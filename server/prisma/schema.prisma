@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  role      UserRole  @default(SALE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders    Order[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  SALE
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id           Int        @id @default(autoincrement())
+  sku          String     @unique
+  name         String
+  importPrice  Int
+  salePrice    Int
+  stock        Int        @default(0)
+  description  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  categoryId   Int
+  category     Category   @relation(fields: [categoryId], references: [id])
+
+  orderItems   OrderItem[]
+  images       ProductImage[]
+
+  @@map("products")
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("product_images")
+}
+
+model Customer {
+  id        Int       @id @default(autoincrement())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders    Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  status      OrderStatus @default(DRAFT)
+  createdTime DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  finalPrice  Int
+
+  customerId  Int?
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  
+  createdById Int?
+  createdBy   User?       @relation(fields: [createdById], references: [id])
+
+  orderItems  OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model OrderItem {
+  id             Int      @id @default(autoincrement())
+  quantity       Int
+  unitSalePrice  Int
+  totalPrice     Int
+
+  orderId        Int
+  productId      Int
+
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
