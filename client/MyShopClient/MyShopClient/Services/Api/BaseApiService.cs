@@ -20,6 +20,9 @@ public abstract class BaseApiService
     protected readonly HttpClient _httpClient;
     protected readonly string _baseUrl = "http://localhost:3000/api/";
 
+    // Static token shared across all API services
+    public static string? CurrentToken { get; private set; }
+
     protected BaseApiService()
     {
         _httpClient = new HttpClient
@@ -28,11 +31,39 @@ public abstract class BaseApiService
             Timeout = TimeSpan.FromSeconds(10)
         };
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        
+        // Apply existing token if available
+        if (!string.IsNullOrEmpty(CurrentToken))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
+        }
     }
 
     protected void SetAuthToken(string token)
     {
+        CurrentToken = token;
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    public static void ClearAuthToken()
+    {
+        CurrentToken = null;
+    }
+
+    /// <summary>
+    /// Apply the current static token to this instance's HttpClient.
+    /// Call this after login to update existing singleton instances.
+    /// </summary>
+    public void ApplyCurrentToken()
+    {
+        if (!string.IsNullOrEmpty(CurrentToken))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
+        }
+        else
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
     }
 
     private T? ParseResponse<T>(string content)
@@ -74,6 +105,9 @@ public abstract class BaseApiService
     {
         try
         {
+            // Always apply current token before request
+            ApplyCurrentToken();
+            
             System.Diagnostics.Debug.WriteLine($"GET {_baseUrl}{endpoint}");
             
             var response = await _httpClient.GetAsync(endpoint);
@@ -94,6 +128,9 @@ public abstract class BaseApiService
     {
         try
         {
+            // Always apply current token before request
+            ApplyCurrentToken();
+            
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -121,6 +158,9 @@ public abstract class BaseApiService
     {
         try
         {
+            // Always apply current token before request
+            ApplyCurrentToken();
+            
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -148,6 +188,9 @@ public abstract class BaseApiService
     {
         try
         {
+            // Always apply current token before request
+            ApplyCurrentToken();
+            
             System.Diagnostics.Debug.WriteLine($"DELETE {_baseUrl}{endpoint}");
             
             var response = await _httpClient.DeleteAsync(endpoint);

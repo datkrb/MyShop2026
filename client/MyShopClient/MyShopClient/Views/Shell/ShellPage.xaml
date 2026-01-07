@@ -1,0 +1,126 @@
+<Page
+    x:Class="MyShopClient.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyShopClient.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="{ThemeResource AppBackgroundBrush}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <!-- Custom NavigationView Style -->
+        <Style x:Key="CustomNavigationViewStyle" TargetType="NavigationView">
+            <Setter Property="IsPaneToggleButtonVisible" Value="True"/>
+            <Setter Property="IsBackButtonVisible" Value="Collapsed"/>
+            <Setter Property="OpenPaneLength" Value="200"/>
+            <Setter Property="CompactPaneLength" Value="50"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1024"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="NavView.PaneDisplayMode" Value="Left"/>
+                        <Setter Target="NavView.IsPaneOpen" Value="True"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="NavView.PaneDisplayMode" Value="LeftCompact"/>
+                        <Setter Target="NavView.IsPaneOpen" Value="False"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <NavigationView x:Name="NavView"
+                        Style="{StaticResource CustomNavigationViewStyle}"
+                        IsSettingsVisible="False"
+                        SelectionChanged="NavView_SelectionChanged"
+                        ItemInvoked="NavView_ItemInvoked">
+        
+        <!-- Pane Header (Brand) -->
+        <NavigationView.PaneHeader>
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="16,16,6,24">
+                <Border Background="{ThemeResource PrimaryBrush}" CornerRadius="8" Width="32" Height="32">
+                    <FontIcon Glyph="&#xE7BF;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="White" FontSize="14"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="MyShop" Foreground="White" FontWeight="Bold" FontSize="18"/>
+                    <TextBlock Text="Shop Manager" Foreground="#94A3B8" FontSize="12"/>
+                </StackPanel>
+            </StackPanel>
+        </NavigationView.PaneHeader>
+
+        <!-- Menu Items -->
+        <NavigationView.MenuItems>
+            <!-- Main Menu Header -->
+            <NavigationViewItem Content="Dashboard" Tag="Dashboard">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE74C;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Products" Tag="Products">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE781;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Orders" Tag="Orders">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7BF;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Margin="0,0,5,0"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Statistics" Tag="Statistics">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9D2;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Invoices" Tag="Invoices">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE946;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Settings" Tag="Settings">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Help Center" Tag="Help">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8F3;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+
+        <!-- Footer Items (Logout) -->
+        <NavigationView.PaneFooter>
+            <NavigationViewItem Content="Log Out" Tag="Logout">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7E8;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#F87171"/>
+                </NavigationViewItem.Icon>
+                <NavigationViewItem.Foreground>
+                    <SolidColorBrush Color="#F87171"/>
+                </NavigationViewItem.Foreground>
+            </NavigationViewItem>
+        </NavigationView.PaneFooter>
+
+        <!-- Content Frame -->
+        <Frame x:Name="ContentFrame"/>
+    </NavigationView>
+    </Grid>
+</Page>
