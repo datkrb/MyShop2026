@@ -23,19 +23,6 @@
         <local:StringToBoolConverter x:Key="StringToBoolConverter"/>
         <local:InvertBoolConverter x:Key="InvertBoolConverter"/>
         <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
-        
-        <Style TargetType="TextBox" x:Key="LoginInputStyle">
-            <Setter Property="Padding" Value="12"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="PlaceholderForeground" Value="#9ca3af"/>
-        </Style>
-
-        <Style TargetType="PasswordBox" x:Key="LoginPasswordStyle">
-            <Setter Property="Padding" Value="12"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
 
         <!-- Login Button Style with nice hover -->
         <Style TargetType="Button" x:Key="LoginButtonStyle">
@@ -188,13 +175,13 @@
                             <!-- Username -->
                             <StackPanel Spacing="4">
                                 <TextBlock Text="User Name" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <TextBox PlaceholderText="username@gmail.com" Text="{x:Bind ViewModel.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LoginInputStyle}"/>
+                                <TextBox PlaceholderText="Enter your username" Text="{x:Bind ViewModel.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Padding="12" CornerRadius="12" />
                             </StackPanel>
 
                             <!-- Password -->
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Password" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <PasswordBox PlaceholderText="•••••••••" Password="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LoginPasswordStyle}"/>
+                                <PasswordBox PlaceholderText="Enter your password" Password="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Padding="12" CornerRadius="12"/>
                             </StackPanel>
 
                             <!-- Remember Me & Forgot PW -->
