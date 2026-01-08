@@ -37,9 +37,9 @@ public class DashboardApiService : BaseApiService
     /// <summary>
     /// Get revenue chart data (daily revenue by day of month)
     /// </summary>
-    public async Task<Dictionary<int, decimal>?> GetRevenueChartAsync()
+    public async Task<Dictionary<string, decimal>?> GetRevenueChartAsync()
     {
-        return await GetAsync<Dictionary<int, decimal>>("dashboard/revenue-chart");
+        return await GetAsync<Dictionary<string, decimal>>("dashboard/revenue-chart");
     }
 
     /// <summary>
@@ -48,5 +48,13 @@ public class DashboardApiService : BaseApiService
     public async Task<List<ApiOrder>?> GetRecentOrdersAsync()
     {
         return await GetAsync<List<ApiOrder>>("dashboard/recent-orders");
+    }
+
+    /// <summary>
+    /// Get category stats (category name and product count)
+    /// </summary>
+    public async Task<List<CategoryStat>?> GetCategoryStatsAsync()
+    {
+        return await GetAsync<List<CategoryStat>>("dashboard/category-stats");
     }
 }

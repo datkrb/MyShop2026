@@ -9,6 +9,7 @@ router.get('/low-stock', authMiddleware, dashboardController.getLowStock.bind(da
 router.get('/top-selling', authMiddleware, dashboardController.getTopSelling.bind(dashboardController));
 router.get('/revenue-chart', authMiddleware, dashboardController.getRevenueChart.bind(dashboardController));
 router.get('/recent-orders', authMiddleware, dashboardController.getRecentOrders.bind(dashboardController));
+router.get('/category-stats', authMiddleware, dashboardController.getCategoryStats.bind(dashboardController));
 
 export default router;
 
