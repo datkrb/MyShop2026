@@ -209,9 +209,9 @@
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">
-                                 <FontIcon Glyph="&#xE70D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource SuccessBrush}" FontSize="12"/>
-                                 <TextBlock Text="+6.5%" Foreground="{ThemeResource SuccessBrush}" FontWeight="SemiBold" FontSize="12"/>
-                                 <TextBlock Text="Since last week" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
+                                 <FontIcon Glyph="{x:Bind ViewModel.ProductsChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeGlyphConverter}}" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{x:Bind ViewModel.ProductsChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontSize="12"/>
+                                 <TextBlock Text="{x:Bind ViewModel.ProductsChangeText, Mode=OneWay}" Foreground="{x:Bind ViewModel.ProductsChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontWeight="SemiBold" FontSize="12"/>
+                                 <TextBlock Text="Since yesterday" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
                              </StackPanel>
                          </StackPanel>
                     </Grid>
@@ -232,9 +232,9 @@
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">
-                                 <FontIcon Glyph="&#xE70E;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource DangerBrush}" FontSize="12"/>
-                                 <TextBlock Text="-0.10%" Foreground="{ThemeResource DangerBrush}" FontWeight="SemiBold" FontSize="12"/>
-                                 <TextBlock Text="Since last week" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
+                                 <FontIcon Glyph="{x:Bind ViewModel.RevenueChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeGlyphConverter}}" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{x:Bind ViewModel.RevenueChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontSize="12"/>
+                                 <TextBlock Text="{x:Bind ViewModel.RevenueChangeText, Mode=OneWay}" Foreground="{x:Bind ViewModel.RevenueChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontWeight="SemiBold" FontSize="12"/>
+                                 <TextBlock Text="Since yesterday" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
                              </StackPanel>
                          </StackPanel>
                     </Grid>
@@ -255,32 +255,31 @@
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">
-                                 <FontIcon Glyph="&#xE70D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource SuccessBrush}" FontSize="12"/>
-                                 <TextBlock Text="+12%" Foreground="{ThemeResource SuccessBrush}" FontWeight="SemiBold" FontSize="12"/>
+                                 <FontIcon Glyph="{x:Bind ViewModel.OrdersChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeGlyphConverter}}" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{x:Bind ViewModel.OrdersChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontSize="12"/>
+                                 <TextBlock Text="{x:Bind ViewModel.OrdersChangeText, Mode=OneWay}" Foreground="{x:Bind ViewModel.OrdersChangePositive, Mode=OneWay, Converter={StaticResource BoolToChangeBrushConverter}}" FontWeight="SemiBold" FontSize="12"/>
                                  <TextBlock Text="Since yesterday" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
                              </StackPanel>
                          </StackPanel>
                     </Grid>
 
-                    <!-- Card 4: Total Invoices -->
+                    <!-- Card 4: Pending Orders -->
                     <Grid x:Name="Card4" Grid.Column="3" Grid.Row="0" Background="{ThemeResource CardBackgroundBrush}" CornerRadius="12" Padding="24" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
                          <StackPanel>
                              <Grid>
                                  <StackPanel Orientation="Horizontal" Spacing="12">
                                      <Border Background="#FB923C" Width="4" Height="32" CornerRadius="2"/>
                                      <StackPanel>
-                                         <TextBlock Text="Total Invoices" Foreground="{ThemeResource TextSecondaryBrush}" FontWeight="Medium" FontSize="14"/>
-                                         <TextBlock Text="{x:Bind ViewModel.TotalInvoices, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}" FontWeight="Bold" FontSize="24"/>
+                                         <TextBlock Text="Pending Orders" Foreground="{ThemeResource TextSecondaryBrush}" FontWeight="Medium" FontSize="14"/>
+                                         <TextBlock Text="{x:Bind ViewModel.PendingOrders, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}" FontWeight="Bold" FontSize="24"/>
                                      </StackPanel>
                                  </StackPanel>
                                  <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#FFF7ED" Width="40" Height="40" CornerRadius="8">
-                                      <FontIcon Glyph="&#xE946;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#F97316"/>
+                                      <FontIcon Glyph="&#xE823;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#F97316"/>
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">
-                                 <FontIcon Glyph="&#xE70D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource SuccessBrush}" FontSize="12"/>
-                                 <TextBlock Text="+1.5%" Foreground="{ThemeResource SuccessBrush}" FontWeight="SemiBold" FontSize="12"/>
-                                 <TextBlock Text="Since last week" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12"/>
+                                 <FontIcon Glyph="&#xE7C4;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#F97316" FontSize="12"/>
+                                 <TextBlock Text="Needs attention" Foreground="#F97316" FontWeight="SemiBold" FontSize="12"/>
                              </StackPanel>
                          </StackPanel>
                     </Grid>
