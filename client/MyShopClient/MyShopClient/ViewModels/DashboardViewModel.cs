@@ -198,8 +198,6 @@ public partial class DashboardViewModel : ViewModelBase
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error loading dashboard: {ex.Message}");
-            // Load mock data as fallback
-            LoadMockData();
         }
         finally
         {
@@ -278,50 +276,5 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         PieSeries = series.ToArray();
-    }
-
-    private void LoadMockData()
-    {
-        // Fallback mock data if API fails
-        TotalProducts = "1,456";
-        DailyRevenue = "$3,345";
-        DailyOrders = "126";
-        PendingOrders = "12";
-
-        // Mock line chart
-        RevenueSeries = new ISeries[]
-        {
-            new LineSeries<double>
-            {
-                Values = new double[] { 1200, 1900, 1500, 2800, 2200, 3100, 2900 },
-                Fill = new LinearGradientPaint(
-                    new[] { new SKColor(124, 92, 252, 128), new SKColor(124, 92, 252, 0) },
-                    new SKPoint(0, 0),
-                    new SKPoint(0, 1)),
-                Stroke = new SolidColorPaint(new SKColor(124, 92, 252)) { StrokeThickness = 3 },
-                GeometrySize = 8,
-                GeometryStroke = new SolidColorPaint(new SKColor(124, 92, 252)) { StrokeThickness = 2 },
-                GeometryFill = new SolidColorPaint(SKColors.White),
-                LineSmoothness = 0.4
-            }
-        };
-
-        // Mock pie chart
-        PieSeries = new ISeries[]
-        {
-            new PieSeries<double> { Values = new double[] { 342 }, Name = "Accessories", InnerRadius = 60, Fill = new SolidColorPaint(new SKColor(124, 92, 252)) },
-            new PieSeries<double> { Values = new double[] { 215 }, Name = "Shoes", InnerRadius = 60, Fill = new SolidColorPaint(new SKColor(236, 72, 153)) },
-            new PieSeries<double> { Values = new double[] { 189 }, Name = "Electronics", InnerRadius = 60, Fill = new SolidColorPaint(new SKColor(34, 197, 94)) },
-            new PieSeries<double> { Values = new double[] { 145 }, Name = "Audio", InnerRadius = 60, Fill = new SolidColorPaint(new SKColor(249, 115, 22)) }
-        };
-
-        TopSelling.Add(new Product { Name = "Urban Backpack", Category = "Accessories", Sold = 342, ImageUrl = "https://via.placeholder.com/150" });
-        TopSelling.Add(new Product { Name = "Nike Running", Category = "Shoes", Sold = 215, ImageUrl = "https://via.placeholder.com/150" });
-        TopSelling.Add(new Product { Name = "iPhone 14 Case", Category = "Electronics", Sold = 189, ImageUrl = "https://via.placeholder.com/150" });
-
-        RecentOrders.Add(new Order { OrderId = "#065499", CustomerName = "John Doe", CustomerAvatar = "https://ui-avatars.com/api/?name=John+Doe", ItemName = "Product", OrderDate = DateTime.Now, Status = "Paid", Price = 101 });
-        
-        LowStock.Add(new Product { Name = "White Cotton T-Shirt", Stock = 2 });
-        LowStock.Add(new Product { Name = "Gaming Mousepad XL", Stock = 5 });
     }
 }

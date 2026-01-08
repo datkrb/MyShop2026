@@ -55,8 +55,8 @@
                     <FontIcon Glyph="&#xE7BF;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="White" FontSize="14"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="MyShop" Foreground="White" FontWeight="Bold" FontSize="18"/>
-                    <TextBlock Text="Shop Manager" Foreground="#94A3B8" FontSize="12"/>
+                    <TextBlock Text="MyShop" Foreground="{ThemeResource PaneHeaderTitleBrush}" FontWeight="Bold" FontSize="18"/>
+                    <TextBlock Text="Shop Manager" Foreground="{ThemeResource PaneHeaderSubtitleBrush}" FontSize="12"/>
                 </StackPanel>
             </StackPanel>
         </NavigationView.PaneHeader>
