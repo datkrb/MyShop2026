@@ -26,6 +26,7 @@ namespace MyShopClient
         public MainWindow()
         {
             InitializeComponent();
+            ContentFrame.Navigate(typeof(Views.Login.LoginView));
         }
     }
 }

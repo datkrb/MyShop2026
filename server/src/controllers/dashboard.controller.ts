@@ -48,6 +48,15 @@ export class DashboardController {
       sendError(res, 'INTERNAL_ERROR', error.message, 500);
     }
   }
+
+  async getCategoryStats(_req: AuthRequest, res: Response) {
+    try {
+      const stats = await dashboardService.getCategoryStats();
+      sendSuccess(res, stats);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
 }
 
 export default new DashboardController();
