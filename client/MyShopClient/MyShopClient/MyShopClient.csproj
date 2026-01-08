@@ -16,9 +16,7 @@
     <Content Remove="Assets\Icons\.gitkeep" />
     <Content Remove="Assets\Images\.gitkeep" />
   </ItemGroup>
-  <ItemGroup>
-    <Page Remove="Views\Login\LoginView.xaml" />
-  </ItemGroup>
+
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -43,6 +41,9 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WinUI" Version="2.0.0-rc6.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
   </ItemGroup>
