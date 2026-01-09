@@ -1,0 +1,331 @@
+<Page
+    x:Class="MyShopClient.Views.Products.ProductDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyShopClient.Views.Products"
+    xmlns:viewmodels="using:MyShopClient.ViewModels"
+    xmlns:helpers="using:MyShopClient.Helpers"
+    Background="{ThemeResource AppBackgroundBrush}">
+    
+    <Page.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <helpers:BoolToPaginationBrushConverter x:Key="BoolToPaginationBrushConverter"/>
+    </Page.Resources>
+
+    <Grid Padding="24,24,4,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Responsive Visual States -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <!-- Wide Layout: 2 columns side by side -->
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="800"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentGrid.ColumnSpacing" Value="32"/>
+                        <Setter Target="ImageColumn.Width" Value="*"/>
+                        <Setter Target="ImageColumn.MaxWidth" Value="500"/>
+                        <Setter Target="DetailsColumn.Width" Value="*"/>
+                        <Setter Target="ImageSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Row)" Value="0"/>
+                        <Setter Target="DetailsSection.(Grid.Column)" Value="1"/>
+                        <Setter Target="DetailsSection.(Grid.Row)" Value="0"/>
+                        <Setter Target="FlipViewImage.Height" Value="400"/>
+                    </VisualState.Setters>
+                </VisualState>
+
+                <!-- Narrow Layout: Single column, stacked -->
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentGrid.ColumnSpacing" Value="0"/>
+                        <Setter Target="ContentGrid.RowSpacing" Value="24"/>
+                        <Setter Target="ImageColumn.Width" Value="*"/>
+                        <Setter Target="ImageColumn.MaxWidth" Value="10000"/>
+                        <Setter Target="DetailsColumn.Width" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Row)" Value="0"/>
+                        <Setter Target="DetailsSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="DetailsSection.(Grid.Row)" Value="1"/>
+                        <Setter Target="FlipViewImage.Height" Value="300"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <!-- Header with Back Button -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,24">
+            <Button 
+                x:Name="BackButton"
+                Click="BackButton_Click"
+                Style="{ThemeResource AccentButtonStyle}"
+                Background="{ThemeResource CardBackgroundBrush}"
+                BorderBrush="{ThemeResource BorderBrush}"
+                Padding="12,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE72B;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Quay lại" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Button>
+            
+            <TextBlock 
+                Text="{x:Bind ViewModel.Name, Mode=OneWay}" 
+                FontSize="24" 
+                FontWeight="Bold"
+                Foreground="{ThemeResource TextPrimaryBrush}"
+                VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
+            <Grid x:Name="ContentGrid" ColumnSpacing="32">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ImageColumn" Width="*" MaxWidth="500"/>
+                    <ColumnDefinition x:Name="DetailsColumn" Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Image Gallery Section -->
+                <StackPanel x:Name="ImageSection" Grid.Column="0" Grid.Row="0" Spacing="16">
+                    <!-- Main Image Carousel -->
+                    <Border 
+                        Background="{ThemeResource CardBackgroundBrush}" 
+                        CornerRadius="16"
+                        BorderBrush="{ThemeResource BorderBrush}"
+                        BorderThickness="1"
+                        Padding="16">
+                        <Grid>
+                            <FlipView 
+                                x:Name="FlipViewImage"
+                                ItemsSource="{x:Bind ViewModel.ProductImages, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedImageIndex, Mode=TwoWay}"
+                                Height="400">
+                                <FlipView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:ProductImageItem">
+                                        <Image 
+                                            Source="{x:Bind ImageUrl}" 
+                                            Stretch="Uniform"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </FlipView.ItemTemplate>
+                            </FlipView>
+
+
+                        </Grid>
+                    </Border>
+
+                    <!-- Thumbnail Gallery -->
+                    <GridView 
+                        ItemsSource="{x:Bind ViewModel.ProductImages, Mode=OneWay}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedImageIndex, Mode=TwoWay}"
+                        SelectionMode="Single"
+                        HorizontalAlignment="Center"
+                        IsItemClickEnabled="True"
+                        ItemClick="ThumbnailItem_Click">
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8"/>
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:ProductImageItem">
+                                <Border 
+                                    Width="64" Height="64"
+                                    CornerRadius="8"
+                                    BorderThickness="2"
+                                    BorderBrush="{x:Bind IsSelected, Mode=OneWay, Converter={StaticResource BoolToPaginationBrushConverter}}">
+                                    <Image 
+                                        Source="{x:Bind ImageUrl}" 
+                                        Stretch="UniformToFill"/>
+                                </Border>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+                </StackPanel>
+
+                <!-- Product Details Section -->
+                <Border 
+                    x:Name="DetailsSection"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundBrush}" 
+                    CornerRadius="16"
+                    BorderBrush="{ThemeResource BorderBrush}"
+                    BorderThickness="1"
+                    Padding="24">
+                    <StackPanel Spacing="20">
+                        <!-- Status Badge -->
+                        <Border 
+                            Background="{x:Bind ViewModel.StatusBackground, Mode=OneWay}"
+                            CornerRadius="8"
+                            Padding="12,6"
+                            HorizontalAlignment="Left">
+                            <TextBlock 
+                                Text="{x:Bind ViewModel.Status, Mode=OneWay}"
+                                Foreground="{x:Bind ViewModel.StatusForeground, Mode=OneWay}"
+                                FontWeight="SemiBold"
+                                FontSize="12"/>
+                        </Border>
+
+                        <!-- Product Name -->
+                        <TextBlock 
+                            Text="{x:Bind ViewModel.Name, Mode=OneWay}"
+                            FontSize="28"
+                            FontWeight="Bold"
+                            Foreground="{ThemeResource TextPrimaryBrush}"
+                            TextWrapping="Wrap"/>
+
+                        <!-- SKU & ID -->
+                        <StackPanel Orientation="Vertical" Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock 
+                                    Text="ID:" 
+                                    Foreground="{ThemeResource TextSecondaryBrush}"
+                                    FontSize="14"/>
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.Id, Mode=OneWay}"
+                                    Foreground="{ThemeResource TextPrimaryBrush}"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock 
+                                    Text="SKU:" 
+                                    Foreground="{ThemeResource TextSecondaryBrush}"
+                                    FontSize="14"/>
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.Sku, Mode=OneWay}"
+                                    Foreground="{ThemeResource TextPrimaryBrush}"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"/>
+                            </StackPanel>
+                            
+                        </StackPanel>
+
+                        <Rectangle Height="1" Fill="{ThemeResource BorderBrush}" Margin="0,8"/>
+
+                        <!-- Price -->
+                        <StackPanel Spacing="8">
+                            <TextBlock 
+                                Text="Giá bán" 
+                                Foreground="{ThemeResource TextSecondaryBrush}"
+                                FontSize="14"/>
+                            <TextBlock 
+                                FontSize="32"
+                                FontWeight="Bold"
+                                Foreground="{ThemeResource PrimaryBrush}">
+                                <Run Text="{x:Bind ViewModel.SalePrice, Mode=OneWay}"/>
+                                <Run Text="₫"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Rectangle Height="1" Fill="{ThemeResource BorderBrush}" Margin="0,8"/>
+
+                        <!-- Info Grid -->
+                        <Grid RowSpacing="16" ColumnSpacing="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Category -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                <TextBlock 
+                                    Text="Danh mục" 
+                                    Foreground="{ThemeResource TextSecondaryBrush}"
+                                    FontSize="12"/>
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.Category, Mode=OneWay}"
+                                    Foreground="{ThemeResource TextPrimaryBrush}"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"/>
+                            </StackPanel>
+
+                            <!-- Stock -->
+                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
+                                <TextBlock 
+                                    Text="Tồn kho" 
+                                    Foreground="{ThemeResource TextSecondaryBrush}"
+                                    FontSize="12"/>
+                                <TextBlock 
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextPrimaryBrush}">
+                                    <Run Text="{x:Bind ViewModel.Stock, Mode=OneWay}"/>
+                                    <Run Text="sản phẩm"/>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Import Price -->
+                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                                <TextBlock 
+                                    Text="Giá nhập" 
+                                    Foreground="{ThemeResource TextSecondaryBrush}"
+                                    FontSize="12"/>
+                                <TextBlock 
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextPrimaryBrush}">
+                                    <Run Text="{x:Bind ViewModel.ImportPrice, Mode=OneWay}"/>
+                                    <Run Text="₫"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+
+                        <Rectangle Height="1" Fill="{ThemeResource BorderBrush}" Margin="0,8"/>
+
+                        <!-- Description -->
+                        <StackPanel Spacing="8">
+                            <TextBlock 
+                                Text="Mô tả sản phẩm" 
+                                Foreground="{ThemeResource TextSecondaryBrush}"
+                                FontSize="14"/>
+                            <TextBlock 
+                                Text="{x:Bind ViewModel.Description, Mode=OneWay}"
+                                Foreground="{ThemeResource TextPrimaryBrush}"
+                                FontSize="14"
+                                TextWrapping="Wrap"
+                                LineHeight="24"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
+                            <Button Style="{ThemeResource AccentButtonStyle}" Padding="24,12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="16"/>
+                                    <TextBlock Text="Chỉnh sửa"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button 
+                                Background="{ThemeResource CardBackgroundBrush}"
+                                BorderBrush="{ThemeResource DangerBrush}"
+                                Foreground="{ThemeResource DangerBrush}"
+                                Padding="24,12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                                    <TextBlock Text="Xóa"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

@@ -94,6 +94,7 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{ThemeResource TextSecondaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">

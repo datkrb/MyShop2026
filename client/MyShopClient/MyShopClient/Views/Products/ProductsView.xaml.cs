@@ -90,5 +90,13 @@ public sealed partial class ProductsView : Page
         }
         return null;
     }
+    
+    private void ProductsListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is ProductViewModel product)
+        {
+            Frame.Navigate(typeof(ProductDetailView), product);
+        }
+    }
 }
 

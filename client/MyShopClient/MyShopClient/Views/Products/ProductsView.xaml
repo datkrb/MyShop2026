@@ -414,9 +414,11 @@
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Disabled">
                             <ListView 
+                                x:Name="ProductsListView"
                                 ItemsSource="{x:Bind ViewModel.FilteredProducts, Mode=OneWay}"
                                 SelectionMode="None"
-                                IsItemClickEnabled="False">
+                                IsItemClickEnabled="True"
+                                ItemClick="ProductsListView_ItemClick">
                                 <ListView.Header>
                                 <Grid Background="{ThemeResource SystemChromeLowColor}" Padding="16,12">
                                     <Grid.ColumnDefinitions>
