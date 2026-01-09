@@ -1,0 +1,297 @@
+<ContentDialog
+    x:Class="MyShopClient.Views.Products.AddProductDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyShopClient.Views.Products"
+    xmlns:models="using:MyShopClient.Models"
+    xmlns:helpers="using:MyShopClient.Helpers"
+    Title="Thêm Sản Phẩm Mới"
+    PrimaryButtonText="Lưu"
+    SecondaryButtonText="Hủy"
+    PrimaryButtonCommand="{x:Bind ViewModel.SaveCommand}"
+    SecondaryButtonCommand="{x:Bind ViewModel.CancelCommand}"
+    DefaultButton="Primary"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}">
+    
+    <ContentDialog.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        
+        <!-- Error TextBlock Style -->
+        <Style x:Key="ErrorTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource DangerBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+        
+        <!-- Form Label Style -->
+        <Style x:Key="FormLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        
+        <!-- Required Indicator Style -->
+        <Style x:Key="RequiredIndicatorStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource DangerBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
+        </Style>
+    </ContentDialog.Resources>
+    
+    <ScrollViewer 
+        VerticalScrollBarVisibility="Auto" 
+        HorizontalScrollBarVisibility="Disabled"
+        MaxHeight="500">
+        
+        <StackPanel Spacing="20" Width="500" Padding="8,8,16,0">
+            
+            <!-- Error Message Banner -->
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.HasErrors, Mode=OneWay}"
+                Severity="Error"
+                Title="Lỗi xác thực"
+                Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                IsClosable="False"/>
+            
+            <!-- Basic Information Section -->
+            <StackPanel Spacing="16">
+                <TextBlock 
+                    Text="Thông tin cơ bản" 
+                    FontSize="16" 
+                    FontWeight="Bold" 
+                    Foreground="{ThemeResource TextPrimaryBrush}"/>
+                
+                <!-- Product Name -->
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Tên sản phẩm" Style="{StaticResource FormLabelStyle}"/>
+                        <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                    </StackPanel>
+                    <TextBox 
+                        PlaceholderText="Nhập tên sản phẩm..."
+                        Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        HorizontalAlignment="Stretch"/>
+                </StackPanel>
+                
+                <!-- SKU -->
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Mã SKU" Style="{StaticResource FormLabelStyle}"/>
+                        <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                    </StackPanel>
+                    <TextBox 
+                        PlaceholderText="Ví dụ: PRD-001"
+                        Text="{x:Bind ViewModel.Sku, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        HorizontalAlignment="Stretch"/>
+                </StackPanel>
+                
+                <!-- Description -->
+                <StackPanel>
+                    <TextBlock Text="Mô tả" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBox 
+                        PlaceholderText="Nhập mô tả sản phẩm..."
+                        Text="{x:Bind ViewModel.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap"
+                        AcceptsReturn="True"
+                        Height="80"
+                        HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </StackPanel>
+            
+            <!-- Pricing Section -->
+            <StackPanel Spacing="16">
+                <TextBlock 
+                    Text="Giá cả" 
+                    FontSize="16" 
+                    FontWeight="Bold" 
+                    Foreground="{ThemeResource TextPrimaryBrush}"/>
+                
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Import Price -->
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Giá nhập (VND)" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                        </StackPanel>
+                        <NumberBox 
+                            PlaceholderText="0"
+                            Value="{x:Bind ViewModel.ImportPrice, Mode=TwoWay}"
+                            Minimum="0"
+                            SpinButtonPlacementMode="Compact"
+                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                    
+                    <!-- Sale Price -->
+                    <StackPanel Grid.Column="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Giá bán (VND)" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                        </StackPanel>
+                        <NumberBox 
+                            PlaceholderText="0"
+                            Value="{x:Bind ViewModel.SalePrice, Mode=TwoWay}"
+                            Minimum="0"
+                            SpinButtonPlacementMode="Compact"
+                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+            
+            <!-- Inventory Section -->
+            <StackPanel Spacing="16">
+                <TextBlock 
+                    Text="Kho hàng" 
+                    FontSize="16" 
+                    FontWeight="Bold" 
+                    Foreground="{ThemeResource TextPrimaryBrush}"/>
+                
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Stock -->
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Số lượng" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                        </StackPanel>
+                        <NumberBox 
+                            PlaceholderText="0"
+                            Value="{x:Bind ViewModel.Stock, Mode=TwoWay}"
+                            Minimum="0"
+                            SpinButtonPlacementMode="Compact"
+                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                    
+                    <!-- Category -->
+                    <StackPanel Grid.Column="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Danh mục" Style="{StaticResource FormLabelStyle}"/>
+                            <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                        </StackPanel>
+                        <ComboBox 
+                            PlaceholderText="Chọn danh mục"
+                            ItemsSource="{x:Bind ViewModel.Categories}"
+                            SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"
+                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                    
+                    <!-- Status -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Trạng thái" Style="{StaticResource FormLabelStyle}"/>
+                        <ComboBox 
+                            ItemsSource="{x:Bind ViewModel.Statuses}"
+                            SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+            
+            <!-- Images Section -->
+            <StackPanel Spacing="12">
+                <TextBlock 
+                    Text="Hình ảnh sản phẩm" 
+                    FontSize="16" 
+                    FontWeight="Bold" 
+                    Foreground="{ThemeResource TextPrimaryBrush}"/>
+                
+                <!-- Drop Zone -->
+                <Border
+                    x:Name="DropZone"
+                    Background="{ThemeResource CardBackgroundBrush}"
+                    BorderBrush="{ThemeResource BorderBrush}"
+                    BorderThickness="2"
+                    CornerRadius="12"
+                    Padding="24"
+                    AllowDrop="True"
+                    DragOver="DropZone_DragOver"
+                    DragLeave="DropZone_DragLeave"
+                    Drop="DropZone_Drop"
+                    PointerPressed="DropZone_PointerPressed">
+                    <StackPanel HorizontalAlignment="Center" Spacing="12">
+                        <FontIcon 
+                            Glyph="&#xE898;" 
+                            FontSize="48" 
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            HorizontalAlignment="Center"/>
+                        <TextBlock 
+                            Text="Kéo thả ảnh vào đây hoặc nhấn để chọn" 
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            FontSize="14"/>
+                        <TextBlock 
+                            Text="Hỗ trợ: JPG, PNG, GIF, BMP, WEBP" 
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            Opacity="0.7"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Selected Images Gallery -->
+                <GridView
+                    x:Name="ImagesGridView"
+                    ItemsSource="{x:Bind ViewModel.ProductImages, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.HasImages, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                    SelectionMode="None"
+                    IsItemClickEnabled="False"
+                    Padding="0">
+                    
+                    <GridView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ProductImage">
+                            <Grid Width="100" Height="100" Margin="4">
+                                <Border 
+                                    CornerRadius="8" 
+                                    Background="{ThemeResource SystemChromeLowColor}">
+                                    <Image 
+                                        Source="{x:Bind ImageSource}" 
+                                        Stretch="UniformToFill"/>
+                                </Border>
+                                
+                                <!-- Remove Button -->
+                                <Button 
+                                    HorizontalAlignment="Right" 
+                                    VerticalAlignment="Top"
+                                    Margin="0,-4,-4,0"
+                                    Padding="4"
+                                    Width="24"
+                                    Height="24"
+                                    CornerRadius="12"
+                                    Background="{ThemeResource DangerBrush}"
+                                    BorderThickness="0"
+                                    Command="{Binding ElementName=ImagesGridView, Path=DataContext.ViewModel.RemoveImageCommand}"
+                                    CommandParameter="{x:Bind}">
+                                    <FontIcon 
+                                        Glyph="&#xE711;" 
+                                        FontSize="10" 
+                                        Foreground="White"/>
+                                </Button>
+                                
+                                <!-- File Name Tooltip -->
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="{x:Bind FileName}"/>
+                                </ToolTipService.ToolTip>
+                            </Grid>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </StackPanel>
+            
+            <!-- Loading Indicator -->
+            <ProgressBar 
+                IsIndeterminate="True"
+                Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>
