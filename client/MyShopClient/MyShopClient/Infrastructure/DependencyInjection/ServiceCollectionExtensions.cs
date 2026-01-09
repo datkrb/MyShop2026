@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ProductsViewModel>();
         services.AddTransient<AddProductDialogViewModel>();
         services.AddTransient<AddCategoryDialogViewModel>();
+        services.AddTransient<ProductDetailViewModel>();
         services.AddTransient<ShellViewModel>();
         return services;
     }
