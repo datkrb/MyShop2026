@@ -26,35 +26,40 @@
             <TextBlock Text="Product Management" Style="{ThemeResource TitleTextBlockStyle}"/>
             
             <CommandBar DefaultLabelPosition="Right" Background="Transparent" Padding="0">
-                <AppBarElementContainer>
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <!-- Search -->
-                        <AutoSuggestBox QueryIcon="Find" 
-                                        PlaceholderText="Search products..." 
-                                        Width="250"
-                                        Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                        QuerySubmitted="AutoSuggestBox_QuerySubmitted">
-                        </AutoSuggestBox>
+                <CommandBar.PrimaryCommands>
+                    <AppBarElementContainer>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <!-- Search -->
+                            <AutoSuggestBox QueryIcon="Find" 
+                                            PlaceholderText="Search products..." 
+                                            Width="250"
+                                            Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            QuerySubmitted="AutoSuggestBox_QuerySubmitted">
+                            </AutoSuggestBox>
 
-                        <!-- Category Filter -->
-                        <ComboBox PlaceholderText="Category" 
-                                  MinWidth="150"
-                                  ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}"
-                                  SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:Category">
-                                    <TextBlock Text="{x:Bind Name}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                            <!-- Category Filter -->
+                            <ComboBox PlaceholderText="Category" 
+                                      MinWidth="150"
+                                      ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}"
+                                      SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Category">
+                                        <TextBlock Text="{x:Bind Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
 
-                        <!-- Sort -->
-                        <ComboBox PlaceholderText="Sort By" 
-                                  MinWidth="150"
-                                  ItemsSource="{x:Bind ViewModel.SortOptions}"
-                                  SelectedItem="{x:Bind ViewModel.SelectedSortOption, Mode=TwoWay}"/>
-                    </StackPanel>
-                </AppBarElementContainer>
+                            <!-- Sort -->
+                            <ComboBox PlaceholderText="Sort By" 
+                                      MinWidth="150"
+                                      ItemsSource="{x:Bind ViewModel.SortOptions}"
+                                      SelectedItem="{x:Bind ViewModel.SelectedSortOption, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </AppBarElementContainer>
+                    
+                    <AppBarButton Icon="Add" Label="Add Product" Command="{x:Bind ViewModel.AddProductCommand}"/>
+                    <AppBarButton Icon="Library" Label="Add Category" Click="AddCategory_Click"/>
+                </CommandBar.PrimaryCommands>
                 
                 <CommandBar.SecondaryCommands>
                     <AppBarButton Icon="Refresh" Label="Refresh" Command="{x:Bind ViewModel.LoadProductsCommand}"/>

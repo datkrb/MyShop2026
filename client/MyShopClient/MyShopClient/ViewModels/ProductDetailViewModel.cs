@@ -39,8 +39,19 @@ public partial class ProductDetailViewModel : ViewModelBase
     public async Task InitializeAsync(int productId)
     {
         _productId = productId;
-        await LoadProduct();
         await LoadCategories();
+
+        if (_productId == 0)
+        {
+            // Create mode
+            Product = new ApiProduct();
+            IsEditing = true;
+        }
+        else
+        {
+            // Edit mode
+            await LoadProduct();
+        }
     }
 
     private async Task LoadCategories() 
@@ -107,10 +118,20 @@ public partial class ProductDetailViewModel : ViewModelBase
                 Product.CategoryId = SelectedCategory.Id;
             }
 
-            var updated = await _productApiService.UpdateProductAsync(_productId, Product);
-            if (updated != null)
+            ApiProduct? result;
+            if (_productId == 0)
             {
-                Product = updated;
+                result = await _productApiService.CreateProductAsync(Product);
+            }
+            else
+            {
+                result = await _productApiService.UpdateProductAsync(_productId, Product);
+            }
+
+            if (result != null)
+            {
+                Product = result;
+                _productId = result.Id;
                 IsEditing = false;
                 
                 // Show success toast/dialog
