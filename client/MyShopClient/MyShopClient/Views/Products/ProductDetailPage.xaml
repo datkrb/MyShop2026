@@ -14,6 +14,8 @@
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibleConverter"/>
         <helpers:BoolToVisibilityConverter x:Key="BoolToCollapsedConverter" IsInverted="True"/>
         <helpers:DecimalToDoubleConverter x:Key="DecimalToDoubleConverter"/>
+        <helpers:IntToVisibleConverter x:Key="IntToVisibleConverter"/>
+        <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter"/>
     </Page.Resources>
 
     <Grid x:Name="RootGrid" Padding="24" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -33,7 +35,7 @@
                 <AppBarButton Icon="Edit" Label="Edit" Command="{x:Bind ViewModel.EnableEditCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToCollapsedConverter}, Mode=OneWay}"/>
                 <AppBarButton Icon="Save" Label="Save" Command="{x:Bind ViewModel.SaveCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}"/>
                 <AppBarButton Icon="Cancel" Label="Cancel" Command="{x:Bind ViewModel.CancelEditCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}"/>
-                <AppBarButton Icon="Delete" Label="Delete" Command="{x:Bind ViewModel.DeleteCommand}"/>
+                <AppBarButton Icon="Delete" Label="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Visibility="{x:Bind ViewModel.Product.Id, Converter={StaticResource IntToVisibleConverter}, Mode=OneWay}"/>
             </CommandBar>
         </StackPanel>
 
@@ -79,7 +81,7 @@
                 </Grid>
 
                 <!-- Stock -->
-                <NumberBox Header="Stock" Value="{x:Bind ViewModel.Product.Stock, Mode=TwoWay, Converter={StaticResource DecimalToDoubleConverter}}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}" SpinButtonPlacementMode="Inline"/>
+                <NumberBox Header="Stock" Value="{x:Bind ViewModel.Product.Stock, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}" SpinButtonPlacementMode="Inline"/>
 
                 <!-- Description -->
                 <TextBox Header="Description" 

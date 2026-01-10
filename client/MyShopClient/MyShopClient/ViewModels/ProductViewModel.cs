@@ -231,6 +231,12 @@ public partial class ProductViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public void AddProduct()
+    {
+        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailPage), 0);
+    }
+
+    [RelayCommand]
     public void ViewDetail(ApiProduct product)
     {
         // Navigate or Show Dialog. 

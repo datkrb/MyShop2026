@@ -102,4 +102,13 @@ public class ProductApiService : BaseApiService
             description = product.Description
         });
     }
+
+    public async Task<Category?> CreateCategoryAsync(string name, string? description)
+    {
+        return await PostAsync<Category>("categories", new
+        {
+            name = name,
+            description = description
+        });
+    }
 }

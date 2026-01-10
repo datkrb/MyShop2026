@@ -73,6 +73,25 @@ public class IntToDoubleConverter : IValueConverter
         {
             return (int)d;
         }
+        
+        // For nullable int, return null. For int, return 0.
+        // targetType might be System.Nullable`1[System.Int32] or System.Int32
+        if (targetType == typeof(int)) return 0;
+        
         return null;
+    }
+}
+
+public class IntToVisibleConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is int i && i > 0) return Visibility.Visible;
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
     }
 }
