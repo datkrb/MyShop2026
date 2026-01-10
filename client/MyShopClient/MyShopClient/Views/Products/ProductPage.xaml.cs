@@ -13,6 +13,7 @@ public sealed partial class ProductPage : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetRequiredService<ProductViewModel>();
+        this.DataContext = ViewModel;
         this.Loaded += ProductPage_Loaded;
     }
 

@@ -147,7 +147,7 @@ public partial class ProductDetailViewModel : ViewModelBase
             if (success)
             {
                 // Go back
-                App.Current.RootFrame?.GoBack();
+                App.Current.ContentFrame?.GoBack();
             }
         }
     }
@@ -155,9 +155,9 @@ public partial class ProductDetailViewModel : ViewModelBase
     [RelayCommand]
     public void GoBack()
     {
-        if (App.Current.RootFrame?.CanGoBack == true)
+        if (App.Current.ContentFrame?.CanGoBack == true)
         {
-             App.Current.RootFrame.GoBack();
+             App.Current.ContentFrame.GoBack();
         }
     }
 }
