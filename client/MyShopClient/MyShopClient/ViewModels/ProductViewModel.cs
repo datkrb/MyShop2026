@@ -224,6 +224,6 @@ public partial class ProductViewModel : ViewModelBase
         // Assuming ShellPage frame navigation.
         
         // Passing ID as parameter
-        App.Current.RootFrame?.Navigate(typeof(Views.Products.ProductDetailPage), product.Id);
+        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailPage), product.Id);
     }
 }

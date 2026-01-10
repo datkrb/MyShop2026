@@ -14,6 +14,7 @@ public sealed partial class ShellPage : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<ShellViewModel>()!;
+        App.Current.ContentFrame = ContentFrame;
         
         // Navigate to Dashboard by default
         this.Loaded += (s, e) =>
