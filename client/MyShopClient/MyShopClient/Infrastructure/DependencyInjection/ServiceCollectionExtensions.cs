@@ -11,6 +11,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<ShellViewModel>();
+        services.AddTransient<ProductViewModel>();
+        services.AddTransient<ProductDetailViewModel>();
         return services;
     }
 
@@ -19,6 +21,7 @@ public static class ServiceCollectionExtensions
         // Register API Services as Singletons
         services.AddSingleton(AuthApiService.Instance);
         services.AddSingleton(DashboardApiService.Instance);
+        services.AddSingleton(ProductApiService.Instance);
         
         return services;
     }

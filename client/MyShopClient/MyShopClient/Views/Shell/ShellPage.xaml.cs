@@ -54,8 +54,7 @@ public sealed partial class ShellPage : Page
         var pageType = tag switch
         {
             "Dashboard" => typeof(Views.Dashboard.DashboardView),
-            // TODO: Add other pages when they're created
-            // "Products" => typeof(Views.Products.ProductsView),
+            "Products" => typeof(Views.Products.ProductPage),
             // "Orders" => typeof(Views.Orders.OrdersView),
             // "Statistics" => typeof(Views.Statistics.StatisticsView),
             // "Invoices" => typeof(Views.Invoices.InvoicesView),
