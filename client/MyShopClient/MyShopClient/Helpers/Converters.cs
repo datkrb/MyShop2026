@@ -41,3 +41,38 @@ public class DecimalToDoubleConverter : IValueConverter
         return 0m;
     }
 }
+
+public class DoubleToNullableDoubleConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        return value ?? double.NaN;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        if (value is double d && !double.IsNaN(d))
+        {
+            return d;
+        }
+        return null;
+    }
+}
+
+public class IntToDoubleConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is int i) return (double)i;
+        return double.NaN;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        if (value is double d && !double.IsNaN(d))
+        {
+            return (int)d;
+        }
+        return null;
+    }
+}

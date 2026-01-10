@@ -17,7 +17,10 @@ public class ProductApiService : BaseApiService
         int size = 10, 
         int? categoryId = null, 
         string? keyword = null, 
-        string sort = "id,desc")
+        string sort = "id,desc",
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        int? id = null)
     {
         var query = new StringBuilder($"products?page={page}&size={size}");
         
@@ -34,6 +37,21 @@ public class ProductApiService : BaseApiService
         if (!string.IsNullOrEmpty(sort))
         {
             query.Append($"&sort={sort}");
+        }
+
+        if (minPrice.HasValue)
+        {
+            query.Append($"&minPrice={minPrice.Value}");
+        }
+
+        if (maxPrice.HasValue)
+        {
+            query.Append($"&maxPrice={maxPrice.Value}");
+        }
+
+        if (id.HasValue)
+        {
+            query.Append($"&id={id.Value}");
         }
 
         return await GetAsync<PagedResult<ApiProduct>>(query.ToString());
