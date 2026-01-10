@@ -35,17 +35,27 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private string _searchKeyword = string.Empty;
 
+    [ObservableProperty]
+    private double? _minPrice;
+
+    [ObservableProperty]
+    private double? _maxPrice;
+
+    [ObservableProperty]
+    private int? _searchId;
+
     // Sort Configuration
     public List<string> SortOptions { get; } = new List<string>
     {
-        "Mới nhất",
+        "ID (Giảm dần)",
+        "ID (Tăng dần)",
         "Giá: Thấp -> Cao",
         "Giá: Cao -> Thấp",
         "Tên: A -> Z"
     };
 
     [ObservableProperty]
-    private string _selectedSortOption = "Mới nhất";
+    private string _selectedSortOption = "ID (Giảm dần)";
 
     partial void OnSelectedSortOptionChanged(string value)
     {
@@ -111,7 +121,9 @@ public partial class ProductViewModel : ViewModelBase
     {
         return uiSort switch
         {
+            "ID (Giảm dần)" => "id,desc",
             "Mới nhất" => "id,desc",
+            "ID (Tăng dần)" => "id,asc",
             "Giá: Thấp -> Cao" => "salePrice,asc",
             "Giá: Cao -> Thấp" => "salePrice,desc",
             "Tên: A -> Z" => "name,asc",
@@ -128,7 +140,10 @@ public partial class ProductViewModel : ViewModelBase
             int? catId = (SelectedCategory == null || SelectedCategory.Id == -1) ? null : SelectedCategory.Id;
             string sort = GetBackendSort(SelectedSortOption);
 
-            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, catId, SearchKeyword, sort);
+            decimal? minVal = MinPrice.HasValue ? (decimal?)MinPrice.Value : null;
+            decimal? maxVal = MaxPrice.HasValue ? (decimal?)MaxPrice.Value : null;
+
+            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, catId, SearchKeyword, sort, minVal, maxVal, SearchId);
             
             if (result != null)
             {

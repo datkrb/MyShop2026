@@ -26,4 +26,12 @@ public sealed partial class ProductPage : Page
     {
         ViewModel.SearchCommand.Execute(null);
     }
+
+    private void ClearPrice_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        ViewModel.MinPrice = null;
+        ViewModel.MaxPrice = null;
+        ViewModel.SearchId = null;
+        ViewModel.LoadProductsCommand.Execute(null);
+    }
 }

@@ -14,6 +14,7 @@ export class ProductController {
         maxPrice: req.query.maxPrice ? parseInt(req.query.maxPrice as string) : undefined,
         keyword: req.query.keyword as string,
         categoryId: req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined,
+        id: req.query.id ? parseInt(req.query.id as string) : undefined,
       };
 
       const result = await productService.getAll(filters);

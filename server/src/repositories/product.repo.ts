@@ -8,6 +8,7 @@ interface ProductFilters {
   maxPrice?: number;
   keyword?: string;
   categoryId?: number;
+  id?: number;
 }
 
 export class ProductRepository {
@@ -20,6 +21,7 @@ export class ProductRepository {
       maxPrice,
       keyword,
       categoryId,
+      id,
     } = filters;
 
     const skip = (page - 1) * size;
@@ -43,6 +45,10 @@ export class ProductRepository {
 
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    if (id) {
+      where.id = id;
     }
 
     const [data, total] = await Promise.all([

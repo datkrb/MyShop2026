@@ -7,7 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:MyShopClient.Models"
     xmlns:vm="using:MyShopClient.ViewModels"
+    xmlns:helpers="using:MyShopClient.Helpers"
     mc:Ignorable="d">
+    <Page.Resources>
+        <helpers:DoubleToNullableDoubleConverter x:Key="DoubleToNullableDoubleConverter"/>
+        <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter"/>
+    </Page.Resources>
 
     <Grid x:Name="RootGrid" Padding="24" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -55,6 +60,21 @@
                     <AppBarButton Icon="Refresh" Label="Refresh" Command="{x:Bind ViewModel.LoadProductsCommand}"/>
                 </CommandBar.SecondaryCommands>
             </CommandBar>
+
+            <!-- Price Filter Row -->
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Quick ID Search:" VerticalAlignment="Center" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                <NumberBox PlaceholderText="ID No." Width="100" Value="{x:Bind ViewModel.SearchId, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" SpinButtonPlacementMode="Hidden"/>
+                
+                <AppBarSeparator/>
+
+                <TextBlock Text="Price Range:" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                <NumberBox PlaceholderText="Min" Width="120" Value="{x:Bind ViewModel.MinPrice, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}" SmallChange="1000"/>
+                <TextBlock Text="-" VerticalAlignment="Center"/>
+                <NumberBox PlaceholderText="Max" Width="120" Value="{x:Bind ViewModel.MaxPrice, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}" SmallChange="1000"/>
+                <Button Content="Apply" Command="{x:Bind ViewModel.LoadProductsCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                <Button Content="Clear" Click="ClearPrice_Click"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- Product List -->
