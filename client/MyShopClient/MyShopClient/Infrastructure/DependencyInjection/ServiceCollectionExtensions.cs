@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(AuthApiService.Instance);
         services.AddSingleton(DashboardApiService.Instance);
         services.AddSingleton(ProductApiService.Instance);
+        services.AddTransient<Services.Import.ImportService>();
         
         return services;
     }

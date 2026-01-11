@@ -14,7 +14,6 @@ namespace MyShopClient.ViewModels;
 
 public partial class ProductViewModel : ViewModelBase
 {
-    private readonly ProductApiService _productApiService;
 
     [ObservableProperty]
     private ObservableCollection<ApiProduct> _products = new();
@@ -85,9 +84,79 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canGoPrev;
 
-    public ProductViewModel(ProductApiService productApiService)
+    private readonly Services.Import.ImportService _importService;
+    private readonly ProductApiService _productApiService;
+    
+    public ProductViewModel(ProductApiService productApiService, Services.Import.ImportService importService)
     {
         _productApiService = productApiService;
+        _importService = importService;
+    }
+
+    [RelayCommand]
+    public async Task ImportProducts()
+    {
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        
+        // Retrieve the window handle (HWND) of the current WinUI 3 window.
+        var window = App.Current.MainWindow;
+        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        
+        // Initialize the file picker with the window handle (HWND).
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hWnd);
+
+        picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+        picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+        picker.FileTypeFilter.Add(".xlsx");
+        picker.FileTypeFilter.Add(".accdb"); 
+        picker.FileTypeFilter.Add(".mdb");
+
+        Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
+        if (file != null)
+        {
+            IsLoading = true;
+            try
+            {
+                List<ApiProduct> imported = new List<ApiProduct>();
+                if (file.FileType == ".xlsx")
+                {
+                    imported = await _importService.ImportFromExcelAsync(file.Path);
+                }
+                else if (file.FileType == ".accdb" || file.FileType == ".mdb")
+                {
+                    imported = await _importService.ImportFromAccessAsync(file.Path);
+                }
+
+                int successCount = 0;
+                foreach(var p in imported)
+                {
+                    var created = await _productApiService.CreateProductAsync(p);
+                    if (created != null) successCount++;
+                }
+
+                if (successCount > 0)
+                {
+                    await LoadProducts();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Import Error: {ex.Message}");
+                // Show error dialog
+                ContentDialog errorDialog = new ContentDialog
+                {
+                    XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                    Title = "Import Failed",
+                    Content = $"Could not import products: {ex.Message}",
+                    CloseButtonText = "OK"
+                };
+                await errorDialog.ShowAsync();
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
     }
 
     public async Task LoadDataAsync()

@@ -59,6 +59,7 @@
                     
                     <AppBarButton Icon="Add" Label="Add Product" Command="{x:Bind ViewModel.AddProductCommand}"/>
                     <AppBarButton Icon="Library" Label="Add Category" Click="AddCategory_Click"/>
+                    <AppBarButton Icon="OpenFile" Label="Import" Command="{x:Bind ViewModel.ImportProductsCommand}"/>
                 </CommandBar.PrimaryCommands>
                 
                 <CommandBar.SecondaryCommands>
