@@ -17,7 +17,7 @@ public partial class ProductDetailViewModel : ViewModelBase
     private int _productId;
 
     [ObservableProperty]
-    private ApiProduct _product;
+    private ApiProduct _product = new();
 
     [ObservableProperty]
     private bool _isEditing;
@@ -30,6 +30,11 @@ public partial class ProductDetailViewModel : ViewModelBase
     
     [ObservableProperty]
     private Category? _selectedCategory;
+
+    [ObservableProperty]
+    private ObservableCollection<string> _selectedImagePaths = new();
+
+    public bool HasMinimumImages => (Product?.Images?.Count ?? 0) + SelectedImagePaths.Count >= 3;
 
     public ProductDetailViewModel(ProductApiService productApiService)
     {
@@ -67,31 +72,6 @@ public partial class ProductDetailViewModel : ViewModelBase
          }
     }
 
-    private async Task LoadProduct()
-    {
-        IsLoading = true;
-        try
-        {
-            var p = await _productApiService.GetProductAsync(_productId);
-            if (p != null)
-            {
-                Product = p;
-                if (Categories.Count > 0 && Product.CategoryId != null)
-                {
-                     SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-             System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
     [RelayCommand]
     public void EnableEdit()
     {
@@ -103,6 +83,66 @@ public partial class ProductDetailViewModel : ViewModelBase
     {
         IsEditing = false;
         _ = LoadProduct(); // Revert changes
+    }
+
+    [RelayCommand]
+    public async Task PickImages()
+    {
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        var window = App.Current.MainWindow;
+        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hWnd);
+
+        picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+        picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+        picker.FileTypeFilter.Add(".jpg");
+        picker.FileTypeFilter.Add(".jpeg");
+        picker.FileTypeFilter.Add(".png");
+
+        var files = await picker.PickMultipleFilesAsync();
+        if (files != null)
+        {
+            foreach (var file in files)
+            {
+                if (!SelectedImagePaths.Contains(file.Path))
+                {
+                    SelectedImagePaths.Add(file.Path);
+                }
+            }
+            OnPropertyChanged(nameof(HasMinimumImages));
+        }
+    }
+
+    [RelayCommand]
+    public void RemoveSelectedImage(string path)
+    {
+        SelectedImagePaths.Remove(path);
+        OnPropertyChanged(nameof(HasMinimumImages));
+    }
+
+    [RelayCommand]
+    public async Task DeleteExistingImage(int imageId)
+    {
+        ContentDialog deleteDialog = new ContentDialog
+        {
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+            Title = "Delete Image",
+            Content = "Are you sure you want to delete this image?",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await deleteDialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            var success = await _productApiService.DeleteProductImageAsync(imageId);
+            if (success)
+            {
+               await LoadProduct();
+            }
+        }
     }
 
     [RelayCommand]
@@ -130,16 +170,48 @@ public partial class ProductDetailViewModel : ViewModelBase
 
             if (result != null)
             {
-                Product = result;
+                // Upload images if any
+                if (SelectedImagePaths.Count > 0)
+                {
+                    await _productApiService.UploadProductImagesAsync(result.Id, SelectedImagePaths.ToList());
+                    SelectedImagePaths.Clear();
+                }
+
+                await LoadProduct(result.Id); // Reload to get new images and reset state
                 _productId = result.Id;
                 IsEditing = false;
-                
-                // Show success toast/dialog
             }
         }
         catch (Exception ex)
         {
              System.Diagnostics.Debug.WriteLine($"Save Error: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadProduct(int? id = null)
+    {
+        int targetId = id ?? _productId;
+        IsLoading = true;
+        try
+        {
+            var p = await _productApiService.GetProductAsync(targetId);
+            if (p != null)
+            {
+                Product = p;
+                if (Categories.Count > 0 && Product.CategoryId != null)
+                {
+                    SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
+                }
+                OnPropertyChanged(nameof(HasMinimumImages));
+            }
+        }
+        catch (Exception ex)
+        {
+             System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
         }
         finally
         {

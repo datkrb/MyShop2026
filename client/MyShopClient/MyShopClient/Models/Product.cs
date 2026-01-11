@@ -26,9 +26,18 @@ public class ApiProduct
     
     // For top-selling products (contains order items)
     public List<OrderItem>? OrderItems { get; set; }
+
+    public List<ProductImage>? Images { get; set; } = new();
     
     // Computed property: total sold from orderItems
     public int TotalSold => OrderItems?.Sum(oi => oi.Quantity) ?? 0;
+}
+
+public class ProductImage
+{
+    public int Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public int ProductId { get; set; }
 }
 
 /// <summary>

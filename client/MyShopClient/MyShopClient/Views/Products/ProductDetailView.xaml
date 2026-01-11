@@ -16,6 +16,7 @@
         <helpers:DecimalToDoubleConverter x:Key="DecimalToDoubleConverter"/>
         <helpers:IntToVisibleConverter x:Key="IntToVisibleConverter"/>
         <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter"/>
+        <helpers:ImageUrlConverter x:Key="ImageUrlConverter"/>
     </Page.Resources>
 
     <Grid x:Name="RootGrid" Padding="24" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -89,7 +90,49 @@
                          AcceptsReturn="True" 
                          Height="100" 
                          IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"/>
-                         
+                
+                <!-- Images Section -->
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                        <TextBlock Text="Images" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"/>
+                        <AppBarButton Icon="Add" Label="Add Images" Command="{x:Bind ViewModel.PickImagesCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}" HorizontalAlignment="Right"/>
+                    </StackPanel>
+
+                    <!-- Existing Images -->
+                    <GridView ItemsSource="{x:Bind ViewModel.Product.Images, Mode=OneWay}" SelectionMode="None">
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="models:ProductImage">
+                                <Grid Margin="4" Width="100" Height="100">
+                                    <Image Source="{x:Bind Url, Converter={StaticResource ImageUrlConverter}}" Stretch="UniformToFill"/>
+                                    <Button Click="DeleteExistingImage_Click" 
+                                            Tag="{x:Bind Id}"
+                                            Loading="DeleteButton_Loading"
+                                            VerticalAlignment="Top" HorizontalAlignment="Right" 
+                                            Background="Red" Foreground="White" Padding="4" MinWidth="0">
+                                        <FontIcon Glyph="&#xE711;" FontSize="10"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+
+                    <!-- Newly Selected Images -->
+                    <GridView ItemsSource="{x:Bind ViewModel.SelectedImagePaths, Mode=OneWay}" SelectionMode="None">
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid Margin="4" Width="100" Height="100">
+                                    <Image Source="{x:Bind Converter={StaticResource ImageUrlConverter}}" Stretch="UniformToFill"/>
+                                    <Button Command="{Binding ElementName=RootGrid, Path=DataContext.RemoveSelectedImageCommand}" 
+                                            CommandParameter="{Binding}"
+                                            VerticalAlignment="Top" HorizontalAlignment="Right" 
+                                            Background="Red" Foreground="White" Padding="4" MinWidth="0">
+                                        <FontIcon Glyph="&#xE711;" FontSize="10"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
