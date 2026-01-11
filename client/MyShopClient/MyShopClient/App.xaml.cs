@@ -39,6 +39,7 @@ namespace MyShopClient
         public IServiceProvider Services { get; }
         public Window? MainWindow => _window;
         public Frame? RootFrame => _rootFrame;
+        public Frame? ContentFrame { get; set; }
 
         public App()
         {
