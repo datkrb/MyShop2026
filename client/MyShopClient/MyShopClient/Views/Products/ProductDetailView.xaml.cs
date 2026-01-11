@@ -6,11 +6,11 @@ using MyShopClient.ViewModels;
 
 namespace MyShopClient.Views.Products;
 
-public sealed partial class ProductDetailPage : Page
+public sealed partial class ProductDetailView : Page
 {
     public ProductDetailViewModel ViewModel { get; }
 
-    public ProductDetailPage()
+    public ProductDetailView()
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetRequiredService<ProductDetailViewModel>();

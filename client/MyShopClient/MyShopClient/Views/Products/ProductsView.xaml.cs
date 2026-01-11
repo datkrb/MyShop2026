@@ -8,19 +8,19 @@ using MyShopClient.Services.Api;
 
 namespace MyShopClient.Views.Products;
 
-public sealed partial class ProductPage : Page
+public sealed partial class ProductsView : Page
 {
     public ProductViewModel ViewModel { get; }
 
-    public ProductPage()
+    public ProductsView()
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetRequiredService<ProductViewModel>();
         this.DataContext = ViewModel;
-        this.Loaded += ProductPage_Loaded;
+        this.Loaded += ProductsView_Loaded;
     }
 
-    private async void ProductPage_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private async void ProductsView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         await ViewModel.LoadDataAsync();
     }
@@ -40,28 +40,16 @@ public sealed partial class ProductPage : Page
 
     private async void AddCategory_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        var nameBox = new TextBox { Header = "Category Name", PlaceholderText = "Enter name..." };
-        var descBox = new TextBox { Header = "Description", PlaceholderText = "Optional...", Margin = new Microsoft.UI.Xaml.Thickness(0, 10, 0, 0) };
-        
-        var stack = new StackPanel();
-        stack.Children.Add(nameBox);
-        stack.Children.Add(descBox);
-
-        var dialog = new ContentDialog
+        var dialog = new AddCategoryDialog
         {
-            XamlRoot = this.XamlRoot,
-            Title = "Add New Category",
-            Content = stack,
-            PrimaryButtonText = "Add",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary
+            XamlRoot = this.XamlRoot
         };
 
         var result = await dialog.ShowAsync();
 
-        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(nameBox.Text))
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(dialog.CategoryName))
         {
-            var newCat = await ProductApiService.Instance.CreateCategoryAsync(nameBox.Text, descBox.Text);
+            var newCat = await ProductApiService.Instance.CreateCategoryAsync(dialog.CategoryName, dialog.CategoryDescription);
             if (newCat != null)
             {
                 await ViewModel.LoadDataAsync();

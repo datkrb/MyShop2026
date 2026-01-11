@@ -391,13 +391,13 @@ public partial class ProductViewModel : ViewModelBase
     [RelayCommand]
     public void AddProduct()
     {
-        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailPage), 0);
+        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), 0);
     }
 
     [RelayCommand]
     public void ViewDetail(ApiProduct product)
     {
-        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailPage), product.Id);
+        App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
     }
 }
 
