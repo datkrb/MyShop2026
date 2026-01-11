@@ -14,6 +14,7 @@ public sealed partial class ShellPage : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<ShellViewModel>()!;
+        App.Current.ContentFrame = ContentFrame;
         
         // Navigate to Dashboard by default
         this.Loaded += (s, e) =>
@@ -54,8 +55,7 @@ public sealed partial class ShellPage : Page
         var pageType = tag switch
         {
             "Dashboard" => typeof(Views.Dashboard.DashboardView),
-            // TODO: Add other pages when they're created
-            // "Products" => typeof(Views.Products.ProductsView),
+            "Products" => typeof(Views.Products.ProductsView),
             // "Orders" => typeof(Views.Orders.OrdersView),
             // "Statistics" => typeof(Views.Statistics.StatisticsView),
             // "Invoices" => typeof(Views.Invoices.InvoicesView),

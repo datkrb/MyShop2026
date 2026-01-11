@@ -26,9 +26,18 @@ public class ApiProduct
     
     // For top-selling products (contains order items)
     public List<OrderItem>? OrderItems { get; set; }
+
+    public List<ProductImage>? Images { get; set; } = new();
     
     // Computed property: total sold from orderItems
     public int TotalSold => OrderItems?.Sum(oi => oi.Quantity) ?? 0;
+}
+
+public class ProductImage
+{
+    public int Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public int ProductId { get; set; }
 }
 
 /// <summary>
@@ -44,4 +53,12 @@ public class Product
     public string ImageUrl { get; set; } = "https://via.placeholder.com/150";
     public int Sold { get; set; }
     public int Stock { get; set; }
+}
+
+public class ProductStats
+{
+    public int TotalProducts { get; set; }
+    public int TotalCategories { get; set; }
+    public int LowStock { get; set; }
+    public int OutOfStock { get; set; }
 }
