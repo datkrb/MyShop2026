@@ -9,6 +9,7 @@ import { UserRole } from '../constants/roles';
 const router = Router();
 
 router.get('/', authMiddleware, productController.getAll.bind(productController));
+router.get('/stats', authMiddleware, productController.getStats.bind(productController));
 router.get('/:id', authMiddleware, productController.getById.bind(productController));
 router.post('/', authMiddleware, requireRole(UserRole.ADMIN), validate(createProductDto), productController.create.bind(productController));
 router.put('/:id', authMiddleware, requireRole(UserRole.ADMIN), validate(updateProductDto), productController.update.bind(productController));

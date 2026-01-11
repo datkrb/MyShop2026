@@ -82,6 +82,10 @@ export class ProductService {
   async getTopSelling(limit: number = 5) {
     return productRepo.findTopSelling(limit);
   }
+
+  async getStats() {
+    return productRepo.getStats();
+  }
 }
 
 export default new ProductService();

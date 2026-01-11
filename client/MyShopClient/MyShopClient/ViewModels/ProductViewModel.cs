@@ -24,6 +24,19 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private Category? _selectedCategory;
 
+    // Statistics Properties
+    [ObservableProperty]
+    private int _statsTotalProducts = 0;
+
+    [ObservableProperty]
+    private int _statsTotalCategories = 0;
+
+    [ObservableProperty]
+    private int _statsLowStock = 0;
+
+    [ObservableProperty]
+    private int _statsOutOfStock = 0;
+
     // Filter Trigger
     async partial void OnSelectedCategoryChanged(Category? value)
     {
@@ -200,6 +213,9 @@ public partial class ProductViewModel : ViewModelBase
         };
     }
 
+    [ObservableProperty]
+    private ObservableCollection<PageInfo> _pages = new();
+
     [RelayCommand]
     public async Task LoadProducts()
     {
@@ -212,6 +228,7 @@ public partial class ProductViewModel : ViewModelBase
             decimal? minVal = MinPrice.HasValue ? (decimal?)MinPrice.Value : null;
             decimal? maxVal = MaxPrice.HasValue ? (decimal?)MaxPrice.Value : null;
 
+            // Load Products
             var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, catId, SearchKeyword, sort, minVal, maxVal, SearchId);
             
             if (result != null)
@@ -222,11 +239,28 @@ public partial class ProductViewModel : ViewModelBase
                 CurrentPage = result.Page;
 
                 UpdatePagingState();
+                GeneratePagination();
+            }
+
+            // Load Stats (Run safely so it doesn't block if fails)
+            try 
+            {
+                var stats = await _productApiService.GetProductStatsAsync();
+                if (stats != null)
+                {
+                    StatsTotalProducts = stats.TotalProducts;
+                    StatsTotalCategories = stats.TotalCategories;
+                    StatsLowStock = stats.LowStock;
+                    StatsOutOfStock = stats.OutOfStock;
+                }
+            }
+            catch (Exception ex)
+            {
+                 System.Diagnostics.Debug.WriteLine($"Error loading stats: {ex.Message}");
             }
         }
         catch (Exception ex)
         {
-            // Handle error (show dialog/toast)
             System.Diagnostics.Debug.WriteLine($"Error loading products: {ex.Message}");
         }
         finally
@@ -241,10 +275,69 @@ public partial class ProductViewModel : ViewModelBase
         CanGoNext = CurrentPage < TotalPages;
     }
 
+    private void GeneratePagination()
+    {
+        var list = new ObservableCollection<PageInfo>();
+        // Threshold for showing all pages is now smaller to show ellipses earlier per user request
+        if (TotalPages <= 5)
+        {
+            for (int i = 1; i <= TotalPages; i++)
+                list.Add(CreatePageInfo(i));
+        }
+        else
+        {
+            // Show 1, 2, ... Last
+            if (CurrentPage <= 2)
+            {
+                list.Add(CreatePageInfo(1));
+                list.Add(CreatePageInfo(2));
+                list.Add(new PageInfo { Text = "...", IsEnabled = false });
+                list.Add(CreatePageInfo(TotalPages));
+            }
+            // Show 1, ... Last-1, Last
+            else if (CurrentPage >= TotalPages - 1)
+            {
+                list.Add(CreatePageInfo(1));
+                list.Add(new PageInfo { Text = "...", IsEnabled = false });
+                list.Add(CreatePageInfo(TotalPages - 1));
+                list.Add(CreatePageInfo(TotalPages));
+            }
+            // Show 1, ... Current ... Last
+            else
+            {
+                list.Add(CreatePageInfo(1));
+                list.Add(new PageInfo { Text = "...", IsEnabled = false });
+                list.Add(CreatePageInfo(CurrentPage));
+                list.Add(new PageInfo { Text = "...", IsEnabled = false });
+                list.Add(CreatePageInfo(TotalPages));
+            }
+        }
+        Pages = list;
+    }
+
+    private PageInfo CreatePageInfo(int page)
+    {
+        return new PageInfo 
+        { 
+            Text = page.ToString(), 
+            PageNumber = page, 
+            IsCurrent = page == CurrentPage,
+            IsEnabled = true,
+            Command = new RelayCommand(async () => await GoToPage(page))
+        };
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page == CurrentPage) return;
+        CurrentPage = page;
+        await LoadProducts();
+    }
+
     [RelayCommand]
     public async Task Search()
     {
-        _currentPage = 1;
+        CurrentPage = 1;
         await LoadProducts();
     }
 
@@ -292,10 +385,6 @@ public partial class ProductViewModel : ViewModelBase
             {
                 await LoadProducts();
             }
-            else 
-            {
-                 // Show error
-            }
         }
     }
 
@@ -308,12 +397,23 @@ public partial class ProductViewModel : ViewModelBase
     [RelayCommand]
     public void ViewDetail(ApiProduct product)
     {
-        // Navigate or Show Dialog. 
-        // User asked for "View List -> View Detail -> Delete/Edit" flow.
-        // I will implement navigation to a Detail Page.
-        // Assuming ShellPage frame navigation.
-        
-        // Passing ID as parameter
         App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailPage), product.Id);
     }
+}
+
+public class PageInfo
+{
+    public string Text { get; set; }
+    public int PageNumber { get; set; }
+    public bool IsCurrent { get; set; }
+    public bool IsEnabled { get; set; }
+    public System.Windows.Input.ICommand Command { get; set; }
+    
+    // Helper for binding
+    public Microsoft.UI.Xaml.Media.SolidColorBrush Background => IsCurrent 
+        ? new Microsoft.UI.Xaml.Media.SolidColorBrush((Windows.UI.Color)Microsoft.UI.Xaml.Application.Current.Resources["SystemAccentColor"])
+        : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        
+    public Microsoft.UI.Xaml.Media.SolidColorBrush Foreground => new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White);
+    public Microsoft.UI.Xaml.Thickness BorderThickness => IsCurrent ? new Microsoft.UI.Xaml.Thickness(0) : new Microsoft.UI.Xaml.Thickness(1);
 }
