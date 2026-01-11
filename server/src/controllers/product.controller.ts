@@ -69,9 +69,35 @@ export class ProductController {
     sendError(res, 'NOT_IMPLEMENTED', 'Import functionality not yet implemented', 501);
   }
 
-  async uploadImages(_req: AuthRequest, res: Response) {
-    // TODO: Implement image upload
-    sendError(res, 'NOT_IMPLEMENTED', 'Image upload functionality not yet implemented', 501);
+  async uploadImages(req: AuthRequest, res: Response) {
+    try {
+      const productId = parseInt(req.params.id);
+      const files = req.files as Express.Multer.File[];
+
+      if (!files || files.length === 0) {
+        return sendError(res, 'BAD_REQUEST', 'No images provided', 400);
+      }
+
+      const product = await productService.getById(productId);
+      if (!product) {
+        return sendError(res, 'NOT_FOUND', 'Product not found', 404);
+      }
+
+      const images = await productService.addImages(productId, files);
+      sendSuccess(res, images, 'Images uploaded successfully', 201);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
+
+  async deleteImage(req: AuthRequest, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      await productService.deleteImage(id);
+      sendSuccess(res, null, 'Image deleted successfully');
+    } catch (error: any) {
+      sendError(res, 'NOT_FOUND', error.message, 404);
+    }
   }
 
   async getStats(req: AuthRequest, res: Response) {

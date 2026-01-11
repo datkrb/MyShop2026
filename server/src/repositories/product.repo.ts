@@ -195,6 +195,24 @@ export class ProductRepository {
     });
   }
 
+  async addImages(data: { productId: number; url: string }[]) {
+    return prisma.productImage.createMany({
+      data,
+    });
+  }
+
+  async findImageById(id: number) {
+    return prisma.productImage.findUnique({
+      where: { id },
+    });
+  }
+
+  async deleteImage(id: number) {
+    return prisma.productImage.delete({
+      where: { id },
+    });
+  }
+
   async getStats() {
     const [totalProducts, totalCategories, lowStock, outOfStock] = await Promise.all([
       prisma.product.count(),

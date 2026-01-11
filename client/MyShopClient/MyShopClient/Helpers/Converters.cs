@@ -10,9 +10,12 @@ public class BoolToVisibilityConverter : IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        bool val = (bool)value;
-        if (IsInverted) val = !val;
-        return val ? Visibility.Visible : Visibility.Collapsed;
+        if (value is bool val)
+        {
+            if (IsInverted) val = !val;
+            return val ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return IsInverted ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -145,6 +148,70 @@ public class StockToStatusStringConverter : IValueConverter
             return "Published";
         }
         return "";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class ImageUrlConverter : IValueConverter
+{
+    private const string BaseUrl = "http://localhost:3000"; 
+
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        string? url = value as string;
+        if (string.IsNullOrEmpty(url)) return null;
+
+        string finalUrl = url;
+        if (!url.StartsWith("http") && !url.StartsWith("ms-appx"))
+        {
+            if (url.StartsWith("/"))
+                finalUrl = BaseUrl + url;
+            else if (System.IO.Path.IsPathRooted(url))
+                finalUrl = "file:///" + url.Replace("\\", "/");
+            else
+                finalUrl = BaseUrl + "/" + url;
+        }
+
+        try
+        {
+            return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(finalUrl));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+
+public class ProductImageToSourceConverter : IValueConverter
+{
+    private readonly ImageUrlConverter _urlConverter = new();
+
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is System.Collections.IEnumerable list)
+        {
+            var enumerator = list.GetEnumerator();
+            if (enumerator.MoveNext())
+            {
+               var firstItem = enumerator.Current;
+               if (firstItem is MyShopClient.Models.ProductImage img)
+               {
+                   return _urlConverter.Convert(img.Url, targetType, parameter, language);
+               }
+            }
+        }
+        return null;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

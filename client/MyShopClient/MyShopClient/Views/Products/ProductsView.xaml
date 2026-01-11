@@ -14,6 +14,7 @@
         <helpers:StockToStatusStringConverter x:Key="StockToStatusStringConverter"/>
         <helpers:StockToStatusForegroundConverter x:Key="StockToStatusForegroundConverter"/>
         <helpers:DoubleToNullableDoubleConverter x:Key="DoubleToNullableDoubleConverter"/>
+        <helpers:ProductImageToSourceConverter x:Key="ProductImageToSourceConverter"/>
         
         <Style x:Key="CardBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="{ThemeResource CardBackgroundBrush}"/>
@@ -249,9 +250,12 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <!-- Placeholder Image -->
+                                    <!-- Product Image -->
                                     <Border Width="40" Height="40" CornerRadius="6" Background="{ThemeResource AppBackgroundBrush}">
-                                        <FontIcon Glyph="&#xE70F;" FontSize="20" Foreground="{ThemeResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Grid>
+                                            <FontIcon Glyph="&#xE70F;" FontSize="20" Foreground="{ThemeResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Image Source="{x:Bind Images, Converter={StaticResource ProductImageToSourceConverter}}" Stretch="UniformToFill"/>
+                                        </Grid>
                                     </Border>
                                     
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">

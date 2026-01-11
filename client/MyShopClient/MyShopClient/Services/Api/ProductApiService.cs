@@ -116,4 +116,25 @@ public class ProductApiService : BaseApiService
     {
         return await GetAsync<ProductStats>("products/stats");
     }
+
+    public async Task<bool> UploadProductImagesAsync(int productId, List<string> imagePaths)
+    {
+        using var content = new System.Net.Http.MultipartFormDataContent();
+        foreach (var path in imagePaths)
+        {
+            var fileName = System.IO.Path.GetFileName(path);
+            var fileStream = System.IO.File.OpenRead(path);
+            var streamContent = new System.Net.Http.StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg"); // Adjust based on extension if needed
+            content.Add(streamContent, "images", fileName);
+        }
+
+        var response = await _httpClient.PostAsync($"products/{productId}/images", content);
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> DeleteProductImageAsync(int imageId)
+    {
+        return await DeleteAsync($"products/images/{imageId}");
+    }
 }
