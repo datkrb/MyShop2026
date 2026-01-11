@@ -66,13 +66,21 @@ export class ProductController {
   }
 
   async import(_req: AuthRequest, res: Response) {
-    // TODO: Implement Excel/Access file import
     sendError(res, 'NOT_IMPLEMENTED', 'Import functionality not yet implemented', 501);
   }
 
   async uploadImages(_req: AuthRequest, res: Response) {
     // TODO: Implement image upload
     sendError(res, 'NOT_IMPLEMENTED', 'Image upload functionality not yet implemented', 501);
+  }
+
+  async getStats(req: AuthRequest, res: Response) {
+    try {
+      const stats = await productService.getStats();
+      sendSuccess(res, stats);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
   }
 }
 

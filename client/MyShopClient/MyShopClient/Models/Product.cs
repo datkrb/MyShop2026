@@ -45,3 +45,11 @@ public class Product
     public int Sold { get; set; }
     public int Stock { get; set; }
 }
+
+public class ProductStats
+{
+    public int TotalProducts { get; set; }
+    public int TotalCategories { get; set; }
+    public int LowStock { get; set; }
+    public int OutOfStock { get; set; }
+}

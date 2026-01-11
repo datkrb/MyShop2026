@@ -111,4 +111,9 @@ public class ProductApiService : BaseApiService
             description = description
         });
     }
+
+    public async Task<ProductStats?> GetProductStatsAsync()
+    {
+        return await GetAsync<ProductStats>("products/stats");
+    }
 }

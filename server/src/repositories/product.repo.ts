@@ -194,6 +194,35 @@ export class ProductRepository {
       },
     });
   }
+
+  async getStats() {
+    const [totalProducts, totalCategories, lowStock, outOfStock] = await Promise.all([
+      prisma.product.count(),
+      prisma.category.count(),
+      prisma.product.count({
+        where: {
+          stock: {
+            gt: 0,
+            lt: 10
+          }
+        }
+      }),
+      prisma.product.count({
+        where: {
+          stock: {
+            lte: 0
+          }
+        }
+      })
+    ]);
+
+    return {
+      totalProducts,
+      totalCategories,
+      lowStock,
+      outOfStock
+    };
+  }
 }
 
 export default new ProductRepository();
