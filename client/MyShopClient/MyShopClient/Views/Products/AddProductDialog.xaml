@@ -248,7 +248,7 @@
                     Padding="0">
                     
                     <GridView.ItemTemplate>
-                        <DataTemplate x:DataType="models:ProductImage">
+                        <DataTemplate x:DataType="models:LocalProductImage">
                             <Grid Width="100" Height="100" Margin="4">
                                 <Border 
                                     CornerRadius="8" 

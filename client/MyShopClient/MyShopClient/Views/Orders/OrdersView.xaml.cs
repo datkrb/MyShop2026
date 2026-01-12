@@ -45,34 +45,16 @@ public sealed partial class OrdersView : Page
         }
     }
     
-    private async void CreateOrderButton_Click(object sender, RoutedEventArgs e)
+    private void CreateOrderButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new CreateOrderDialog
-        {
-            XamlRoot = this.XamlRoot
-        };
-        await dialog.ShowAsync();
-        
-        // Refresh orders after dialog closes
-        ViewModel.RefreshCommand.Execute(null);
+        Frame.Navigate(typeof(OrderDetailView), "new");
     }
     
-    private async void EditOrderButton_Click(object sender, RoutedEventArgs e)
+    private void EditOrderButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button button && button.Tag is OrderViewModel order)
         {
-            var dialog = new CreateOrderDialog
-            {
-                XamlRoot = this.XamlRoot
-            };
-            
-            // Load order data into dialog for editing
-            dialog.ViewModel.LoadOrder(order);
-            
-            await dialog.ShowAsync();
-            
-            // Refresh orders after dialog closes
-            ViewModel.RefreshCommand.Execute(null);
+            Frame.Navigate(typeof(OrderDetailView), order);
         }
     }
     

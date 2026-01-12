@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Media;
+using MyShopClient.Models;
+using MyShopClient.Services.Api;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Windows.UI;
 
 namespace MyShopClient.ViewModels;
@@ -11,6 +14,11 @@ namespace MyShopClient.ViewModels;
 /// </summary>
 public partial class CustomerDetailViewModel : ObservableObject
 {
+    private readonly CustomerApiService _customerApiService;
+
+    [ObservableProperty]
+    private bool _isLoading;
+
     [ObservableProperty]
     private int _id;
 
@@ -37,8 +45,13 @@ public partial class CustomerDetailViewModel : ObservableObject
 
     public CustomerDetailViewModel()
     {
+        _customerApiService = CustomerApiService.Instance;
     }
 
+    /// <summary>
+    /// Load basic customer info from list (for immediate display)
+    /// then fetch full details from API
+    /// </summary>
     public void LoadCustomer(CustomerViewModel customer)
     {
         Id = customer.Id;
@@ -48,15 +61,87 @@ public partial class CustomerDetailViewModel : ObservableObject
         Address = customer.Address;
         CreatedAt = customer.CreatedAt;
 
-        // Load mock order history
-        RecentOrders.Clear();
-        RecentOrders.Add(new CustomerOrderViewModel { OrderId = "#ORD-2023-001", Date = DateTime.Now.AddDays(-5), Amount = 250.00m, Status = "Paid" });
-        RecentOrders.Add(new CustomerOrderViewModel { OrderId = "#ORD-2023-008", Date = DateTime.Now.AddDays(-15), Amount = 180.50m, Status = "Paid" });
-        RecentOrders.Add(new CustomerOrderViewModel { OrderId = "#ORD-2023-015", Date = DateTime.Now.AddDays(-30), Amount = 420.00m, Status = "Canceled" });
-
         OnPropertyChanged(nameof(AvatarUrl));
         OnPropertyChanged(nameof(FormattedCreatedDate));
-        OnPropertyChanged(nameof(OrderCount));
+
+        // Load full details including orders from API
+        _ = LoadCustomerDetailsAsync(customer.Id);
+    }
+
+    /// <summary>
+    /// Load full customer details including orders from API
+    /// </summary>
+    public async Task LoadCustomerDetailsAsync(int customerId)
+    {
+        IsLoading = true;
+
+        try
+        {
+            var customer = await _customerApiService.GetCustomerAsync(customerId);
+
+            if (customer != null)
+            {
+                Id = customer.Id;
+                Name = customer.Name;
+                Email = customer.Email;
+                Phone = customer.Phone;
+                Address = customer.Address;
+                CreatedAt = customer.CreatedAt;
+
+                RecentOrders.Clear();
+
+                if (customer.Orders != null)
+                {
+                    foreach (var order in customer.Orders)
+                    {
+                        RecentOrders.Add(new CustomerOrderViewModel
+                        {
+                            OrderId = $"#ORD-{order.Id:D4}",
+                            Date = order.CreatedTime,
+                            Amount = order.FinalPrice,
+                            Status = FormatStatus(order.Status)
+                        });
+                    }
+                }
+
+                OnPropertyChanged(nameof(AvatarUrl));
+                OnPropertyChanged(nameof(FormattedCreatedDate));
+                OnPropertyChanged(nameof(OrderCount));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading customer details: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static string FormatStatus(string status)
+    {
+        return status switch
+        {
+            "PAID" => "Paid",
+            "DRAFT" => "Draft",
+            "CANCELLED" => "Cancelled",
+            "PENDING" => "Pending",
+            _ => status
+        };
+    }
+
+    public async Task<bool> DeleteCustomerAsync()
+    {
+        try
+        {
+            return await _customerApiService.DeleteCustomerAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error deleting customer: {ex.Message}");
+            return false;
+        }
     }
 }
 
@@ -71,21 +156,23 @@ public class CustomerOrderViewModel
     public string Status { get; set; } = string.Empty;
 
     public string FormattedDate => Date.ToString("MMM dd, yyyy");
-    public string FormattedAmount => $"${Amount:N2}";
+    public string FormattedAmount => $"{Amount:N0}đ";
 
     public SolidColorBrush StatusBackground => Status switch
     {
         "Paid" => new SolidColorBrush(Color.FromArgb(255, 220, 252, 231)),
-        "New" => new SolidColorBrush(Color.FromArgb(255, 224, 231, 255)),
-        "Canceled" => new SolidColorBrush(Color.FromArgb(255, 254, 226, 226)),
+        "Draft" => new SolidColorBrush(Color.FromArgb(255, 224, 231, 255)),
+        "Pending" => new SolidColorBrush(Color.FromArgb(255, 254, 249, 195)),
+        "Cancelled" => new SolidColorBrush(Color.FromArgb(255, 254, 226, 226)),
         _ => new SolidColorBrush(Color.FromArgb(255, 241, 245, 249))
     };
 
     public SolidColorBrush StatusForeground => Status switch
     {
         "Paid" => new SolidColorBrush(Color.FromArgb(255, 22, 163, 74)),
-        "New" => new SolidColorBrush(Color.FromArgb(255, 124, 92, 252)),
-        "Canceled" => new SolidColorBrush(Color.FromArgb(255, 239, 68, 68)),
+        "Draft" => new SolidColorBrush(Color.FromArgb(255, 124, 92, 252)),
+        "Pending" => new SolidColorBrush(Color.FromArgb(255, 202, 138, 4)),
+        "Cancelled" => new SolidColorBrush(Color.FromArgb(255, 239, 68, 68)),
         _ => new SolidColorBrush(Color.FromArgb(255, 100, 116, 139))
     };
 }

@@ -249,13 +249,16 @@ public partial class OrdersViewModel : ViewModelBase
     [RelayCommand]
     private void CreateOrder()
     {
-        // TODO: Open create order dialog
+        App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), "new");
     }
 
     [RelayCommand]
     private void EditOrder(OrderViewModel order)
     {
-        // TODO: Open edit order dialog
+        if (order != null)
+        {
+            App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
+        }
     }
 
     [RelayCommand]
@@ -267,7 +270,10 @@ public partial class OrdersViewModel : ViewModelBase
     [RelayCommand]
     private void ViewOrder(OrderViewModel order)
     {
-        // TODO: Navigate to order detail
+        if (order != null)
+        {
+            App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
+        }
     }
 
     [RelayCommand]

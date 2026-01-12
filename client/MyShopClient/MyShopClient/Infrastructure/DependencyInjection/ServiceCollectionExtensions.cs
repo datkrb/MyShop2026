@@ -10,7 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardViewModel>();
-        services.AddTransient<ProductsViewModel>();
+        services.AddTransient<ProductViewModel>();
         services.AddTransient<AddProductDialogViewModel>();
         services.AddTransient<AddCategoryDialogViewModel>();
         services.AddTransient<ProductDetailViewModel>();

@@ -277,11 +277,12 @@
                             </Grid.ColumnDefinitions>
                             
                             <!-- Search Box -->
-                            <TextBox 
+                            <AutoSuggestBox 
                                 Grid.Column="0"
                                 PlaceholderText="Search customers by name, email or phone..."
                                 Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                MaxWidth="400"
+                                QueryIcon="Find"
+                                MinWidth="330"
                                 HorizontalAlignment="Left"/>
                         </Grid>
 
@@ -466,5 +467,22 @@
 
             </StackPanel>
         </ScrollViewer>
+        
+        <!-- Loading Overlay -->
+        <Grid 
+            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+            <StackPanel 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Spacing="16">
+                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="48" Height="48"/>
+                <TextBlock 
+                    Text="Loading customers..." 
+                    Foreground="{ThemeResource TextSecondaryBrush}"
+                    HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>
+
