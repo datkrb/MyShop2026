@@ -1,160 +1,256 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
+using MyShopClient.Models;
+using MyShopClient.Services.Api;
 using MyShopClient.ViewModels.Base;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace MyShopClient.ViewModels;
 
 public partial class ProductDetailViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private int _id;
+    private readonly ProductApiService _productApiService;
+    private int _productId;
 
     [ObservableProperty]
-    private string _sku = string.Empty;
+    private ApiProduct _product = new();
 
     [ObservableProperty]
-    private string _name = string.Empty;
+    private bool _isEditing;
 
     [ObservableProperty]
-    private string _category = string.Empty;
+    private bool _isLoading;
+    
+    [ObservableProperty]
+    private ObservableCollection<Category> _categories = new();
+    
+    [ObservableProperty]
+    private Category? _selectedCategory;
 
     [ObservableProperty]
-    private string _description = string.Empty;
+    private ObservableCollection<string> _selectedImagePaths = new();
 
-    [ObservableProperty]
-    private decimal _importPrice;
+    public bool HasMinimumImages => (Product?.Images?.Count ?? 0) + SelectedImagePaths.Count >= 3;
 
-    [ObservableProperty]
-    private decimal _salePrice;
-
-    [ObservableProperty]
-    private int _stock;
-
-    [ObservableProperty]
-    private string _status = string.Empty;
-
-    [ObservableProperty]
-    private int _selectedImageIndex;
-
-    public ObservableCollection<ProductImageItem> ProductImages { get; } = new();
-
-    public bool HasMultipleImages => ProductImages.Count > 1;
-
-    public ProductDetailViewModel()
+    public ProductDetailViewModel(ProductApiService productApiService)
     {
+        _productApiService = productApiService;
     }
 
-    /// <summary>
-    /// Initialize the view model with product data
-    /// </summary>
-    public void LoadProduct(ProductViewModel product)
+    public async Task InitializeAsync(int productId)
     {
-        Id = product.Id;
-        Sku = product.Sku;
-        Name = product.Name;
-        Category = product.Category;
-        SalePrice = product.Price;
-        Stock = product.Stock;
-        Status = product.Status;
+        _productId = productId;
+        await LoadCategories();
 
-        // Load images (for now using single image from product, can be expanded for multiple)
-        ProductImages.Clear();
+        if (_productId == 0)
+        {
+            // Create mode
+            Product = new ApiProduct();
+            IsEditing = true;
+        }
+        else
+        {
+            // Edit mode
+            await LoadProduct();
+        }
+    }
+
+    private async Task LoadCategories() 
+    {
+         var cats = await _productApiService.GetCategoriesAsync();
+         if(cats != null)
+         {
+             Categories = new ObservableCollection<Category>(cats);
+             if (Product?.CategoryId != null)
+             {
+                 SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
+             }
+         }
+    }
+
+    [RelayCommand]
+    public void EnableEdit()
+    {
+        IsEditing = true;
+    }
+
+    [RelayCommand]
+    public void CancelEdit()
+    {
+        IsEditing = false;
+        _ = LoadProduct(); // Revert changes
+    }
+
+    [RelayCommand]
+    public async Task PickImages()
+    {
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        var window = App.Current.MainWindow;
+        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hWnd);
+
+        picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+        picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+        picker.FileTypeFilter.Add(".jpg");
+        picker.FileTypeFilter.Add(".jpeg");
+        picker.FileTypeFilter.Add(".png");
+
+        var files = await picker.PickMultipleFilesAsync();
+        if (files != null)
+        {
+            foreach (var file in files)
+            {
+                if (!SelectedImagePaths.Contains(file.Path))
+                {
+                    SelectedImagePaths.Add(file.Path);
+                }
+            }
+            OnPropertyChanged(nameof(HasMinimumImages));
+        }
+    }
+
+    [RelayCommand]
+    public void RemoveSelectedImage(string path)
+    {
+        SelectedImagePaths.Remove(path);
+        OnPropertyChanged(nameof(HasMinimumImages));
+    }
+
+    [RelayCommand]
+    public async Task DeleteExistingImage(int imageId)
+    {
+        ContentDialog deleteDialog = new ContentDialog
+        {
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+            Title = "Delete Image",
+            Content = "Are you sure you want to delete this image?",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await deleteDialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            var success = await _productApiService.DeleteProductImageAsync(imageId);
+            if (success)
+            {
+               await LoadProduct();
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task Save()
+    {
+        if (Product == null) return;
         
-        // Add the main product image
-        ProductImages.Add(new ProductImageItem 
-        { 
-            ImageUrl = product.ImageUrl,
-            IsSelected = true
-        });
+        IsLoading = true;
+        try
+        {
+            if (SelectedCategory != null) 
+            {
+                Product.CategoryId = SelectedCategory.Id;
+            }
 
-        // Add some mock additional images for demo
-        ProductImages.Add(new ProductImageItem 
-        { 
-            ImageUrl = "https://via.placeholder.com/400x400/7C5CFC/FFFFFF?text=Image+2"
-        });
-        ProductImages.Add(new ProductImageItem 
-        { 
-            ImageUrl = "https://via.placeholder.com/400x400/10B981/FFFFFF?text=Image+3"
-        });
+            ApiProduct? result;
+            if (_productId == 0)
+            {
+                result = await _productApiService.CreateProductAsync(Product);
+            }
+            else
+            {
+                result = await _productApiService.UpdateProductAsync(_productId, Product);
+            }
 
-        SelectedImageIndex = 0;
-        OnPropertyChanged(nameof(HasMultipleImages));
+            if (result != null)
+            {
+                // Upload images if any
+                if (SelectedImagePaths.Count > 0)
+                {
+                    await _productApiService.UploadProductImagesAsync(result.Id, SelectedImagePaths.ToList());
+                    SelectedImagePaths.Clear();
+                }
+
+                await LoadProduct(result.Id); // Reload to get new images and reset state
+                _productId = result.Id;
+                IsEditing = false;
+            }
+        }
+        catch (Exception ex)
+        {
+             System.Diagnostics.Debug.WriteLine($"Save Error: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadProduct(int? id = null)
+    {
+        int targetId = id ?? _productId;
+        IsLoading = true;
+        try
+        {
+            var p = await _productApiService.GetProductAsync(targetId);
+            if (p != null)
+            {
+                Product = p;
+                if (Categories.Count > 0 && Product.CategoryId != null)
+                {
+                    SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
+                }
+                OnPropertyChanged(nameof(HasMinimumImages));
+            }
+        }
+        catch (Exception ex)
+        {
+             System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
-    private void PreviousImage()
+    public async Task Delete()
     {
-        if (SelectedImageIndex > 0)
+        ContentDialog deleteDialog = new ContentDialog
         {
-            SelectedImageIndex--;
-        }
-        else
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+            Title = "Xác nhận xóa",
+            Content = $"Bạn có chắc muốn xóa sản phẩm {Product.Name}?",
+            PrimaryButtonText = "Xóa",
+            CloseButtonText = "Hủy",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await deleteDialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
         {
-            SelectedImageIndex = ProductImages.Count - 1;
+            var success = await _productApiService.DeleteProductAsync(_productId);
+            if (success)
+            {
+                // Go back
+                App.Current.ContentFrame?.GoBack();
+            }
         }
     }
-
+    
     [RelayCommand]
-    private void NextImage()
+    public void GoBack()
     {
-        if (SelectedImageIndex < ProductImages.Count - 1)
+        if (App.Current.ContentFrame?.CanGoBack == true)
         {
-            SelectedImageIndex++;
-        }
-        else
-        {
-            SelectedImageIndex = 0;
+             App.Current.ContentFrame.GoBack();
         }
     }
-
-    [RelayCommand]
-    private void SelectImage(int index)
-    {
-        if (index >= 0 && index < ProductImages.Count)
-        {
-            SelectedImageIndex = index;
-        }
-    }
-
-    partial void OnSelectedImageIndexChanged(int value)
-    {
-        // Update selection state on all images
-        for (int i = 0; i < ProductImages.Count; i++)
-        {
-            ProductImages[i].IsSelected = i == value;
-        }
-    }
-
-    public string StatusBackground => Status switch
-    {
-        "Published" => "#DCFCE7",
-        "Low Stock" => "#FEF3C7",
-        "Out of Stock" => "#FEE2E2",
-        "Draft" => "#F3F4F6",
-        _ => "#F3F4F6"
-    };
-
-    public string StatusForeground => Status switch
-    {
-        "Published" => "#15803D",
-        "Low Stock" => "#B45309",
-        "Out of Stock" => "#B91C1C",
-        "Draft" => "#4B5563",
-        _ => "#4B5563"
-    };
-}
-
-/// <summary>
-/// Represents an image in the product detail carousel
-/// </summary>
-public partial class ProductImageItem : ObservableObject
-{
-    [ObservableProperty]
-    private string _imageUrl = string.Empty;
-
-    [ObservableProperty]
-    private bool _isSelected;
 }

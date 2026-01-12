@@ -1,102 +1,59 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Input;
 using MyShopClient.ViewModels;
-using Windows.UI;
+using MyShopClient.Services.Api;
 
 namespace MyShopClient.Views.Products;
 
 public sealed partial class ProductsView : Page
 {
-    public ProductsViewModel ViewModel { get; }
-    
-    // Primary color brush for current page
-    private static readonly SolidColorBrush PrimaryBrush = new(Color.FromArgb(255, 124, 92, 252));
-    private static readonly SolidColorBrush WhiteBrush = new(Colors.White);
-    private static readonly SolidColorBrush GrayBrush = new(Color.FromArgb(255, 107, 114, 128));
+    public ProductViewModel ViewModel { get; }
 
     public ProductsView()
     {
         this.InitializeComponent();
-        
-        ViewModel = App.Current.Services.GetService<ProductsViewModel>()!;
-        
-        // Subscribe to PageNumbers collection changes to update styling
-        ViewModel.PageNumbers.CollectionChanged += (s, e) => UpdatePageButtonStyles();
+        ViewModel = App.Current.Services.GetRequiredService<ProductViewModel>();
+        this.DataContext = ViewModel;
+        this.Loaded += ProductsView_Loaded;
     }
-    
-    private void PageButton_Click(object sender, RoutedEventArgs e)
+
+    private async void ProductsView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is int pageNumber)
-        {
-            ViewModel.GoToPageCommand.Execute(pageNumber);
-            // Styling will be updated via CollectionChanged event
-        }
+        await ViewModel.LoadDataAsync();
     }
-    
-    private void UpdatePageButtonStyles()
+
+    private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        // Use DispatcherQueue to ensure UI is updated
-        DispatcherQueue.TryEnqueue(() =>
+        ViewModel.SearchCommand.Execute(null);
+    }
+
+    private void ClearPrice_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        ViewModel.MinPrice = null;
+        ViewModel.MaxPrice = null;
+        ViewModel.SearchId = null;
+        ViewModel.LoadProductsCommand.Execute(null);
+    }
+
+    private async void AddCategory_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        var dialog = new AddCategoryDialog
         {
-            if (PageNumbersControl?.ItemsPanelRoot == null) return;
-            
-            foreach (var child in PageNumbersControl.ItemsPanelRoot.Children)
+            XamlRoot = this.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(dialog.CategoryName))
+        {
+            var newCat = await ProductApiService.Instance.CreateCategoryAsync(dialog.CategoryName, dialog.CategoryDescription);
+            if (newCat != null)
             {
-                if (child is ContentPresenter presenter && presenter.Content is PageButtonModel model)
-                {
-                    // Find the Button inside the ContentPresenter
-                    var button = FindChild<Button>(presenter);
-                    if (button != null)
-                    {
-                        ApplyButtonStyle(button, model.IsCurrentPage);
-                    }
-                }
-                else if (child is Button button && button.DataContext is PageButtonModel model2)
-                {
-                    ApplyButtonStyle(button, model2.IsCurrentPage);
-                }
+                await ViewModel.LoadDataAsync();
             }
-        });
-    }
-    
-    private void ApplyButtonStyle(Button button, bool isCurrentPage)
-    {
-        if (isCurrentPage)
-        {
-            button.Background = PrimaryBrush;
-            button.Foreground = WhiteBrush;
-        }
-        else
-        {
-            button.Background = null; // Use default from style
-            button.Foreground = GrayBrush;
-        }
-    }
-    
-    private static T? FindChild<T>(DependencyObject parent) where T : DependencyObject
-    {
-        int count = VisualTreeHelper.GetChildrenCount(parent);
-        for (int i = 0; i < count; i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T typedChild)
-                return typedChild;
-            var found = FindChild<T>(child);
-            if (found != null)
-                return found;
-        }
-        return null;
-    }
-    
-    private void ProductsListView_ItemClick(object sender, ItemClickEventArgs e)
-    {
-        if (e.ClickedItem is ProductViewModel product)
-        {
-            Frame.Navigate(typeof(ProductDetailView), product);
         }
     }
 }
-
