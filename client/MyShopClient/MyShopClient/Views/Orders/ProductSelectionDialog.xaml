@@ -11,114 +11,165 @@
     PrimaryButtonText="Add to Order"
     SecondaryButtonText="Cancel"
     DefaultButton="Primary"
+    IsPrimaryButtonEnabled="{x:Bind ViewModel.SelectedProduct, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}"
     Style="{StaticResource DefaultContentDialogStyle}"
     RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}">
 
     <ContentDialog.Resources>
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        
-        <DataTemplate x:Key="ProductItemTemplate" x:DataType="models:ApiProduct">
-            <Grid Padding="12" Background="{ThemeResource SystemChromeLowColor}" CornerRadius="4" Margin="0,0,0,8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <Border Width="48" Height="48" CornerRadius="4" Margin="0,0,12,0" Background="#f0f0f0">
-                   <!-- Placeholder for image, or first image if available -->
-                   <Image Source="/Assets/placeholder.png" Stretch="UniformToFill"/>
-                </Border>
-                
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold"/>
-                    <TextBlock Text="{x:Bind Sku}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                </StackPanel>
-                
-                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                    <TextBlock Text="{x:Bind FormattedPrice}" FontWeight="Bold" HorizontalAlignment="Right"/>
-                    <TextBlock Text="{x:Bind Stock, Converter={StaticResource StockToStringConverter}}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-        
-        <!-- Quick converter for UI binding -->
+        <helpers:NullToBoolConverter x:Key="NullToBoolConverter"/>
+        <helpers:BoolToPaginationBrushConverter x:Key="BoolToPaginationBrushConverter"/>
         <helpers:StockToStringConverter x:Key="StockToStringConverter"/>
+        <helpers:ProductImageToSourceConverter x:Key="ProductImageToSourceConverter"/>
+        
+        <!-- Table Header Style -->
+        <Style x:Key="TableHeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextSecondaryBrush}"/>
+            <Setter Property="CharacterSpacing" Value="50"/>
+        </Style>
     </ContentDialog.Resources>
 
-    <Grid Width="600" Height="600">
+    <Grid Width="500" MaxHeight="500">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
+
         <!-- Search Bar -->
-        <Grid Grid.Row="0" ColumnSpacing="8" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox 
-                PlaceholderText="Search product by name, sku..." 
-                Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                KeyDown="SearchBox_KeyDown"/>
-            <Button Grid.Column="1" Command="{x:Bind ViewModel.SearchCommand}">
-                <FontIcon Glyph="&#xE721;"/>
-            </Button>
-        </Grid>
+        <AutoSuggestBox 
+            Grid.Row="0"
+            PlaceholderText="Search products by name, SKU..."
+            Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            QueryIcon="Find"
+            Width="300"
+            HorizontalAlignment="Left"
+            Margin="0,0,0,16"/>
 
         <!-- Loading -->
         <ProgressBar 
             Grid.Row="1" 
-            VerticalAlignment="Top" 
             IsIndeterminate="True" 
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-        <!-- Product List -->
-        <ListView
-            Grid.Row="1"
-            ItemsSource="{x:Bind ViewModel.Products, Mode=OneWay}"
-            SelectedItem="{x:Bind ViewModel.SelectedProduct, Mode=TwoWay}"
-            SelectionMode="Single"
-            ItemTemplate="{StaticResource ProductItemTemplate}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
+        <!-- Product List + Pagination in ScrollViewer -->
+        <ScrollViewer 
+            Grid.Row="2"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Auto"
+            Padding="0,0,8,0">
+            <StackPanel>
+                <ListView
+                    ItemsSource="{x:Bind ViewModel.Products, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedProduct, Mode=TwoWay}"
+                    SelectionMode="Single">
+                    <ListView.Header>
+                        <Grid Background="{ThemeResource SystemChromeLowColor}" Padding="12,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" MinWidth="150"/>
+                                <ColumnDefinition Width="*" MinWidth="80"/>
+                                <ColumnDefinition Width="*" MinWidth="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PRODUCT" Style="{StaticResource TableHeaderTextStyle}"/>
+                            <TextBlock Grid.Column="1" Text="PRICE" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                            <TextBlock Grid.Column="2" Text="STOCK" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                        </Grid>
+                    </ListView.Header>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ApiProduct">
+                            <Grid Padding="12,10" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" MinWidth="150"/>
+                                    <ColumnDefinition Width="*" MinWidth="80"/>
+                                    <ColumnDefinition Width="*" MinWidth="60"/>
+                                </Grid.ColumnDefinitions>
 
-        <!-- Pagination -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4" Margin="0,16,0,0">
-            <Button Command="{x:Bind ViewModel.PreviousPageCommand}" IsEnabled="{x:Bind ViewModel.CanGoPrev, Mode=OneWay}" Style="{StaticResource DateTimePickerFlyoutButtonStyle}">
-                <FontIcon Glyph="&#xE76B;" FontSize="12"/>
-            </Button>
-            
-            <ItemsControl ItemsSource="{x:Bind ViewModel.Pages, Mode=OneWay}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="4"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:PageInfo">
+                                <!-- Product Info -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                    <Border Width="40" Height="40" CornerRadius="4" Background="#f0f0f0">
+                                        <Image Source="{x:Bind Images, Converter={StaticResource ProductImageToSourceConverter}}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                        <TextBlock Text="{x:Bind Sku}" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Price -->
+                                <TextBlock Grid.Column="1" Text="{x:Bind FormattedPrice}" VerticalAlignment="Center" Foreground="{ThemeResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="13"/>
+
+                                <!-- Stock -->
+                                <TextBlock Grid.Column="2" Text="{x:Bind Stock}" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="13"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Pagination -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12">
+                        <Run Text="Page"/>
+                        <Run Text="{x:Bind ViewModel.CurrentPage, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                        <Run Text="of"/>
+                        <Run Text="{x:Bind ViewModel.TotalPages, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                        <Run Text="("/>
+                        <Run Text="{x:Bind ViewModel.TotalItems, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                        <Run Text="products)"/>
+                    </TextBlock>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <!-- Previous Button -->
                         <Button 
-                            Content="{x:Bind Text}" 
-                            Command="{x:Bind Command}"
-                            IsEnabled="{x:Bind IsEnabled}"
-                            Background="{x:Bind Background}"
-                            Foreground="{x:Bind Foreground}"
-                            BorderThickness="{x:Bind BorderThickness}"
-                            MinWidth="32"
-                            Padding="0"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            
-            <Button Command="{x:Bind ViewModel.NextPageCommand}" IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}" Style="{StaticResource DateTimePickerFlyoutButtonStyle}">
-                <FontIcon Glyph="&#xE76C;" FontSize="12"/>
-            </Button>
-        </StackPanel>
+                            Command="{x:Bind ViewModel.PreviousPageCommand}"
+                            IsEnabled="{x:Bind ViewModel.CanGoPrev, Mode=OneWay}"
+                            Style="{StaticResource PaginationButtonStyle}">
+                            <FontIcon Glyph="&#xE76B;" FontSize="12"/>
+                        </Button>
+                        
+                        <!-- Page Number Buttons -->
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Pages, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PageInfo">
+                                    <Button 
+                                        Content="{x:Bind Text}"
+                                        Command="{x:Bind Command}"
+                                        IsEnabled="{x:Bind IsEnabled}"
+                                        Style="{StaticResource PaginationButtonStyle}"
+                                        Background="{x:Bind IsCurrent, Converter={StaticResource BoolToPaginationBrushConverter}}"
+                                        Foreground="{x:Bind IsCurrent, Converter={StaticResource BoolToPaginationBrushConverter}, ConverterParameter=Foreground}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <!-- Next Button -->
+                        <Button 
+                            Command="{x:Bind ViewModel.NextPageCommand}"
+                            IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}"
+                            Style="{StaticResource PaginationButtonStyle}">
+                            <FontIcon Glyph="&#xE76C;" FontSize="12"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </ContentDialog>

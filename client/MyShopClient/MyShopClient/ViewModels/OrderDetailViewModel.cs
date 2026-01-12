@@ -270,18 +270,19 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task AddProduct()
     {
-        var vm = new ProductSelectionViewModel(ProductApiService.Instance);
         var dialog = new ProductSelectionDialog
         {
-            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-            ViewModel = vm
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot
         };
+        
+        // Load products when dialog opens
+        dialog.LoadProducts();
         
         var result = await dialog.ShowAsync();
         
-        if (result == ContentDialogResult.Primary && vm.SelectedProduct != null)
+        if (result == ContentDialogResult.Primary && dialog.ViewModel.SelectedProduct != null)
         {
-            var product = vm.SelectedProduct;
+            var product = dialog.ViewModel.SelectedProduct;
             var existing = OrderItems.FirstOrDefault(i => i.ProductId == product.Id);
             
             if (existing != null)

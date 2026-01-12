@@ -1,27 +1,23 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using MyShopClient.Services.Api;
 using MyShopClient.ViewModels;
 
 namespace MyShopClient.Views.Orders;
 
 public sealed partial class ProductSelectionDialog : ContentDialog
 {
-    public ProductSelectionViewModel ViewModel
-    {
-        get => (ProductSelectionViewModel)DataContext;
-        set => DataContext = value;
-    }
+    public ProductSelectionViewModel ViewModel { get; }
 
     public ProductSelectionDialog()
     {
         this.InitializeComponent();
+        ViewModel = new ProductSelectionViewModel(ProductApiService.Instance);
     }
 
-    private void SearchBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    public async void LoadProducts()
     {
-        if (e.Key == Windows.System.VirtualKey.Enter)
-        {
-             ViewModel.SearchCommand.Execute(null);
-        }
+        await ViewModel.LoadProducts();
     }
 }
