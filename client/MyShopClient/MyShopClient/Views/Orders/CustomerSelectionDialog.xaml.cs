@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using MyShopClient.ViewModels;
@@ -6,22 +7,26 @@ namespace MyShopClient.Views.Orders;
 
 public sealed partial class CustomerSelectionDialog : ContentDialog
 {
-    public CustomerSelectionViewModel ViewModel
-    {
-        get => (CustomerSelectionViewModel)DataContext;
-        set => DataContext = value;
-    }
+    public CustomersViewModel ViewModel { get; }
 
     public CustomerSelectionDialog()
     {
         this.InitializeComponent();
+        ViewModel = App.Current.Services.GetService<CustomersViewModel>() 
+            ?? new CustomersViewModel();
+        ViewModel.IsSelectionMode = true;
     }
 
-    private void SearchBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    public async void LoadCustomers()
     {
-        if (e.Key == Windows.System.VirtualKey.Enter)
+        await ViewModel.LoadCustomersAsync();
+    }
+
+    private void PageButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is int pageNumber)
         {
-             ViewModel.SearchCommand.Execute(null);
+            _ = ViewModel.GoToPageAsync(pageNumber);
         }
     }
 }

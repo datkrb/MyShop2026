@@ -200,3 +200,20 @@ public class ProductImageToSourceConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts null to false, non-null to true. Useful for enabling buttons when a selection is made.
+/// </summary>
+public class NullToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        return value != null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+

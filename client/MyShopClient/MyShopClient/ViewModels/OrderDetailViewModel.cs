@@ -246,17 +246,18 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task SelectCustomer()
     {
-        var vm = new CustomerSelectionViewModel(CustomerApiService.Instance);
         var dialog = new CustomerSelectionDialog
         {
-            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-            ViewModel = vm
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot
         };
         
+        // Load customers when dialog opens
+        dialog.LoadCustomers();
+        
         var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary && vm.SelectedCustomer != null)
+        if (result == ContentDialogResult.Primary && dialog.ViewModel.SelectedCustomer != null)
         {
-            var customer = vm.SelectedCustomer;
+            var customer = dialog.ViewModel.SelectedCustomer;
             CustomerId = customer.Id;
             CustomerName = customer.Name;
             CustomerEmail = customer.Email ?? "";

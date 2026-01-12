@@ -300,17 +300,17 @@
                                 <ListView.Header>
                                 <Grid Background="{ThemeResource SystemChromeLowColor}" Padding="16,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" MinWidth="200"/>
-                                        <ColumnDefinition Width="*" MinWidth="180"/>
+                                        <ColumnDefinition Width="2*" MinWidth="200"/>
+                                        <ColumnDefinition Width="2*" MinWidth="180"/>
                                         <ColumnDefinition Width="*" MinWidth="120"/>
                                         <ColumnDefinition Width="*" MinWidth="120"/>
                                         <ColumnDefinition Width="100"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Text="CUSTOMER" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="1" Text="EMAIL" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="2" Text="PHONE" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="3" Text="CREATED" Style="{StaticResource TableHeaderTextStyle}"/>
+                                    <TextBlock Grid.Column="1" Text="EMAIL" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                                    <TextBlock Grid.Column="2" Text="PHONE" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                                    <TextBlock Grid.Column="3" Text="CREATED" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
                                     <TextBlock Grid.Column="4" Text="ACTIONS" Style="{StaticResource TableHeaderTextStyle}" HorizontalAlignment="Center"/>
                                 </Grid>
                             </ListView.Header>
@@ -324,10 +324,10 @@
                             </ListView.ItemContainerStyle>
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="viewmodels:CustomerViewModel">
-                                    <Grid Padding="16,12" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
+                                    <Grid Padding="16,12" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1" ColumnSpacing="10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" MinWidth="200"/>
-                                            <ColumnDefinition Width="*" MinWidth="180"/>
+                                            <ColumnDefinition Width="2*" MinWidth="200"/>
+                                            <ColumnDefinition Width="2*" MinWidth="180"/>
                                             <ColumnDefinition Width="*" MinWidth="120"/>
                                             <ColumnDefinition Width="*" MinWidth="120"/>
                                             <ColumnDefinition Width="100"/>
@@ -344,6 +344,7 @@
                                                 <TextBlock 
                                                     Text="{x:Bind Name}" 
                                                     FontWeight="SemiBold" 
+                                                  
                                                     Foreground="{ThemeResource TextPrimaryBrush}"/>
                                                 <TextBlock 
                                                     Text="{x:Bind Address}" 
