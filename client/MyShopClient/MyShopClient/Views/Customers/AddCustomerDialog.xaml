@@ -8,11 +8,11 @@
     Title="{x:Bind ViewModel.DialogTitle, Mode=OneWay}"
     PrimaryButtonText="Save"
     SecondaryButtonText="Cancel"
-    PrimaryButtonCommand="{x:Bind ViewModel.SaveCommand}"
-    SecondaryButtonCommand="{x:Bind ViewModel.CancelCommand}"
     DefaultButton="Primary"
     Style="{StaticResource DefaultContentDialogStyle}"
-    RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}">
+    RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
     
     <ContentDialog.Resources>
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
@@ -62,7 +62,10 @@
             
             <!-- Email Field -->
             <StackPanel>
-                <TextBlock Text="Email" Style="{StaticResource FormLabelStyle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Email" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
                 <TextBox 
                     PlaceholderText="customer@email.com"
                     Text="{x:Bind ViewModel.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -71,16 +74,22 @@
             
             <!-- Phone Field -->
             <StackPanel>
-                <TextBlock Text="Phone" Style="{StaticResource FormLabelStyle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Phone" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
                 <TextBox 
-                    PlaceholderText="+1 234 567 890"
+                    PlaceholderText="0901234567 (10-11 digits)"
                     Text="{x:Bind ViewModel.Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     HorizontalAlignment="Stretch"/>
             </StackPanel>
             
             <!-- Address Field -->
             <StackPanel>
-                <TextBlock Text="Address" Style="{StaticResource FormLabelStyle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Address" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
                 <TextBox 
                     PlaceholderText="Enter full address..."
                     Text="{x:Bind ViewModel.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

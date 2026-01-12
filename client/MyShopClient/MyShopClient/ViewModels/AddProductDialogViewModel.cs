@@ -83,7 +83,7 @@ public partial class AddProductDialogViewModel : ObservableValidator
         "Out of Stock"
     };
 
-    public ObservableCollection<ProductImage> ProductImages { get; } = new();
+    public ObservableCollection<LocalProductImage> ProductImages { get; } = new();
 
     public bool HasImages => ProductImages.Count > 0;
 
@@ -138,7 +138,7 @@ public partial class AddProductDialogViewModel : ObservableValidator
                 await bitmapImage.SetSourceAsync(stream);
             }
 
-            var productImage = new ProductImage
+            var productImage = new LocalProductImage
             {
                 FilePath = file.Path,
                 FileName = file.Name,
@@ -154,7 +154,7 @@ public partial class AddProductDialogViewModel : ObservableValidator
     }
 
     [RelayCommand]
-    private void RemoveImage(ProductImage image)
+    private void RemoveImage(LocalProductImage image)
     {
         if (image != null)
         {

@@ -46,6 +46,9 @@ public sealed partial class CustomerDetailView : Page
         dialog.ViewModel.LoadFromDetailViewModel(ViewModel);
         
         await dialog.ShowAsync();
+        
+        // Reload customer details after edit
+        await ViewModel.LoadCustomerDetailsAsync(ViewModel.Id);
     }
 
     private async void DeleteCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -64,9 +67,23 @@ public sealed partial class CustomerDetailView : Page
 
         if (result == ContentDialogResult.Primary)
         {
-            if (Frame.CanGoBack)
+            var success = await ViewModel.DeleteCustomerAsync();
+            
+            if (success && Frame.CanGoBack)
             {
                 Frame.GoBack();
+            }
+            else if (!success)
+            {
+                // Show error dialog
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Error",
+                    Content = "Failed to delete customer. Please try again.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await errorDialog.ShowAsync();
             }
         }
     }

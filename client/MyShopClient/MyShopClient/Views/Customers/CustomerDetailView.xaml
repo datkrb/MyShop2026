@@ -232,5 +232,22 @@
                 </Border>
             </Grid>
         </ScrollViewer>
+        
+        <!-- Loading Overlay -->
+        <Grid 
+            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+            <StackPanel 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Spacing="16">
+                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="48" Height="48"/>
+                <TextBlock 
+                    Text="Loading customer details..." 
+                    Foreground="{ThemeResource TextSecondaryBrush}"
+                    HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>
+

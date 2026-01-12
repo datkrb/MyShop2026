@@ -3,6 +3,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
 using System;
 using Windows.UI;
@@ -24,6 +25,14 @@ public sealed partial class CustomersView : Page
         ViewModel = App.Current.Services.GetService<CustomersViewModel>()!;
         
         ViewModel.PageNumbers.CollectionChanged += (s, e) => UpdatePageButtonStyles();
+    }
+    
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        
+        // Load customers from API when navigating to this page
+        await ViewModel.LoadCustomersAsync();
     }
     
     private void PageButton_Click(object sender, RoutedEventArgs e)
@@ -48,9 +57,13 @@ public sealed partial class CustomersView : Page
         {
             XamlRoot = this.XamlRoot
         };
+        
+        dialog.ViewModel.Reset();
+        
         await dialog.ShowAsync();
         
-        ViewModel.RefreshCommand.Execute(null);
+        // Refresh the list after dialog closes
+        await ViewModel.LoadCustomersAsync();
     }
     
     private async void EditCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -66,7 +79,8 @@ public sealed partial class CustomersView : Page
             
             await dialog.ShowAsync();
             
-            ViewModel.RefreshCommand.Execute(null);
+            // Refresh the list after dialog closes
+            await ViewModel.LoadCustomersAsync();
         }
     }
     
@@ -88,7 +102,7 @@ public sealed partial class CustomersView : Page
 
             if (result == ContentDialogResult.Primary)
             {
-                ViewModel.RefreshCommand.Execute(null);
+                await ViewModel.DeleteCustomerCommand.ExecuteAsync(customer.Id);
             }
         }
     }
@@ -103,15 +117,15 @@ public sealed partial class CustomersView : Page
             {
                 if (child is ContentPresenter presenter && presenter.Content is PageButtonModel model)
                 {
-                    var button = FindChild<Button>(presenter);
-                    if (button != null)
+                    var foundButton = FindChild<Button>(presenter);
+                    if (foundButton != null)
                     {
-                        ApplyButtonStyle(button, model.IsCurrentPage);
+                        ApplyButtonStyle(foundButton, model.IsCurrentPage);
                     }
                 }
-                else if (child is Button button && button.DataContext is PageButtonModel model2)
+                else if (child is Button btn && btn.DataContext is PageButtonModel model2)
                 {
-                    ApplyButtonStyle(button, model2.IsCurrentPage);
+                    ApplyButtonStyle(btn, model2.IsCurrentPage);
                 }
             }
         });

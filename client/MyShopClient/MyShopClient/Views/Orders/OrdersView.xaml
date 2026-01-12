@@ -24,7 +24,7 @@
     <Grid Padding="24,12,2,12">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
-                <!-- Large: 4 columns (1 row) -->
+                <!-- Large: 4 columns, inline filters visible -->
                 <VisualState x:Name="LargeState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1200"/>
@@ -43,23 +43,15 @@
                         <Setter Target="StatCard4.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="1"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.Column)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="FilterToDate.(Grid.Column)" Value="1"/>
-                        <Setter Target="FilterToDate.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterToDate.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="FilterStatus.(Grid.Column)" Value="2"/>
-                        <Setter Target="FilterStatus.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterStatus.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="FiltersGrid.RowSpacing" Value="0"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
+                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
                     </VisualState.Setters>
                 </VisualState>
                 
-                <!-- Medium: 2 columns, 2 rows -->
+                <!-- Medium: 2 columns, inline filters visible -->
                 <VisualState x:Name="MediumState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="768"/>
+                        <AdaptiveTrigger MinWindowWidth="900"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
@@ -75,20 +67,12 @@
                         <Setter Target="StatCard4.(Grid.Row)" Value="1"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="2"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="16"/>
-                        <Setter Target="FilterFromDate.(Grid.Column)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="FilterToDate.(Grid.Column)" Value="1"/>
-                        <Setter Target="FilterToDate.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterToDate.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="FilterStatus.(Grid.Column)" Value="2"/>
-                        <Setter Target="FilterStatus.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterStatus.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="FiltersGrid.RowSpacing" Value="0"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
+                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
                     </VisualState.Setters>
                 </VisualState>
                 
-                <!-- Small: 1 column, 4 rows -->
+                <!-- Small: hide inline filters, show filter button -->
                 <VisualState x:Name="SmallState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0"/>
@@ -107,16 +91,8 @@
                         <Setter Target="StatCard4.(Grid.Row)" Value="3"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="4"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="16"/>
-                        <Setter Target="FilterFromDate.(Grid.Column)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.Row)" Value="0"/>
-                        <Setter Target="FilterFromDate.(Grid.ColumnSpan)" Value="4"/>
-                        <Setter Target="FilterToDate.(Grid.Column)" Value="0"/>
-                        <Setter Target="FilterToDate.(Grid.Row)" Value="1"/>
-                        <Setter Target="FilterToDate.(Grid.ColumnSpan)" Value="4"/>
-                        <Setter Target="FilterStatus.(Grid.Column)" Value="0"/>
-                        <Setter Target="FilterStatus.(Grid.Row)" Value="2"/>
-                        <Setter Target="FilterStatus.(Grid.ColumnSpan)" Value="4"/>
-                        <Setter Target="FiltersGrid.RowSpacing" Value="12"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -307,57 +283,92 @@
                         </Grid.RowDefinitions>
 
                         <!-- Filters Section -->
-                        <Grid x:Name="FiltersGrid" Grid.Row="0" Padding="20" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1" ColumnSpacing="12" RowSpacing="12">
+                        <Grid Grid.Row="0" Padding="20" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- From Date -->
-                            <StackPanel
-                                x:Name="FilterFromDate"
+                            
+                            <!-- Inline Filters (visible on large screens) -->
+                            <StackPanel 
+                                x:Name="InlineFiltersPanel"
                                 Grid.Column="0"
                                 Orientation="Horizontal" 
-                                Spacing="8">
-                                <TextBlock Text="From:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                <CalendarDatePicker 
-                                    Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
-                                    PlaceholderText="Select date" 
-                                    HorizontalAlignment="Stretch"/>
-                            </StackPanel>
+                                Spacing="16">
+                                
+                                <!-- From Date -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="From:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <CalendarDatePicker 
+                                        Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
+                                        PlaceholderText="Select date"/>
+                                </StackPanel>
 
-                            <!-- To Date -->
-                            <StackPanel
-                                x:Name="FilterToDate"
+                                <!-- To Date -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="To:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <CalendarDatePicker 
+                                        Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
+                                        PlaceholderText="Select date"/>
+                                </StackPanel>
+
+                                <!-- Status Filter -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <ComboBox 
+                                        Width="140"
+                                        SelectedItem="{x:Bind ViewModel.SelectedOrderStatus, Mode=TwoWay}"
+                                        ItemsSource="{x:Bind ViewModel.OrderStatuses, Mode=OneWay}"/>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <!-- Filter Button (visible on small screens) -->
+                            <Button 
+                                x:Name="FilterButton"
                                 Grid.Column="1"
-                                Orientation="Horizontal" 
-                                Spacing="8">
-                                <TextBlock Text="To:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                <CalendarDatePicker 
-                                    Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
-                                    PlaceholderText="Select date" 
-                                    HorizontalAlignment="Stretch"/>
-                            </StackPanel>
+                                Visibility="Collapsed"
+                                Background="{ThemeResource CardBackgroundBrush}"
+                                BorderBrush="{ThemeResource BorderBrush}"
+                                Padding="12,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE71C;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Filters" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                                <Button.Flyout>
+                                    <Flyout Placement="BottomEdgeAlignedRight">
+                                        <StackPanel Spacing="16" MinWidth="280" Padding="8">
+                                            <TextBlock Text="Filter Orders" FontWeight="SemiBold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                            
+                                            <!-- From Date -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="From Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <CalendarDatePicker 
+                                                    Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
+                                                    PlaceholderText="Select date"
+                                                    HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
 
-                            <!-- Status Filter -->
-                            <StackPanel
-                                x:Name="FilterStatus"
-                                Grid.Column="2"
-                                Orientation="Horizontal" 
-                                Spacing="8">
-                                <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                <ComboBox 
-                                    Width="160"
-                                    SelectedItem="{x:Bind ViewModel.SelectedOrderStatus, Mode=TwoWay}"
-                                    ItemsSource="{x:Bind ViewModel.OrderStatuses, Mode=OneWay}"/>
-                            </StackPanel>
+                                            <!-- To Date -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="To Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <CalendarDatePicker 
+                                                    Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
+                                                    PlaceholderText="Select date"
+                                                    HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
+
+                                            <!-- Status Filter -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Status" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <ComboBox 
+                                                    HorizontalAlignment="Stretch"
+                                                    SelectedItem="{x:Bind ViewModel.SelectedOrderStatus, Mode=TwoWay}"
+                                                    ItemsSource="{x:Bind ViewModel.OrderStatuses, Mode=OneWay}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
                         </Grid>
 
                         <!-- Products List with Header -->

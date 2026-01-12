@@ -9,7 +9,10 @@
     
     <Page.Resources>
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <helpers:BoolToPaginationBrushConverter x:Key="BoolToPaginationBrushConverter"/>
+        <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+        <helpers:StringVisibilityConverter x:Key="StringVisibilityConverter"/>
+        <helpers:InverseStringVisibilityConverter x:Key="InverseStringVisibilityConverter"/>
+        <helpers:ImageUrlConverter x:Key="ImageUrlConverter"/>
     </Page.Resources>
 
     <Grid Padding="24,24,4,24">
@@ -17,44 +20,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <!-- Responsive Visual States -->
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <!-- Wide Layout: 2 columns side by side -->
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="900"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ContentGrid.ColumnSpacing" Value="24"/>
-                        <Setter Target="OrderInfoColumn.Width" Value="*"/>
-                        <Setter Target="OrderItemsColumn.Width" Value="*"/>
-                        <Setter Target="OrderInfoSection.(Grid.Column)" Value="0"/>
-                        <Setter Target="OrderInfoSection.(Grid.Row)" Value="0"/>
-                        <Setter Target="OrderItemsSection.(Grid.Column)" Value="1"/>
-                        <Setter Target="OrderItemsSection.(Grid.Row)" Value="0"/>
-                    </VisualState.Setters>
-                </VisualState>
-
-                <!-- Narrow Layout: Single column, stacked -->
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ContentGrid.ColumnSpacing" Value="0"/>
-                        <Setter Target="ContentGrid.RowSpacing" Value="24"/>
-                        <Setter Target="OrderInfoColumn.Width" Value="*"/>
-                        <Setter Target="OrderItemsColumn.Width" Value="0"/>
-                        <Setter Target="OrderInfoSection.(Grid.Column)" Value="0"/>
-                        <Setter Target="OrderInfoSection.(Grid.Row)" Value="0"/>
-                        <Setter Target="OrderItemsSection.(Grid.Column)" Value="0"/>
-                        <Setter Target="OrderItemsSection.(Grid.Row)" Value="1"/>
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
 
         <!-- Header with Back Button -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,24">
@@ -72,17 +37,27 @@
             </Button>
             
             <TextBlock 
-                Text="Order Details" 
+                Text="{x:Bind ViewModel.OrderId, Mode=OneWay, Converter={StaticResource StringFormatConverter}, ConverterParameter='Order #{0}'}" 
                 FontSize="24" 
                 FontWeight="Bold"
                 Foreground="{ThemeResource TextPrimaryBrush}"
-                VerticalAlignment="Center"/>
+                VerticalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsNewOrder, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+
+            <TextBlock 
+                Text="New Order" 
+                FontSize="24" 
+                FontWeight="Bold"
+                Foreground="{ThemeResource TextPrimaryBrush}"
+                VerticalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsNewOrder, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 
             <Border 
                 Background="{x:Bind ViewModel.OrderStatusBackground, Mode=OneWay}"
                 CornerRadius="8"
                 Padding="12,6"
-                VerticalAlignment="Center">
+                VerticalAlignment="Center"
+                Visibility="{x:Bind ViewModel.IsNewOrder, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                 <TextBlock 
                     Text="{x:Bind ViewModel.OrderStatus, Mode=OneWay}"
                     Foreground="{x:Bind ViewModel.OrderStatusForeground, Mode=OneWay}"
@@ -93,10 +68,10 @@
 
         <!-- Main Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
-            <Grid x:Name="ContentGrid" ColumnSpacing="24">
+            <Grid ColumnSpacing="24">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition x:Name="OrderInfoColumn" Width="*"/>
-                    <ColumnDefinition x:Name="OrderItemsColumn" Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -104,7 +79,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Order Info Section -->
-                <StackPanel x:Name="OrderInfoSection" Grid.Column="0" Grid.Row="0" Spacing="16">
+                <StackPanel Grid.Column="0" Grid.Row="0" Spacing="16">
                     
                     <!-- Order Information Card -->
                     <Border 
@@ -118,20 +93,24 @@
                             
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="Order ID:" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="14" Width="100"/>
-                                    <TextBlock Text="{x:Bind ViewModel.OrderId, Mode=OneWay}" Foreground="{ThemeResource PrimaryBrush}" FontSize="14" FontWeight="SemiBold"/>
-                                </StackPanel>
-                                
-                                <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="Date:" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="14" Width="100"/>
                                     <TextBlock Text="{x:Bind ViewModel.FormattedDate, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}" FontSize="14"/>
                                 </StackPanel>
                                 
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                                     <TextBlock Text="Status:" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="14" Width="100"/>
                                     <Border Background="{x:Bind ViewModel.OrderStatusBackground, Mode=OneWay}" CornerRadius="6" Padding="8,4">
                                         <TextBlock Text="{x:Bind ViewModel.OrderStatus, Mode=OneWay}" Foreground="{x:Bind ViewModel.OrderStatusForeground, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"/>
                                     </Border>
+                                </StackPanel>
+
+                                <!-- Edit Mode: Status Selector -->
+                                <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="Status:" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="14" Width="100" VerticalAlignment="Center"/>
+                                    <ComboBox 
+                                        ItemsSource="{x:Bind ViewModel.Statuses}"
+                                        SelectedItem="{x:Bind ViewModel.SelectedStatus, Mode=TwoWay}"
+                                        Width="200"/>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
@@ -145,44 +124,81 @@
                         BorderThickness="1"
                         Padding="24">
                         <StackPanel Spacing="20">
-                            <TextBlock Text="Customer Information" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            <Grid>
+                                <TextBlock Text="Customer Information" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button 
+                                    Content="Change" 
+                                    Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Command="{x:Bind ViewModel.SelectCustomerCommand}"
+                                    HorizontalAlignment="Right"
+                                    Style="{ThemeResource AccentButtonStyle}"/>
+                            </Grid>
                             
-                            <StackPanel Orientation="Horizontal" Spacing="16">
+                            <!-- Customer Details -->
+                            <StackPanel Orientation="Horizontal" Spacing="16" Visibility="{x:Bind ViewModel.CustomerName, Mode=OneWay, Converter={StaticResource StringVisibilityConverter}}">
                                 <Ellipse Width="64" Height="64">
                                     <Ellipse.Fill>
-                                        <ImageBrush ImageSource="{x:Bind ViewModel.CustomerAvatar, Mode=OneWay}"/>
+                                        <ImageBrush ImageSource="{x:Bind ViewModel.CustomerAvatar, Mode=OneWay, Converter={StaticResource ImageUrlConverter}}"/>
                                     </Ellipse.Fill>
                                 </Ellipse>
                                 
                                 <StackPanel VerticalAlignment="Center" Spacing="4">
                                     <TextBlock Text="{x:Bind ViewModel.CustomerName, Mode=OneWay}" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
                                     <TextBlock Text="{x:Bind ViewModel.CustomerEmail, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.CustomerPhone, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.CustomerAddress, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
+
+                            <!-- Placeholder if no customer selected in Edit Mode -->
+                            <TextBlock 
+                                Text="No customer selected" 
+                                Foreground="{ThemeResource TextSecondaryBrush}"
+                                Visibility="{x:Bind ViewModel.CustomerName, Mode=OneWay, Converter={StaticResource InverseStringVisibilityConverter}}"/>
+                                
                         </StackPanel>
                     </Border>
                     
                     <!-- Action Buttons -->
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Click="EditStatusButton_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE70F;" FontSize="14"/>
-                                <TextBlock Text="Edit Order"/>
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="#EF4444" Padding="20,10" Click="DeleteOrderButton_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
-                                <TextBlock Text="Delete" Foreground="#EF4444"/>
-                            </StackPanel>
-                        </Button>
+                        <!-- View Mode Actions -->
+                        <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                            <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Command="{x:Bind ViewModel.EditStatusCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="14"/>
+                                    <TextBlock Text="Edit Order"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="#EF4444" Padding="20,10" Command="{x:Bind ViewModel.DeleteOrderCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                    <TextBlock Text="Delete" Foreground="#EF4444"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Edit Mode Actions -->
+                        <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Command="{x:Bind ViewModel.SaveCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74E;" FontSize="14"/>
+                                    <TextBlock Text="Save Order"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.CancelCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE711;" FontSize="14"/>
+                                    <TextBlock Text="Cancel"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Order Items Section -->
                 <Border 
-                    x:Name="OrderItemsSection"
                     Grid.Column="1"
                     Grid.Row="0"
                     Background="{ThemeResource CardBackgroundBrush}" 
@@ -198,10 +214,23 @@
                         </Grid.RowDefinitions>
                         
                         <!-- Header -->
-                        <TextBlock Grid.Row="0" Text="Order Items" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}" Margin="0,0,0,16"/>
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <TextBlock Text="Order Items" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            <Button 
+                                HorizontalAlignment="Right" 
+                                Style="{ThemeResource AccentButtonStyle}" 
+                                Command="{x:Bind ViewModel.AddProductCommand}"
+                                Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="12"/>
+                                    <TextBlock Text="Add Product"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                         
                         <!-- Items List -->
                         <ListView 
+                            x:Name="OrderItemsList"
                             Grid.Row="1"
                             ItemsSource="{x:Bind ViewModel.OrderItems, Mode=OneWay}"
                             SelectionMode="None">
@@ -220,13 +249,14 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         
                                         <!-- Product Image -->
                                         <Border Grid.Column="0" Width="48" Height="48" CornerRadius="8" Margin="0,0,12,0">
                                             <Ellipse Width="48" Height="48">
                                                 <Ellipse.Fill>
-                                                    <ImageBrush ImageSource="{x:Bind ProductImage}"/>
+                                                    <ImageBrush ImageSource="{Binding ProductImage, Converter={StaticResource ImageUrlConverter}}"/>
                                                 </Ellipse.Fill>
                                             </Ellipse>
                                         </Border>
@@ -237,14 +267,41 @@
                                             <TextBlock Text="{x:Bind FormattedUnitPrice}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                         
-                                        <!-- Quantity -->
-                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="12,0" Foreground="{ThemeResource TextSecondaryBrush}">
+                                        <!-- Quantity (Read Only) -->
+                                        <TextBlock 
+                                            Grid.Column="2" 
+                                            VerticalAlignment="Center" 
+                                            Margin="12,0" 
+                                            Foreground="{ThemeResource TextSecondaryBrush}"
+                                            Visibility="{Binding ElementName=OrderItemsList, Path=DataContext.ViewModel.IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                                             <Run Text="x"/>
                                             <Run Text="{x:Bind Quantity}"/>
                                         </TextBlock>
+
+                                        <!-- Quantity (Editable) -->
+                                        <NumberBox 
+                                            Grid.Column="2"
+                                            Value="{x:Bind Quantity, Mode=TwoWay}"
+                                            Minimum="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            Width="80"
+                                            Margin="8,0"
+                                            Visibility="{Binding ElementName=OrderItemsList, Path=DataContext.ViewModel.IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         
                                         <!-- Total -->
                                         <TextBlock Grid.Column="3" Text="{x:Bind FormattedTotalPrice}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+
+                                        <!-- Remove Button (Edit Mode Only) -->
+                                        <Button
+                                            Grid.Column="4"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Margin="8,0,0,0"
+                                            Visibility="{Binding ElementName=OrderItemsList, Path=DataContext.ViewModel.IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Command="{Binding ElementName=OrderItemsList, Path=DataContext.ViewModel.RemoveItemCommand}"
+                                            CommandParameter="{x:Bind}">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
