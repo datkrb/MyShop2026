@@ -3,6 +3,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
 using System;
 using Windows.UI;
@@ -13,7 +14,6 @@ public sealed partial class OrdersView : Page
 {
     public OrdersViewModel ViewModel { get; }
     
-    // Primary color brush for current page
     private static readonly SolidColorBrush PrimaryBrush = new(Color.FromArgb(255, 124, 92, 252));
     private static readonly SolidColorBrush WhiteBrush = new(Colors.White);
     private static readonly SolidColorBrush GrayBrush = new(Color.FromArgb(255, 107, 114, 128));
@@ -24,16 +24,20 @@ public sealed partial class OrdersView : Page
         
         ViewModel = App.Current.Services.GetService<OrdersViewModel>()!;
         
-        // Subscribe to PageNumbers collection changes to update styling
         ViewModel.PageNumbers.CollectionChanged += (s, e) => UpdatePageButtonStyles();
+    }
+    
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        await ViewModel.LoadOrdersAsync();
     }
     
     private void PageButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button button && button.Tag is int pageNumber)
         {
-            ViewModel.GoToPageCommand.Execute(pageNumber);
-            // Styling will be updated via CollectionChanged event
+            _ = ViewModel.GoToPageAsync(pageNumber);
         }
     }
     
@@ -41,7 +45,7 @@ public sealed partial class OrdersView : Page
     {
         if (e.ClickedItem is OrderViewModel order)
         {
-            Frame.Navigate(typeof(OrderDetailView), order);
+            Frame.Navigate(typeof(OrderDetailView), order.Id);
         }
     }
     
@@ -54,7 +58,7 @@ public sealed partial class OrdersView : Page
     {
         if (sender is Button button && button.Tag is OrderViewModel order)
         {
-            Frame.Navigate(typeof(OrderDetailView), order);
+            Frame.Navigate(typeof(OrderDetailView), order.Id);
         }
     }
     
@@ -62,7 +66,6 @@ public sealed partial class OrdersView : Page
     {
         if (sender is Button button && button.Tag is OrderViewModel order)
         {
-            // Show confirmation dialog
             var confirmDialog = new ContentDialog
             {
                 Title = "Delete Order",
@@ -77,16 +80,13 @@ public sealed partial class OrdersView : Page
 
             if (result == ContentDialogResult.Primary)
             {
-                // TODO: Call API to delete order
-                // For now, just refresh the list
-                ViewModel.RefreshCommand.Execute(null);
+                await ViewModel.DeleteOrderAsync(order);
             }
         }
     }
     
     private void UpdatePageButtonStyles()
     {
-        // Use DispatcherQueue to ensure UI is updated
         DispatcherQueue.TryEnqueue(() =>
         {
             if (PageNumbersControl?.ItemsPanelRoot == null) return;
@@ -95,16 +95,15 @@ public sealed partial class OrdersView : Page
             {
                 if (child is ContentPresenter presenter && presenter.Content is PageButtonModel model)
                 {
-                    // Find the Button inside the ContentPresenter
-                    var button = FindChild<Button>(presenter);
-                    if (button != null)
+                    var foundButton = FindChild<Button>(presenter);
+                    if (foundButton != null)
                     {
-                        ApplyButtonStyle(button, model.IsCurrentPage);
+                        ApplyButtonStyle(foundButton, model.IsCurrentPage);
                     }
                 }
-                else if (child is Button button && button.DataContext is PageButtonModel model2)
+                else if (child is Button btn && btn.DataContext is PageButtonModel model2)
                 {
-                    ApplyButtonStyle(button, model2.IsCurrentPage);
+                    ApplyButtonStyle(btn, model2.IsCurrentPage);
                 }
             }
         });
@@ -119,7 +118,7 @@ public sealed partial class OrdersView : Page
         }
         else
         {
-            button.Background = null; // Use default from style
+            button.Background = null;
             button.Foreground = GrayBrush;
         }
     }

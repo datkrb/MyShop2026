@@ -16,10 +16,10 @@ namespace MyShopClient.ViewModels;
 /// </summary>
 public partial class OrderDetailViewModel : ObservableObject
 {
-    private readonly OrderApiService _orderApiService; // Assumption: we might need this later
-    // In current code, it wasn't injected. I'll stick to non-DI for service or simple usage if possible, 
-    // but better to add it if I'm doing real save.
-    // For now, I'll focus on the UI properties.
+    private readonly OrderApiService _orderApiService;
+
+    [ObservableProperty]
+    private bool _isLoading;
 
     [ObservableProperty]
     private bool _isEditing;
@@ -59,43 +59,136 @@ public partial class OrderDetailViewModel : ObservableObject
     private decimal _amount;
 
     [ObservableProperty]
-    private string _orderStatus = "Pending";
+    private string _orderStatus = "DRAFT";
 
     [ObservableProperty]
-    private string _orderStatusBackground = "#F3F4F6";
-
-    [ObservableProperty]
-    private string _orderStatusForeground = "#4B5563";
+    private string _createdByUsername = string.Empty;
     
     public ObservableCollection<string> Statuses { get; } = new() 
     { 
-        "Pending", "Processing", "Shipped", "Delivered", "Cancelled" 
+        "DRAFT", "PENDING", "PAID", "CANCELLED" 
     };
 
     [ObservableProperty]
-    private string _selectedStatus = "Pending";
+    private string _selectedStatus = "DRAFT";
 
     // Order Items
     public ObservableCollection<OrderItemViewModel> OrderItems { get; } = new();
 
     // Computed properties
-    public string FormattedDate => OrderDate.ToString("MMM dd, yyyy 'at' HH:mm");
-    public string FormattedAmount => $"${Amount:N2}";
+    public string FormattedDate => OrderDate.ToString("dd/MM/yyyy HH:mm");
+    public string FormattedAmount => $"{Amount:N0}đ";
     
     public decimal Subtotal => OrderItems.Sum(x => x.TotalPrice);
-    public decimal Tax => Subtotal * 0.1m; // 10% tax
-    public decimal Total => Subtotal + Tax;
+    public decimal Total => Subtotal; // No tax calculation for simplicity
     
-    public string FormattedSubtotal => $"${Subtotal:N2}";
-    public string FormattedTax => $"${Tax:N2}";
-    public string FormattedTotal => $"${Total:N2}";
+    public string FormattedSubtotal => $"{Subtotal:N0}đ";
+    public string FormattedTotal => $"{Total:N0}đ";
+
+    public string DisplayStatus => OrderStatus switch
+    {
+        "DRAFT" => "Draft",
+        "PENDING" => "Pending",
+        "PAID" => "Paid",
+        "CANCELLED" => "Cancelled",
+        _ => OrderStatus
+    };
+
+    public string StatusBackground => OrderStatus switch
+    {
+        "DRAFT" => "#F3F4F6",
+        "PENDING" => "#FEF3C7",
+        "PAID" => "#DCFCE7",
+        "CANCELLED" => "#FEE2E2",
+        _ => "#F3F4F6"
+    };
+
+    public string StatusForeground => OrderStatus switch
+    {
+        "DRAFT" => "#4B5563",
+        "PENDING" => "#CA8A04",
+        "PAID" => "#15803D",
+        "CANCELLED" => "#B91C1C",
+        _ => "#4B5563"
+    };
 
     public OrderDetailViewModel()
     {
-        // Default constructor
+        _orderApiService = OrderApiService.Instance;
         OrderDate = DateTime.Now;
     }
 
+    /// <summary>
+    /// Load order from API by ID
+    /// </summary>
+    public async Task LoadOrderAsync(int orderId)
+    {
+        IsLoading = true;
+        IsNewOrder = false;
+        IsEditing = false;
+
+        try
+        {
+            var order = await _orderApiService.GetOrderAsync(orderId);
+
+            if (order != null)
+            {
+                Id = order.Id;
+                OrderId = $"#ORD-{order.Id:D4}";
+                OrderStatus = order.Status;
+                SelectedStatus = order.Status;
+                OrderDate = order.CreatedTime;
+                Amount = order.FinalPrice;
+
+                // Customer info
+                CustomerId = order.CustomerId;
+                CustomerName = order.Customer?.Name ?? "Walk-in Customer";
+                CustomerEmail = order.Customer?.Email ?? "";
+                CustomerPhone = order.Customer?.Phone ?? "";
+                CustomerAddress = order.Customer?.Address ?? "";
+                CustomerAvatar = order.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Guest&background=7C5CFC&color=fff";
+
+                // Created by
+                CreatedByUsername = order.CreatedBy?.Username ?? "";
+
+                // Order items
+                OrderItems.Clear();
+                if (order.OrderItems != null)
+                {
+                    foreach (var item in order.OrderItems)
+                    {
+                        OrderItems.Add(new OrderItemViewModel
+                        {
+                            ProductId = item.ProductId,
+                            ProductName = item.Product?.Name ?? "Unknown Product",
+                            ProductSku = item.Product?.Sku ?? "",
+                            ProductImage = "", // Would need images from product
+                            Quantity = item.Quantity,
+                            UnitPrice = item.UnitSalePrice,
+                            TotalPrice = item.TotalPrice
+                        });
+                    }
+                }
+
+                RecalculateTotals();
+                OnPropertyChanged(nameof(DisplayStatus));
+                OnPropertyChanged(nameof(StatusBackground));
+                OnPropertyChanged(nameof(StatusForeground));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading order: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Load from OrderViewModel (quick load for navigation)
+    /// </summary>
     public void LoadOrder(OrderViewModel order)
     {
         IsNewOrder = false;
@@ -103,36 +196,16 @@ public partial class OrderDetailViewModel : ObservableObject
         
         Id = order.Id;
         OrderId = order.OrderId;
-        
-        CustomerId = 0; // Info not strictly in OrderViewModel, need real object. 
-        // For Refactor: We should ideally load full details from API.
-        // But adapting to existing:
         CustomerName = order.CustomerName;
         CustomerEmail = order.CustomerEmail;
         CustomerAvatar = order.CustomerAvatar;
-        
         OrderDate = order.OrderDate;
-        Amount = order.Amount; // In edit mode, this will be recalculated
+        Amount = order.Amount;
         OrderStatus = order.OrderStatus;
-        SelectedStatus = OrderStatus;
-        
-        OrderStatusBackground = order.OrderStatusBackground;
-        OrderStatusForeground = order.OrderStatusForeground;
+        SelectedStatus = order.OrderStatus;
 
-        // Load items (Mock for now as per previous)
-        OrderItems.Clear();
-        // Preserving existing logic or loading real items if available
-        // Existing logic added mock items manually.
-        OrderItems.Add(new OrderItemViewModel 
-        { 
-            ProductName = "Product Item 1", 
-            ProductImage = "https://ui-avatars.com/api/?name=P1&background=7C5CFC&color=fff",
-            Quantity = 2, 
-            UnitPrice = Amount * 0.4m,
-            TotalPrice = Amount * 0.4m * 2
-        });
-        
-        RecalculateTotals();
+        // Load full details from API
+        _ = LoadOrderAsync(order.Id);
     }
     
     public void InitializeNewOrder()
@@ -142,11 +215,13 @@ public partial class OrderDetailViewModel : ObservableObject
         
         OrderId = "NEW";
         OrderDate = DateTime.Now;
-        OrderStatus = "Pending";
-        SelectedStatus = "Pending";
+        OrderStatus = "DRAFT";
+        SelectedStatus = "DRAFT";
         
         CustomerName = "Select Customer";
         CustomerEmail = "";
+        CustomerPhone = "";
+        CustomerAddress = "";
         CustomerAvatar = "";
         
         OrderItems.Clear();
@@ -160,13 +235,12 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private void RecalculateTotals()
     {
-        Amount = Subtotal; // Base amount
+        Amount = Subtotal;
         OnPropertyChanged(nameof(Subtotal));
-        OnPropertyChanged(nameof(Tax));
         OnPropertyChanged(nameof(Total));
         OnPropertyChanged(nameof(FormattedSubtotal));
-        OnPropertyChanged(nameof(FormattedTax));
         OnPropertyChanged(nameof(FormattedTotal));
+        OnPropertyChanged(nameof(FormattedAmount));
     }
 
     [RelayCommand]
@@ -203,16 +277,11 @@ public partial class OrderDetailViewModel : ObservableObject
         };
         
         var result = await dialog.ShowAsync();
-        // If dialog result is None but we handled "Add" internally, we might need a mechanism.
-        // Actually, simpler: Dialog has "Add" button that closes it or returning selected product.
-        // Let's assume Primary Button is "Select"
         
         if (result == ContentDialogResult.Primary && vm.SelectedProduct != null)
         {
             var product = vm.SelectedProduct;
-            var existing = OrderItems.FirstOrDefault(i => i.ProductName == product.Name); 
-            // Better to match by ID, but OrderItemViewModel doesn't have ID yet.
-            // I should add ProductId to OrderItemViewModel.
+            var existing = OrderItems.FirstOrDefault(i => i.ProductId == product.Id);
             
             if (existing != null)
             {
@@ -223,7 +292,9 @@ public partial class OrderDetailViewModel : ObservableObject
             {
                 OrderItems.Add(new OrderItemViewModel
                 {
+                    ProductId = product.Id,
                     ProductName = product.Name,
+                    ProductSku = product.Sku,
                     ProductImage = (product.Images != null && product.Images.Count > 0) ? product.Images[0].Url : "",
                     Quantity = 1,
                     UnitPrice = product.SalePrice,
@@ -242,15 +313,63 @@ public partial class OrderDetailViewModel : ObservableObject
     }
     
     [RelayCommand]
-    private void Save()
+    private async Task SaveAsync()
     {
-        // TODO: Implement Save via API
-        // For now, just exit edit mode?
-        // Or if New, create.
-        
-        IsEditing = false;
-        IsNewOrder = false;
-        OrderStatus = SelectedStatus;
+        IsLoading = true;
+
+        try
+        {
+            if (IsNewOrder)
+            {
+                var request = new CreateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Status = SelectedStatus,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                var result = await _orderApiService.CreateOrderAsync(request);
+                if (result != null)
+                {
+                    Id = result.Id;
+                    OrderId = $"#ORD-{result.Id:D4}";
+                    IsNewOrder = false;
+                    IsEditing = false;
+                }
+            }
+            else
+            {
+                var request = new UpdateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Status = SelectedStatus,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                var result = await _orderApiService.UpdateOrderAsync(Id, request);
+                if (result != null)
+                {
+                    OrderStatus = result.Status;
+                    IsEditing = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error saving order: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -258,14 +377,12 @@ public partial class OrderDetailViewModel : ObservableObject
     {
         if (IsNewOrder)
         {
-            // Go back
-             if (App.Current.ContentFrame.CanGoBack)
+            if (App.Current.ContentFrame.CanGoBack)
                 App.Current.ContentFrame.GoBack();
         }
         else
         {
             IsEditing = false;
-            // Reload original state... 
         }
     }
 
@@ -282,9 +399,20 @@ public partial class OrderDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void DeleteOrder()
+    public async Task DeleteOrderAsync()
     {
-        // TODO: Implement delete order
+        try
+        {
+            var success = await _orderApiService.DeleteOrderAsync(Id);
+            if (success && App.Current.ContentFrame.CanGoBack)
+            {
+                App.Current.ContentFrame.GoBack();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error deleting order: {ex.Message}");
+        }
     }
 }
 
@@ -294,7 +422,13 @@ public partial class OrderDetailViewModel : ObservableObject
 public partial class OrderItemViewModel : ObservableObject
 {
     [ObservableProperty]
+    private int _productId;
+
+    [ObservableProperty]
     private string _productName = string.Empty;
+
+    [ObservableProperty]
+    private string _productSku = string.Empty;
 
     [ObservableProperty]
     private string _productImage = string.Empty;
@@ -308,11 +442,12 @@ public partial class OrderItemViewModel : ObservableObject
     [ObservableProperty]
     private decimal _totalPrice;
 
-    public string FormattedUnitPrice => $"${UnitPrice:N2}";
-    public string FormattedTotalPrice => $"${TotalPrice:N2}";
+    public string FormattedUnitPrice => $"{UnitPrice:N0}đ";
+    public string FormattedTotalPrice => $"{TotalPrice:N0}đ";
     
     partial void OnQuantityChanged(int value)
     {
         TotalPrice = UnitPrice * value;
+        OnPropertyChanged(nameof(FormattedTotalPrice));
     }
 }
