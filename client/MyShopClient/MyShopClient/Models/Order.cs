@@ -5,8 +5,17 @@ using System.Linq;
 namespace MyShopClient.Models;
 
 /// <summary>
-/// Full Order model matching API: dashboard/recent-orders
-/// This model matches the API response structure exactly
+/// User info from API (createdBy field)
+/// </summary>
+public class ApiUser
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Full Order model matching API: /api/orders
 /// </summary>
 public class ApiOrder
 {
@@ -20,6 +29,7 @@ public class ApiOrder
     
     // Navigation properties
     public Customer? Customer { get; set; }
+    public ApiUser? CreatedBy { get; set; }
     public List<OrderItem>? OrderItems { get; set; }
     
     // Helper: Get first item name for display
@@ -50,8 +60,8 @@ public class Order
         return new Order
         {
             OrderId = $"#{apiOrder.Id:D6}",
-            CustomerName = apiOrder.Customer?.Name ?? "Customer",
-            CustomerAvatar = apiOrder.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Customer&background=7C5CFC&color=fff",
+            CustomerName = apiOrder.Customer?.Name ?? "Walk-in Customer",
+            CustomerAvatar = apiOrder.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Guest&background=7C5CFC&color=fff",
             ItemName = apiOrder.FirstItemName,
             OrderDate = apiOrder.CreatedTime,
             Status = apiOrder.Status,
@@ -59,3 +69,4 @@ public class Order
         };
     }
 }
+

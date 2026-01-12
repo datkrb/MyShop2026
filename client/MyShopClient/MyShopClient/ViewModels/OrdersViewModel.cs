@@ -1,16 +1,23 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
+using MyShopClient.Services.Api;
 using MyShopClient.ViewModels.Base;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyShopClient.ViewModels;
 
 public partial class OrdersViewModel : ViewModelBase
 {
+    private readonly OrderApiService _orderApiService;
+
+    // Loading state
+    [ObservableProperty]
+    private bool _isLoading;
+
     // Search and Filters
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -26,16 +33,16 @@ public partial class OrdersViewModel : ViewModelBase
 
     // Stats
     [ObservableProperty]
-    private int _newOrdersCount;
+    private int _draftCount;
 
     [ObservableProperty]
-    private int _pendingPaymentCount;
+    private int _pendingCount;
 
     [ObservableProperty]
-    private int _deliveredCount;
+    private int _paidCount;
 
     [ObservableProperty]
-    private decimal _totalRevenue;
+    private int _cancelledCount;
 
     [ObservableProperty]
     private int _totalOrdersCount;
@@ -47,7 +54,9 @@ public partial class OrdersViewModel : ViewModelBase
     [ObservableProperty]
     private int _pageSize = 10;
 
-    public int TotalPages => TotalOrdersCount > 0 ? (int)Math.Ceiling((double)TotalOrdersCount / PageSize) : 1;
+    [ObservableProperty]
+    private int _totalPages = 1;
+
     public int PageStart => TotalOrdersCount > 0 ? (CurrentPage - 1) * PageSize + 1 : 0;
     public int PageEnd => Math.Min(CurrentPage * PageSize, TotalOrdersCount);
     public bool CanGoPrevious => CurrentPage > 1;
@@ -55,145 +64,133 @@ public partial class OrdersViewModel : ViewModelBase
 
     public ObservableCollection<string> OrderStatuses { get; } = new()
     {
-        "All", "New", "Paid", "Canceled"
+        "All", "DRAFT", "PENDING", "PAID", "CANCELLED"
     };
 
-    public ObservableCollection<OrderViewModel> Orders { get; } = new();
     public ObservableCollection<OrderViewModel> FilteredOrders { get; } = new();
     public ObservableCollection<PageButtonModel> PageNumbers { get; } = new();
 
-    private List<OrderViewModel> _allOrders = new();
+    // Debounce
+    private System.Threading.CancellationTokenSource? _searchDebounceToken;
 
     public OrdersViewModel()
     {
-        LoadMockData();
-        UpdateFilteredOrders();
+        _orderApiService = OrderApiService.Instance;
     }
 
-    private void LoadMockData()
+    public async Task LoadOrdersAsync()
     {
-        _allOrders = new List<OrderViewModel>
-        {
-            new() { Id = 1, OrderId = "#ORD-2023-001", CustomerName = "Sarah Smith", CustomerEmail = "sarah@example.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Sarah+Smith&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-1), Amount = 120.50m, OrderStatus = "New" },
-            new() { Id = 2, OrderId = "#ORD-2023-002", CustomerName = "Michael Brown", CustomerEmail = "michael.b@tech.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Michael+Brown&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-2), Amount = 850.00m, OrderStatus = "Paid" },
-            new() { Id = 3, OrderId = "#ORD-2023-003", CustomerName = "Emily Davis", CustomerEmail = "emily.design@studio.io", CustomerAvatar = "https://ui-avatars.com/api/?name=Emily+Davis&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-3), Amount = 45.00m, OrderStatus = "Canceled" },
-            new() { Id = 4, OrderId = "#ORD-2023-004", CustomerName = "James Wilson", CustomerEmail = "jwilson@corp.net", CustomerAvatar = "https://ui-avatars.com/api/?name=James+Wilson&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-4), Amount = 2300.00m, OrderStatus = "Paid" },
-            new() { Id = 5, OrderId = "#ORD-2023-005", CustomerName = "Anna Johnson", CustomerEmail = "anna.j@mail.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Anna+Johnson&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-5), Amount = 175.25m, OrderStatus = "New" },
-            new() { Id = 6, OrderId = "#ORD-2023-006", CustomerName = "Robert Lee", CustomerEmail = "robert.lee@business.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Robert+Lee&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-5), Amount = 550.00m, OrderStatus = "Paid" },
-            new() { Id = 7, OrderId = "#ORD-2023-007", CustomerName = "Lisa Chen", CustomerEmail = "lisa.chen@shop.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Lisa+Chen&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-6), Amount = 89.99m, OrderStatus = "New" },
-            new() { Id = 8, OrderId = "#ORD-2023-008", CustomerName = "David Kim", CustomerEmail = "david.k@email.org", CustomerAvatar = "https://ui-avatars.com/api/?name=David+Kim&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-7), Amount = 420.00m, OrderStatus = "Canceled" },
-            // Additional mock data for pagination
-            new() { Id = 9, OrderId = "#ORD-2023-009", CustomerName = "Jennifer White", CustomerEmail = "j.white@company.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Jennifer+White&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-8), Amount = 299.99m, OrderStatus = "Paid" },
-            new() { Id = 10, OrderId = "#ORD-2023-010", CustomerName = "Thomas Garcia", CustomerEmail = "t.garcia@mail.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Thomas+Garcia&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-9), Amount = 1250.00m, OrderStatus = "New" },
-            new() { Id = 11, OrderId = "#ORD-2023-011", CustomerName = "Patricia Martinez", CustomerEmail = "p.martinez@work.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Patricia+Martinez&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-10), Amount = 78.50m, OrderStatus = "Paid" },
-            new() { Id = 12, OrderId = "#ORD-2023-012", CustomerName = "Christopher Lee", CustomerEmail = "c.lee@tech.io", CustomerAvatar = "https://ui-avatars.com/api/?name=Christopher+Lee&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-11), Amount = 650.00m, OrderStatus = "New" },
-            new() { Id = 13, OrderId = "#ORD-2023-013", CustomerName = "Amanda Taylor", CustomerEmail = "a.taylor@shop.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Amanda+Taylor&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-12), Amount = 189.00m, OrderStatus = "Paid" },
-            new() { Id = 14, OrderId = "#ORD-2023-014", CustomerName = "Daniel Anderson", CustomerEmail = "d.anderson@corp.net", CustomerAvatar = "https://ui-avatars.com/api/?name=Daniel+Anderson&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-13), Amount = 3200.00m, OrderStatus = "Canceled" },
-            new() { Id = 15, OrderId = "#ORD-2023-015", CustomerName = "Michelle Thomas", CustomerEmail = "m.thomas@email.org", CustomerAvatar = "https://ui-avatars.com/api/?name=Michelle+Thomas&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-14), Amount = 445.00m, OrderStatus = "New" },
-            new() { Id = 16, OrderId = "#ORD-2023-016", CustomerName = "Kevin Jackson", CustomerEmail = "k.jackson@business.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Kevin+Jackson&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-15), Amount = 99.99m, OrderStatus = "Paid" },
-            new() { Id = 17, OrderId = "#ORD-2023-017", CustomerName = "Nancy Moore", CustomerEmail = "n.moore@mail.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Nancy+Moore&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-16), Amount = 780.00m, OrderStatus = "New" },
-            new() { Id = 18, OrderId = "#ORD-2023-018", CustomerName = "Brian Harris", CustomerEmail = "b.harris@work.io", CustomerAvatar = "https://ui-avatars.com/api/?name=Brian+Harris&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-17), Amount = 125.50m, OrderStatus = "Paid" },
-            new() { Id = 19, OrderId = "#ORD-2023-019", CustomerName = "Elizabeth Clark", CustomerEmail = "e.clark@shop.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Elizabeth+Clark&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-18), Amount = 2100.00m, OrderStatus = "Canceled" },
-            new() { Id = 20, OrderId = "#ORD-2023-020", CustomerName = "George Lewis", CustomerEmail = "g.lewis@company.net", CustomerAvatar = "https://ui-avatars.com/api/?name=George+Lewis&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-19), Amount = 350.00m, OrderStatus = "Paid" },
-            new() { Id = 21, OrderId = "#ORD-2023-021", CustomerName = "Sandra Robinson", CustomerEmail = "s.robinson@tech.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Sandra+Robinson&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-20), Amount = 890.00m, OrderStatus = "New" },
-            new() { Id = 22, OrderId = "#ORD-2023-022", CustomerName = "Mark Walker", CustomerEmail = "m.walker@mail.org", CustomerAvatar = "https://ui-avatars.com/api/?name=Mark+Walker&background=10B981&color=fff", OrderDate = DateTime.Now.AddDays(-21), Amount = 67.99m, OrderStatus = "Paid" },
-            new() { Id = 23, OrderId = "#ORD-2023-023", CustomerName = "Donna Hall", CustomerEmail = "d.hall@business.io", CustomerAvatar = "https://ui-avatars.com/api/?name=Donna+Hall&background=EF4444&color=fff", OrderDate = DateTime.Now.AddDays(-22), Amount = 1450.00m, OrderStatus = "New" },
-            new() { Id = 24, OrderId = "#ORD-2023-024", CustomerName = "Steven Young", CustomerEmail = "s.young@shop.net", CustomerAvatar = "https://ui-avatars.com/api/?name=Steven+Young&background=F59E0B&color=fff", OrderDate = DateTime.Now.AddDays(-23), Amount = 520.00m, OrderStatus = "Canceled" },
-            new() { Id = 25, OrderId = "#ORD-2023-025", CustomerName = "Carol King", CustomerEmail = "c.king@work.com", CustomerAvatar = "https://ui-avatars.com/api/?name=Carol+King&background=7C5CFC&color=fff", OrderDate = DateTime.Now.AddDays(-24), Amount = 275.00m, OrderStatus = "Paid" },
-        };
+        IsLoading = true;
 
-        // Calculate stats
-        NewOrdersCount = _allOrders.Count(o => o.OrderStatus == "New");
-        PendingPaymentCount = _allOrders.Count(o => o.OrderStatus == "Paid");
-        DeliveredCount = _allOrders.Count(o => o.OrderStatus == "Canceled");
-        TotalRevenue = _allOrders.Sum(o => o.Amount);
-        TotalOrdersCount = _allOrders.Count();
+        try
+        {
+            var result = await _orderApiService.GetOrdersAsync(
+                page: CurrentPage,
+                size: PageSize,
+                status: SelectedOrderStatus == "All" ? null : SelectedOrderStatus,
+                fromDate: FromDate?.DateTime,
+                toDate: ToDate?.DateTime
+            );
+
+            if (result != null)
+            {
+                TotalOrdersCount = result.Total;
+                TotalPages = result.TotalPages > 0 ? result.TotalPages : 1;
+
+                FilteredOrders.Clear();
+                foreach (var order in result.Data)
+                {
+                    FilteredOrders.Add(new OrderViewModel
+                    {
+                        Id = order.Id,
+                        OrderId = $"#ORD-{order.Id:D4}",
+                        CustomerName = order.Customer?.Name ?? "Walk-in Customer",
+                        CustomerEmail = order.Customer?.Email ?? "",
+                        CustomerAvatar = order.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Guest&background=7C5CFC&color=fff",
+                        OrderDate = order.CreatedTime,
+                        Amount = order.FinalPrice,
+                        OrderStatus = order.Status
+                    });
+                }
+
+                // Update stats (simplified - would need separate API for accurate counts)
+                DraftCount = FilteredOrders.Count(o => o.OrderStatus == "DRAFT");
+                PendingCount = FilteredOrders.Count(o => o.OrderStatus == "PENDING");
+                PaidCount = FilteredOrders.Count(o => o.OrderStatus == "PAID");
+                CancelledCount = FilteredOrders.Count(o => o.OrderStatus == "CANCELLED");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading orders: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+            UpdatePaginationProperties();
+            UpdatePageNumbers();
+        }
     }
 
-    partial void OnSearchQueryChanged(string value) => UpdateFilteredOrders();
-    partial void OnFromDateChanged(DateTimeOffset? value) => UpdateFilteredOrders();
-    partial void OnToDateChanged(DateTimeOffset? value) => UpdateFilteredOrders();
-    partial void OnSelectedOrderStatusChanged(string value) => UpdateFilteredOrders();
-
-    private void UpdateFilteredOrders()
+    partial void OnSearchQueryChanged(string value)
     {
-        var filtered = _allOrders.AsEnumerable();
-
-        // Filter by search query
-        if (!string.IsNullOrWhiteSpace(SearchQuery))
-        {
-            filtered = filtered.Where(o =>
-                o.OrderId.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                o.CustomerName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                o.CustomerEmail.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
-        }
-
-        // Filter by date range
-        if (FromDate.HasValue)
-        {
-            var fromDateTime = FromDate.Value.Date;
-            filtered = filtered.Where(o => o.OrderDate.Date >= fromDateTime);
-        }
-
-        if (ToDate.HasValue)
-        {
-            var toDateTime = ToDate.Value.Date;
-            filtered = filtered.Where(o => o.OrderDate.Date <= toDateTime);
-        }
-
-        // Filter by order status
-        if (SelectedOrderStatus != "All")
-        {
-            filtered = filtered.Where(o => o.OrderStatus == SelectedOrderStatus);
-        }
-
-        var filteredList = filtered.OrderByDescending(o => o.OrderDate).ToList();
-        TotalOrdersCount = filteredList.Count();
-
-        // Reset to page 1 if needed
-        if (CurrentPage > TotalPages)
-        {
-            CurrentPage = 1;
-        }
-
-        ApplyPagination(filteredList);
+        // Debounce search
+        _searchDebounceToken?.Cancel();
+        _searchDebounceToken = new System.Threading.CancellationTokenSource();
+        var token = _searchDebounceToken.Token;
+        _ = DebounceSearchAsync(token);
     }
 
-    private void ApplyPagination(List<OrderViewModel> filteredList)
+    private async Task DebounceSearchAsync(System.Threading.CancellationToken token)
     {
-        var pagedOrders = filteredList
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize)
-            .ToList();
-
-        FilteredOrders.Clear();
-        foreach (var order in pagedOrders)
+        try
         {
-            FilteredOrders.Add(order);
+            await Task.Delay(400, token);
+            if (!token.IsCancellationRequested)
+            {
+                CurrentPage = 1;
+                await LoadOrdersAsync();
+            }
         }
+        catch (TaskCanceledException) { }
+    }
 
-        OnPropertyChanged(nameof(TotalPages));
+    partial void OnFromDateChanged(DateTimeOffset? value)
+    {
+        CurrentPage = 1;
+        _ = LoadOrdersAsync();
+    }
+
+    partial void OnToDateChanged(DateTimeOffset? value)
+    {
+        CurrentPage = 1;
+        _ = LoadOrdersAsync();
+    }
+
+    partial void OnSelectedOrderStatusChanged(string value)
+    {
+        CurrentPage = 1;
+        _ = LoadOrdersAsync();
+    }
+
+    private void UpdatePaginationProperties()
+    {
         OnPropertyChanged(nameof(PageStart));
         OnPropertyChanged(nameof(PageEnd));
         OnPropertyChanged(nameof(CanGoPrevious));
         OnPropertyChanged(nameof(CanGoNext));
-
-        UpdatePageNumbers();
     }
 
     private void UpdatePageNumbers()
     {
         PageNumbers.Clear();
 
-        int totalPages = TotalPages;
-        int current = CurrentPage;
+        if (TotalPages <= 1) return;
 
-        if (totalPages <= 1) return;
+        PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
 
-        PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = current == 1 });
-
-        int startPage = Math.Max(2, current - 1);
-        int endPage = Math.Min(totalPages - 1, current + 1);
+        int startPage = Math.Max(2, CurrentPage - 1);
+        int endPage = Math.Min(TotalPages - 1, CurrentPage + 1);
 
         if (startPage > 2)
         {
@@ -202,47 +199,47 @@ public partial class OrdersViewModel : ViewModelBase
 
         for (int i = startPage; i <= endPage; i++)
         {
-            PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = current == i });
+            PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = CurrentPage == i });
         }
 
-        if (endPage < totalPages - 1)
+        if (endPage < TotalPages - 1)
         {
             PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
         }
 
-        if (totalPages > 1)
+        if (TotalPages > 1)
         {
-            PageNumbers.Add(new PageButtonModel { PageNumber = totalPages, IsCurrentPage = current == totalPages });
+            PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
         }
     }
 
     [RelayCommand]
-    private void GoToPage(int pageNumber)
+    public async Task GoToPageAsync(int pageNumber)
     {
         if (pageNumber >= 1 && pageNumber <= TotalPages && pageNumber != CurrentPage)
         {
             CurrentPage = pageNumber;
-            UpdateFilteredOrders();
+            await LoadOrdersAsync();
         }
     }
 
     [RelayCommand]
-    private void PreviousPage()
+    private async Task PreviousPageAsync()
     {
         if (CanGoPrevious)
         {
             CurrentPage--;
-            UpdateFilteredOrders();
+            await LoadOrdersAsync();
         }
     }
 
     [RelayCommand]
-    private void NextPage()
+    private async Task NextPageAsync()
     {
         if (CanGoNext)
         {
             CurrentPage++;
-            UpdateFilteredOrders();
+            await LoadOrdersAsync();
         }
     }
 
@@ -262,9 +259,23 @@ public partial class OrdersViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void DeleteOrder(OrderViewModel order)
+    public async Task DeleteOrderAsync(OrderViewModel order)
     {
-        // TODO: Confirm and delete order
+        if (order != null)
+        {
+            try
+            {
+                var success = await _orderApiService.DeleteOrderAsync(order.Id);
+                if (success)
+                {
+                    await LoadOrdersAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting order: {ex.Message}");
+            }
+        }
     }
 
     [RelayCommand]
@@ -277,10 +288,9 @@ public partial class OrdersViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Refresh()
+    private async Task RefreshAsync()
     {
-        LoadMockData();
-        UpdateFilteredOrders();
+        await LoadOrdersAsync();
     }
 }
 
@@ -319,20 +329,31 @@ public partial class OrderViewModel : ObservableObject
     // Computed properties for status styling
     public string OrderStatusBackground => OrderStatus switch
     {
-        "New" => "#DBEAFE",
-        "Paid" => "#DCFCE7",
-        "Canceled" => "#FEE2E2",
+        "DRAFT" => "#F3F4F6",
+        "PENDING" => "#FEF3C7",
+        "PAID" => "#DCFCE7",
+        "CANCELLED" => "#FEE2E2",
         _ => "#F3F4F6"
     };
 
     public string OrderStatusForeground => OrderStatus switch
     {
-        "New" => "#1D4ED8",
-        "Paid" => "#15803D",
-        "Canceled" => "#B91C1C",
+        "DRAFT" => "#4B5563",
+        "PENDING" => "#CA8A04",
+        "PAID" => "#15803D",
+        "CANCELLED" => "#B91C1C",
         _ => "#4B5563"
     };
 
-    public string FormattedDate => OrderDate.ToString("MMM dd, yyyy");
-    public string FormattedAmount => $"${Amount:N2}";
+    public string FormattedDate => OrderDate.ToString("dd/MM/yyyy");
+    public string FormattedAmount => $"{Amount:N0}đ";
+    
+    public string DisplayStatus => OrderStatus switch
+    {
+        "DRAFT" => "Draft",
+        "PENDING" => "Pending",
+        "PAID" => "Paid",
+        "CANCELLED" => "Cancelled",
+        _ => OrderStatus
+    };
 }
