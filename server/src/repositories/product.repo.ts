@@ -8,6 +8,7 @@ interface ProductFilters {
   maxPrice?: number;
   keyword?: string;
   categoryId?: number;
+  id?: number;
 }
 
 export class ProductRepository {
@@ -20,6 +21,7 @@ export class ProductRepository {
       maxPrice,
       keyword,
       categoryId,
+      id,
     } = filters;
 
     const skip = (page - 1) * size;
@@ -43,6 +45,10 @@ export class ProductRepository {
 
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    if (id) {
+      where.id = id;
     }
 
     const [data, total] = await Promise.all([
@@ -187,6 +193,53 @@ export class ProductRepository {
         },
       },
     });
+  }
+
+  async addImages(data: { productId: number; url: string }[]) {
+    return prisma.productImage.createMany({
+      data,
+    });
+  }
+
+  async findImageById(id: number) {
+    return prisma.productImage.findUnique({
+      where: { id },
+    });
+  }
+
+  async deleteImage(id: number) {
+    return prisma.productImage.delete({
+      where: { id },
+    });
+  }
+
+  async getStats() {
+    const [totalProducts, totalCategories, lowStock, outOfStock] = await Promise.all([
+      prisma.product.count(),
+      prisma.category.count(),
+      prisma.product.count({
+        where: {
+          stock: {
+            gt: 0,
+            lt: 10
+          }
+        }
+      }),
+      prisma.product.count({
+        where: {
+          stock: {
+            lte: 0
+          }
+        }
+      })
+    ]);
+
+    return {
+      totalProducts,
+      totalCategories,
+      lowStock,
+      outOfStock
+    };
   }
 }
 
