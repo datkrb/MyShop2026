@@ -35,12 +35,19 @@ public partial class CustomersViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalOrders;
 
+    // Selection mode (for dialog)
+    [ObservableProperty]
+    private bool _isSelectionMode;
+
+    [ObservableProperty]
+    private CustomerViewModel? _selectedCustomer;
+
     // Pagination
     [ObservableProperty]
     private int _currentPage = 1;
 
     [ObservableProperty]
-    private int _pageSize = 10;
+    private int _pageSize = 2;
 
     [ObservableProperty]
     private int _totalPages = 1;
@@ -180,7 +187,7 @@ public partial class CustomersViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task GoToPageAsync(int pageNumber)
+    public async Task GoToPageAsync(int pageNumber)
     {
         if (pageNumber >= 1 && pageNumber <= TotalPages && pageNumber != CurrentPage)
         {

@@ -9,91 +9,165 @@
     PrimaryButtonText="Select"
     SecondaryButtonText="Cancel"
     DefaultButton="Primary"
+    IsPrimaryButtonEnabled="{x:Bind ViewModel.SelectedCustomer, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}"
     Style="{StaticResource DefaultContentDialogStyle}"
     RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}">
 
     <ContentDialog.Resources>
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <helpers:NullToBoolConverter x:Key="NullToBoolConverter"/>
+        <helpers:BoolToPaginationBrushConverter x:Key="BoolToPaginationBrushConverter"/>
         
-        <DataTemplate x:Key="CustomerItemTemplate" x:DataType="vm:CustomerViewModel">
-            <Grid Padding="12" Background="{ThemeResource SystemChromeLowColor}" CornerRadius="4" Margin="0,0,0,8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <Ellipse Width="40" Height="40" Margin="0,0,12,0">
-                    <Ellipse.Fill>
-                        <ImageBrush ImageSource="{x:Bind AvatarUrl}"/>
-                    </Ellipse.Fill>
-                </Ellipse>
-                
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold"/>
-                    <TextBlock Text="{x:Bind Email}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
+        <!-- Table Header Style -->
+        <Style x:Key="TableHeaderTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{ThemeResource TextSecondaryBrush}"/>
+            <Setter Property="CharacterSpacing" Value="50"/>
+        </Style>
     </ContentDialog.Resources>
 
-    <Grid Width="500" Height="500">
+    <Grid Width="500" MaxHeight="500">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Search Bar -->
-        <Grid Grid.Row="0" ColumnSpacing="8" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox 
-                PlaceholderText="Search customer by name, email, phone..." 
-                Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                KeyDown="SearchBox_KeyDown"/>
-            <Button Grid.Column="1" Command="{x:Bind ViewModel.SearchCommand}">
-                <FontIcon Glyph="&#xE721;"/>
-            </Button>
-        </Grid>
+        <AutoSuggestBox 
+            Grid.Row="0"
+            PlaceholderText="Search customers by name, email or phone..."
+            Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            QueryIcon="Find"
+            Width="300"
+            HorizontalAlignment="Left"
+            Margin="0,0,0,16"/>
 
         <!-- Loading -->
         <ProgressBar 
             Grid.Row="1" 
-            VerticalAlignment="Top" 
             IsIndeterminate="True" 
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-        <!-- Customer List -->
-        <ListView
-            Grid.Row="1"
-            ItemsSource="{x:Bind ViewModel.Customers, Mode=OneWay}"
-            SelectedItem="{x:Bind ViewModel.SelectedCustomer, Mode=TwoWay}"
-            SelectionMode="Single"
-            ItemTemplate="{StaticResource CustomerItemTemplate}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
+        <!-- Customer List + Pagination in ScrollViewer -->
+        <ScrollViewer 
+            Grid.Row="2"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Auto"
+            Padding="0,0,8,0">
+            <StackPanel>
+                <ListView
+                    ItemsSource="{x:Bind ViewModel.FilteredCustomers, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedCustomer, Mode=TwoWay}"
+                    SelectionMode="Single">
+                    <ListView.Header>
+                        <Grid Background="{ThemeResource SystemChromeLowColor}" Padding="12,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" MinWidth="150"/>
+                                <ColumnDefinition Width="2*" MinWidth="150"/>
+                                <ColumnDefinition Width="*" MinWidth="80"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="CUSTOMER" Style="{StaticResource TableHeaderTextStyle}"/>
+                            <TextBlock Grid.Column="1" Text="EMAIL" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                            <TextBlock Grid.Column="2" Text="PHONE" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                        </Grid>
+                    </ListView.Header>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CustomerViewModel">
+                            <Grid Padding="12,10" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" MinWidth="150"/>
+                                    <ColumnDefinition Width="2*" MinWidth="150"/>
+                                    <ColumnDefinition Width="*" MinWidth="80"/>
+                                </Grid.ColumnDefinitions>
 
-        <!-- Create New Section -->
-        <Expander Grid.Row="2" Header="Create New Customer" Margin="0,16,0,0" IsExpanded="{x:Bind ViewModel.IsCreatingNew, Mode=TwoWay}">
-            <StackPanel Spacing="12" Padding="0,12,0,0">
-                <TextBox Header="Name" PlaceholderText="Full Name" Text="{x:Bind ViewModel.NewCustomerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBox Header="Email" PlaceholderText="email@example.com" Text="{x:Bind ViewModel.NewCustomerEmail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBox Header="Phone" PlaceholderText="+1 234..." Text="{x:Bind ViewModel.NewCustomerPhone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBox Header="Address" PlaceholderText="Full Address" Text="{x:Bind ViewModel.NewCustomerAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                
-                <Button Command="{x:Bind ViewModel.CreateNewCustomerCommand}" HorizontalAlignment="Right" Style="{ThemeResource AccentButtonStyle}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE710;" FontSize="12"/>
-                        <TextBlock Text="Create &amp; Select"/>
+                                <!-- Customer Info -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                    <Ellipse Width="36" Height="36">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{x:Bind AvatarUrl}"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                        <TextBlock Text="{x:Bind Address}" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="120"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Email -->
+                                <TextBlock Grid.Column="1" Text="{x:Bind Email}" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" FontSize="13" MaxWidth="150"/>
+
+                                <!-- Phone -->
+                                <TextBlock Grid.Column="2" Text="{x:Bind Phone}" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="13"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Pagination -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12">
+                        <Run Text="Showing"/>
+                        <Run Text="{x:Bind ViewModel.PageStart, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                        <Run Text="-"/>
+                        <Run Text="{x:Bind ViewModel.PageEnd, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                        <Run Text="of"/>
+                        <Run Text="{x:Bind ViewModel.TotalCustomers, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                    </TextBlock>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <!-- Previous Button -->
+                        <Button 
+                            Command="{x:Bind ViewModel.PreviousPageCommand}"
+                            IsEnabled="{x:Bind ViewModel.CanGoPrevious, Mode=OneWay}"
+                            Style="{StaticResource PaginationButtonStyle}">
+                            <FontIcon Glyph="&#xE76B;" FontSize="12"/>
+                        </Button>
+                        
+                        <!-- Page Number Buttons -->
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.PageNumbers, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PageButtonModel">
+                                    <Button 
+                                        Content="{x:Bind DisplayText}"
+                                        Tag="{x:Bind PageNumber}"
+                                        Click="PageButton_Click"
+                                        IsEnabled="{x:Bind IsEllipsis, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Inverse}"
+                                        Style="{StaticResource PaginationButtonStyle}"
+                                        Background="{x:Bind IsCurrentPage, Converter={StaticResource BoolToPaginationBrushConverter}}"
+                                        Foreground="{x:Bind IsCurrentPage, Converter={StaticResource BoolToPaginationBrushConverter}, ConverterParameter=Foreground}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <!-- Next Button -->
+                        <Button 
+                            Command="{x:Bind ViewModel.NextPageCommand}"
+                            IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}"
+                            Style="{StaticResource PaginationButtonStyle}">
+                            <FontIcon Glyph="&#xE76C;" FontSize="12"/>
+                        </Button>
                     </StackPanel>
-                </Button>
+                </Grid>
             </StackPanel>
-        </Expander>
+        </ScrollViewer>
     </Grid>
 </ContentDialog>
