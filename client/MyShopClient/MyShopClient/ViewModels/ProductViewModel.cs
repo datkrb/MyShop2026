@@ -216,6 +216,9 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<PageInfo> _pages = new();
 
+    // PageNumbers for PaginationControl compatibility
+    public ObservableCollection<PageButtonModel> PageNumbers { get; } = new();
+
     [RelayCommand]
     public async Task LoadProducts()
     {
@@ -278,11 +281,16 @@ public partial class ProductViewModel : ViewModelBase
     private void GeneratePagination()
     {
         var list = new ObservableCollection<PageInfo>();
+        PageNumbers.Clear();
+        
         // Threshold for showing all pages is now smaller to show ellipses earlier per user request
         if (TotalPages <= 5)
         {
             for (int i = 1; i <= TotalPages; i++)
+            {
                 list.Add(CreatePageInfo(i));
+                PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = i == CurrentPage });
+            }
         }
         else
         {
@@ -293,6 +301,11 @@ public partial class ProductViewModel : ViewModelBase
                 list.Add(CreatePageInfo(2));
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { PageNumber = 2, IsCurrentPage = CurrentPage == 2 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
             // Show 1, ... Last-1, Last
             else if (CurrentPage >= TotalPages - 1)
@@ -301,6 +314,11 @@ public partial class ProductViewModel : ViewModelBase
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages - 1));
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages - 1, IsCurrentPage = CurrentPage == TotalPages - 1 });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
             // Show 1, ... Current ... Last
             else
@@ -310,6 +328,12 @@ public partial class ProductViewModel : ViewModelBase
                 list.Add(CreatePageInfo(CurrentPage));
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = CurrentPage, IsCurrentPage = true });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
         }
         Pages = list;
@@ -332,6 +356,12 @@ public partial class ProductViewModel : ViewModelBase
         if (page == CurrentPage) return;
         CurrentPage = page;
         await LoadProducts();
+    }
+
+    // Public method for PaginationControl compatibility
+    public async Task GoToPageAsync(int page)
+    {
+        await GoToPage(page);
     }
 
     [RelayCommand]
