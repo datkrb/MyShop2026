@@ -3,7 +3,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
+using MyShopClient.Views.Shared;
 using System;
+using System.Threading.Tasks;
 
 namespace MyShopClient.Views.Orders;
 
@@ -16,6 +18,32 @@ public sealed partial class OrderDetailView : Page
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<OrderDetailViewModel>() 
             ?? new OrderDetailViewModel();
+        
+        // Subscribe to notification property changes
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.IsTipOpen) && ViewModel.IsTipOpen)
+        {
+            ShowNotification();
+            ViewModel.IsTipOpen = false; // Reset flag
+        }
+    }
+
+    private void ShowNotification()
+    {
+        // Use the SlideNotification component based on severity
+        var severity = ViewModel.InfoBarSeverity switch
+        {
+            "Success" => NotificationSeverity.Success,
+            "Warning" => NotificationSeverity.Warning,
+            "Error" => NotificationSeverity.Error,
+            _ => NotificationSeverity.Info
+        };
+        
+        Notification.Show(ViewModel.InfoBarMessage, severity);
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -55,10 +83,10 @@ public sealed partial class OrderDetailView : Page
     {
         var confirmDialog = new ContentDialog
         {
-            Title = "Delete Order",
-            Content = $"Are you sure you want to delete order {ViewModel.OrderId}? This action cannot be undone.",
-            PrimaryButtonText = "Delete",
-            SecondaryButtonText = "Cancel",
+            Title = "Xóa đơn hàng",
+            Content = $"Bạn có chắc chắn muốn xóa đơn hàng {ViewModel.OrderId}? Hành động này không thể hoàn tác.",
+            PrimaryButtonText = "Xóa",
+            SecondaryButtonText = "Hủy",
             DefaultButton = ContentDialogButton.Secondary,
             XamlRoot = this.XamlRoot
         };
@@ -67,7 +95,21 @@ public sealed partial class OrderDetailView : Page
 
         if (result == ContentDialogResult.Primary)
         {
-            await ViewModel.DeleteOrderAsync();
+            var success = await ViewModel.DeleteOrderAsync();
+            
+            if (success)
+            {
+                // Show notification first
+                Notification.ShowSuccess("Đơn hàng đã được xóa thành công!");
+                
+                // Wait a bit for user to see the notification, then go back
+                await Task.Delay(1500);
+                
+                if (Frame.CanGoBack)
+                {
+                    Frame.GoBack();
+                }
+            }
         }
     }
 }

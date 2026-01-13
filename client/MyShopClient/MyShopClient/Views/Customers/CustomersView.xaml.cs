@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
+using MyShopClient.Views.Shared;
 using System;
 using Windows.UI;
 
@@ -60,52 +61,16 @@ public sealed partial class CustomersView : Page
         
         dialog.ViewModel.Reset();
         
-        await dialog.ShowAsync();
+        var result = await dialog.ShowAsync();
         
-        // Refresh the list after dialog closes
-        await ViewModel.LoadCustomersAsync();
-    }
-    
-    private async void EditCustomerButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button button && button.Tag is CustomerViewModel customer)
+        if (result == ContentDialogResult.Primary)
         {
-            var dialog = new AddCustomerDialog
-            {
-                XamlRoot = this.XamlRoot
-            };
-            
-            dialog.ViewModel.LoadCustomer(customer);
-            
-            await dialog.ShowAsync();
-            
-            // Refresh the list after dialog closes
+            // Show success notification and refresh list
+            Notification.ShowSuccess("Khách hàng đã được thêm thành công!");
             await ViewModel.LoadCustomersAsync();
         }
     }
     
-    private async void DeleteCustomerButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button button && button.Tag is CustomerViewModel customer)
-        {
-            var confirmDialog = new ContentDialog
-            {
-                Title = "Delete Customer",
-                Content = $"Are you sure you want to delete {customer.Name}? This action cannot be undone.",
-                PrimaryButtonText = "Delete",
-                SecondaryButtonText = "Cancel",
-                DefaultButton = ContentDialogButton.Secondary,
-                XamlRoot = this.XamlRoot
-            };
-
-            var result = await confirmDialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                await ViewModel.DeleteCustomerCommand.ExecuteAsync(customer.Id);
-            }
-        }
-    }
     
     private void UpdatePageButtonStyles()
     {

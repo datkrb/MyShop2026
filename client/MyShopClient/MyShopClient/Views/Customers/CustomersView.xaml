@@ -5,6 +5,7 @@
     xmlns:local="using:MyShopClient.Views.Customers"
     xmlns:viewmodels="using:MyShopClient.ViewModels"
     xmlns:helpers="using:MyShopClient.Helpers"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     Background="{ThemeResource AppBackgroundBrush}">
 
     <Page.Resources>
@@ -304,14 +305,12 @@
                                         <ColumnDefinition Width="2*" MinWidth="180"/>
                                         <ColumnDefinition Width="*" MinWidth="120"/>
                                         <ColumnDefinition Width="*" MinWidth="120"/>
-                                        <ColumnDefinition Width="100"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Text="CUSTOMER" Style="{StaticResource TableHeaderTextStyle}"/>
                                     <TextBlock Grid.Column="1" Text="EMAIL" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="2" Text="PHONE" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="3" Text="CREATED" VerticalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
-                                    <TextBlock Grid.Column="4" Text="ACTIONS" Style="{StaticResource TableHeaderTextStyle}" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="PHONE" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                                    <TextBlock Grid.Column="3" Text="CREATED" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
                                 </Grid>
                             </ListView.Header>
                             <ListView.ItemContainerStyle>
@@ -330,7 +329,6 @@
                                             <ColumnDefinition Width="2*" MinWidth="180"/>
                                             <ColumnDefinition Width="*" MinWidth="120"/>
                                             <ColumnDefinition Width="*" MinWidth="120"/>
-                                            <ColumnDefinition Width="100"/>
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Customer Info -->
@@ -367,6 +365,7 @@
                                             Grid.Column="2" 
                                             Text="{x:Bind Phone}" 
                                             VerticalAlignment="Center" 
+                                            HorizontalAlignment="Center"
                                             Foreground="{ThemeResource TextPrimaryBrush}"/>
 
                                         <!-- Created Date -->
@@ -374,33 +373,8 @@
                                             Grid.Column="3" 
                                             Text="{x:Bind FormattedCreatedDate}" 
                                             VerticalAlignment="Center" 
+                                            HorizontalAlignment="Center"
                                             Foreground="{ThemeResource TextPrimaryBrush}"/>
-
-                                        <!-- Actions -->
-                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                                            <Button 
-                                                Width="32" 
-                                                Height="32" 
-                                                Padding="0"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Tag="{x:Bind}"
-                                                Click="EditCustomerButton_Click"
-                                                ToolTipService.ToolTip="Edit">
-                                                <FontIcon Glyph="&#xE70F;" FontSize="16" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                            </Button>
-                                            <Button 
-                                                Width="32" 
-                                                Height="32" 
-                                                Padding="0"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Tag="{x:Bind}"
-                                                Click="DeleteCustomerButton_Click"
-                                                ToolTipService.ToolTip="Delete">
-                                                <FontIcon Glyph="&#xE74D;" FontSize="16" Foreground="#EF4444"/>
-                                            </Button>
-                                        </StackPanel>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -484,6 +458,10 @@
                     HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
+
+        <!-- Slide Notification Component -->
+        <shared:SlideNotification 
+            x:Name="Notification" 
+            Canvas.ZIndex="999"/>
     </Grid>
 </Page>
-
