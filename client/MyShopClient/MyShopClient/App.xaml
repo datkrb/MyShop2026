@@ -15,6 +15,7 @@
             <helpers:StringFormatConverter x:Key="StringFormatConverter" />
             <helpers:BoolToChangeBrushConverter x:Key="BoolToChangeBrushConverter" />
             <helpers:BoolToChangeGlyphConverter x:Key="BoolToChangeGlyphConverter" />
+            <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
