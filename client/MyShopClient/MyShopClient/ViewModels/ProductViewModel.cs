@@ -283,59 +283,52 @@ public partial class ProductViewModel : ViewModelBase
         var list = new ObservableCollection<PageInfo>();
         PageNumbers.Clear();
         
-        // Threshold for showing all pages is now smaller to show ellipses earlier per user request
-        if (TotalPages <= 5)
+        if (TotalPages <= 1) 
         {
-            for (int i = 1; i <= TotalPages; i++)
+            if (TotalPages == 1)
             {
-                list.Add(CreatePageInfo(i));
-                PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = i == CurrentPage });
+                list.Add(CreatePageInfo(1));
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = true });
             }
+            Pages = list;
+            return;
         }
-        else
+
+        // Always show page 1
+        list.Add(CreatePageInfo(1));
+        PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+
+        int startPage = Math.Max(2, CurrentPage - 1);
+        int endPage = Math.Min(TotalPages - 1, CurrentPage + 1);
+
+        // Add ellipsis after page 1 if needed
+        if (startPage > 2)
         {
-            // Show 1, 2, ... Last
-            if (CurrentPage <= 2)
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(CreatePageInfo(2));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { PageNumber = 2, IsCurrentPage = CurrentPage == 2 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
-            // Show 1, ... Last-1, Last
-            else if (CurrentPage >= TotalPages - 1)
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages - 1));
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages - 1, IsCurrentPage = CurrentPage == TotalPages - 1 });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
-            // Show 1, ... Current ... Last
-            else
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(CurrentPage));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = CurrentPage, IsCurrentPage = true });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
+            list.Add(new PageInfo { Text = "...", IsEnabled = false });
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
         }
+
+        // Add middle pages
+        for (int i = startPage; i <= endPage; i++)
+        {
+            list.Add(CreatePageInfo(i));
+            PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = CurrentPage == i });
+        }
+
+        // Add ellipsis before last page if needed
+        if (endPage < TotalPages - 1)
+        {
+            list.Add(new PageInfo { Text = "...", IsEnabled = false });
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+        }
+
+        // Always show last page if there's more than 1 page
+        if (TotalPages > 1)
+        {
+            list.Add(CreatePageInfo(TotalPages));
+            PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
+        }
+
         Pages = list;
     }
 

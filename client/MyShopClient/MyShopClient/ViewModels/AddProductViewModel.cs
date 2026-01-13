@@ -12,10 +12,22 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
+using MyShopClient.Services.Api;
+
 namespace MyShopClient.ViewModels;
 
-public partial class AddProductDialogViewModel : ObservableValidator
+public partial class AddProductViewModel : ObservableValidator
 {
+    // Edit mode properties
+    [ObservableProperty]
+    private int _productId;
+
+    [ObservableProperty]
+    private bool _isEditMode;
+
+    public string PageTitle => IsEditMode ? "Edit Product" : "Add New Product";
+    public string SaveButtonText => IsEditMode ? "Update Product" : "Save Product";
+
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required(ErrorMessage = "Tên sản phẩm là bắt buộc")]
@@ -89,7 +101,7 @@ public partial class AddProductDialogViewModel : ObservableValidator
 
     public event EventHandler<bool>? DialogCloseRequested;
 
-    public AddProductDialogViewModel()
+    public AddProductViewModel()
     {
         ProductImages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasImages));
     }
@@ -162,6 +174,57 @@ public partial class AddProductDialogViewModel : ObservableValidator
         }
     }
 
+    /// <summary>
+    /// Load product data for editing
+    /// </summary>
+    public async Task LoadProductAsync(int productId)
+    {
+        ProductId = productId;
+        IsEditMode = true;
+        IsSaving = true;
+        OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(SaveButtonText));
+
+        try
+        {
+            var product = await ProductApiService.Instance.GetProductAsync(productId);
+            if (product != null)
+            {
+                Name = product.Name;
+                Sku = product.Sku ?? "";
+                Description = product.Description ?? "";
+                ImportPrice = (double)product.ImportPrice;
+                SalePrice = (double)product.SalePrice;
+                Stock = product.Stock;
+                SelectedCategory = product.Category?.Name;
+
+                // Load existing images as display (not editable for now)
+                ProductImages.Clear();
+                if (product.Images != null)
+                {
+                    foreach (var img in product.Images)
+                    {
+                        ProductImages.Add(new LocalProductImage
+                        {
+                            FilePath = img.Url,
+                            FileName = img.Url.Split('/').LastOrDefault() ?? "image",
+                            ImageUrl = img.Url
+                        });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Failed to load product: {ex.Message}";
+            HasErrors = true;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
     [RelayCommand]
     private async Task SaveAsync()
     {
@@ -195,11 +258,71 @@ public partial class AddProductDialogViewModel : ObservableValidator
 
         try
         {
-            // Simulate async save operation
-            await Task.Delay(500);
+            if (IsEditMode)
+            {
+                // Update existing product
+                var existingProduct = await ProductApiService.Instance.GetProductAsync(ProductId);
+                if (existingProduct != null)
+                {
+                    existingProduct.Name = Name;
+                    existingProduct.Sku = Sku;
+                    existingProduct.Description = Description;
+                    existingProduct.ImportPrice = (decimal)ImportPrice;
+                    existingProduct.SalePrice = (decimal)SalePrice;
+                    existingProduct.Stock = (int)Stock;
 
-            // Close dialog with success
-            DialogCloseRequested?.Invoke(this, true);
+                    // Find category ID by name
+                    var categories = await ProductApiService.Instance.GetCategoriesAsync();
+                    var category = categories?.FirstOrDefault(c => c.Name == SelectedCategory);
+                    if (category != null)
+                    {
+                        existingProduct.CategoryId = category.Id;
+                    }
+
+                    await ProductApiService.Instance.UpdateProductAsync(ProductId, existingProduct);
+                }
+
+                DialogCloseRequested?.Invoke(this, true);
+            }
+            else
+            {
+                // Create new product
+                var newProduct = new ApiProduct
+                {
+                    Name = Name,
+                    Sku = Sku,
+                    Description = Description,
+                    ImportPrice = (decimal)ImportPrice,
+                    SalePrice = (decimal)SalePrice,
+                    Stock = (int)Stock
+                };
+
+                // Find category ID by name
+                var categories = await ProductApiService.Instance.GetCategoriesAsync();
+                var category = categories?.FirstOrDefault(c => c.Name == SelectedCategory);
+                if (category != null)
+                {
+                    newProduct.CategoryId = category.Id;
+                }
+
+                var createdProduct = await ProductApiService.Instance.CreateProductAsync(newProduct);
+                
+                if (createdProduct != null)
+                {
+                    // Upload images for the new product
+                    var imagePaths = ProductImages
+                        .Where(img => !string.IsNullOrEmpty(img.FilePath) && string.IsNullOrEmpty(img.ImageUrl))
+                        .Select(img => img.FilePath!)
+                        .ToList();
+
+                    if (imagePaths.Any())
+                    {
+                        await ProductApiService.Instance.UploadProductImagesAsync(createdProduct.Id, imagePaths);
+                    }
+                }
+
+                DialogCloseRequested?.Invoke(this, true);
+            }
         }
         catch (Exception ex)
         {

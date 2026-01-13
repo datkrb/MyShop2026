@@ -36,9 +36,62 @@ public partial class ProductDetailViewModel : ViewModelBase
 
     public bool HasMinimumImages => (Product?.Images?.Count ?? 0) + SelectedImagePaths.Count >= 3;
 
+    // Image Slideshow Properties
+    [ObservableProperty]
+    private int _currentImageIndex = 0;
+
+    public string? CurrentImage => Product?.Images?.Count > 0 && CurrentImageIndex < Product.Images.Count 
+        ? Product.Images[CurrentImageIndex].Url 
+        : null;
+
+    public bool HasMultipleImages => (Product?.Images?.Count ?? 0) > 1;
+
+    public string ImageCounterText => $"{CurrentImageIndex + 1} / {Product?.Images?.Count ?? 0}";
+
+    // Formatted display properties
+    public string FormattedImportPrice => Product?.ImportPrice.ToString("N0") + " VND" ?? "0 VND";
+    public string FormattedSalePrice => Product?.SalePrice.ToString("N0") + " VND" ?? "0 VND";
+
     public ProductDetailViewModel(ProductApiService productApiService)
     {
         _productApiService = productApiService;
+    }
+
+    [RelayCommand]
+    public void NextImage()
+    {
+        if (Product?.Images?.Count > 0)
+        {
+            CurrentImageIndex = (CurrentImageIndex + 1) % Product.Images.Count;
+            OnPropertyChanged(nameof(CurrentImage));
+            OnPropertyChanged(nameof(ImageCounterText));
+        }
+    }
+
+    [RelayCommand]
+    public void PreviousImage()
+    {
+        if (Product?.Images?.Count > 0)
+        {
+            CurrentImageIndex = CurrentImageIndex > 0 ? CurrentImageIndex - 1 : Product.Images.Count - 1;
+            OnPropertyChanged(nameof(CurrentImage));
+            OnPropertyChanged(nameof(ImageCounterText));
+        }
+    }
+
+    [RelayCommand]
+    public void SelectImage(ProductImage image)
+    {
+        if (Product?.Images != null)
+        {
+            var index = Product.Images.ToList().FindIndex(i => i.Id == image.Id);
+            if (index >= 0)
+            {
+                CurrentImageIndex = index;
+                OnPropertyChanged(nameof(CurrentImage));
+                OnPropertyChanged(nameof(ImageCounterText));
+            }
+        }
     }
 
     public async Task InitializeAsync(int productId)
@@ -202,11 +255,17 @@ public partial class ProductDetailViewModel : ViewModelBase
             if (p != null)
             {
                 Product = p;
+                CurrentImageIndex = 0; // Reset to first image
                 if (Categories.Count > 0 && Product.CategoryId != null)
                 {
                     SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
                 }
                 OnPropertyChanged(nameof(HasMinimumImages));
+                OnPropertyChanged(nameof(CurrentImage));
+                OnPropertyChanged(nameof(HasMultipleImages));
+                OnPropertyChanged(nameof(ImageCounterText));
+                OnPropertyChanged(nameof(FormattedImportPrice));
+                OnPropertyChanged(nameof(FormattedSalePrice));
             }
         }
         catch (Exception ex)

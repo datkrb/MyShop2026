@@ -9,10 +9,56 @@
     Title="Add New Category"
     PrimaryButtonText="Add"
     CloseButtonText="Cancel"
-    DefaultButton="Primary">
-
-    <StackPanel Spacing="10" Margin="0,10,0,0">
-        <TextBox x:Name="NameBox" Header="Category Name" PlaceholderText="Enter name..."/>
-        <TextBox x:Name="DescriptionBox" Header="Description" PlaceholderText="Optional..." AcceptsReturn="True" Height="80"/>
+    DefaultButton="Primary"
+    Style="{StaticResource DefaultContentDialogStyle}">
+    
+    <ContentDialog.Resources>
+        <!-- Form Label Style -->
+        <Style x:Key="FormLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        
+        <!-- Required Indicator Style -->
+        <Style x:Key="RequiredIndicatorStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource DangerBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
+        </Style>
+        
+        <!-- Primary Button Override with App Primary Color -->
+        <StaticResource x:Key="AccentButtonBackground" ResourceKey="PrimaryBrush"/>
+        <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="PrimaryBrush"/>
+        <StaticResource x:Key="AccentButtonBackgroundPressed" ResourceKey="PrimaryBrush"/>
+    </ContentDialog.Resources>
+    
+    <StackPanel Spacing="20" Width="350" Padding="8,8,8,0">
+        
+        <!-- Category Name Field -->
+        <StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Category Name" Style="{StaticResource FormLabelStyle}"/>
+                <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+            </StackPanel>
+            <TextBox 
+                x:Name="NameBox"
+                PlaceholderText="Enter category name..."
+                HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        
+        <!-- Description Field -->
+        <StackPanel>
+            <TextBlock Text="Description" Style="{StaticResource FormLabelStyle}"/>
+            <TextBox 
+                x:Name="DescriptionBox"
+                PlaceholderText="Optional description..."
+                TextWrapping="Wrap"
+                AcceptsReturn="True"
+                Height="80"
+                HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        
     </StackPanel>
 </ContentDialog>
