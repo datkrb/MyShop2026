@@ -82,6 +82,12 @@
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 
+            <NavigationViewItem Content="Customers" Tag="Customers">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE77B;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
             <NavigationViewItem Content="Statistics" Tag="Statistics">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE9D2;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>

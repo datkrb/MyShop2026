@@ -1,0 +1,109 @@
+<ContentDialog
+    x:Class="MyShopClient.Views.Customers.AddCustomerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyShopClient.Views.Customers"
+    xmlns:viewmodels="using:MyShopClient.ViewModels"
+    xmlns:helpers="using:MyShopClient.Helpers"
+    Title="{x:Bind ViewModel.DialogTitle, Mode=OneWay}"
+    PrimaryButtonText="Save"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Primary"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    RequestedTheme="{x:Bind RequestedTheme, Mode=OneWay}"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+    
+    <ContentDialog.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        
+        <!-- Form Label Style -->
+        <Style x:Key="FormLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        
+        <!-- Required Indicator Style -->
+        <Style x:Key="RequiredIndicatorStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource DangerBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
+        </Style>
+    </ContentDialog.Resources>
+    
+    <ScrollViewer 
+        VerticalScrollBarVisibility="Auto" 
+        HorizontalScrollBarVisibility="Disabled"
+        MaxHeight="450">
+        
+        <StackPanel Spacing="20" Width="400" Padding="8,8,16,0">
+            
+            <!-- Error Message Banner -->
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.HasErrors, Mode=OneWay}"
+                Severity="Error"
+                Title="Validation Error"
+                Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                IsClosable="False"/>
+            
+            <!-- Name Field -->
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Name" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
+                <TextBox 
+                    PlaceholderText="Enter customer name..."
+                    Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            
+            <!-- Email Field -->
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Email" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
+                <TextBox 
+                    PlaceholderText="customer@email.com"
+                    Text="{x:Bind ViewModel.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            
+            <!-- Phone Field -->
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Phone" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
+                <TextBox 
+                    PlaceholderText="0901234567 (10-11 digits)"
+                    Text="{x:Bind ViewModel.Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            
+            <!-- Address Field -->
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Address" Style="{StaticResource FormLabelStyle}"/>
+                    <TextBlock Text="*" Style="{StaticResource RequiredIndicatorStyle}"/>
+                </StackPanel>
+                <TextBox 
+                    PlaceholderText="Enter full address..."
+                    Text="{x:Bind ViewModel.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap"
+                    AcceptsReturn="True"
+                    Height="80"
+                    HorizontalAlignment="Stretch"/>
+            </StackPanel>
+            
+            <!-- Loading Indicator -->
+            <ProgressBar 
+                IsIndeterminate="True"
+                Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

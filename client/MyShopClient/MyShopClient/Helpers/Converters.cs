@@ -4,25 +4,6 @@ using System;
 
 namespace MyShopClient.Helpers;
 
-public class BoolToVisibilityConverter : IValueConverter
-{
-    public bool IsInverted { get; set; }
-
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        if (value is bool val)
-        {
-            if (IsInverted) val = !val;
-            return val ? Visibility.Visible : Visibility.Collapsed;
-        }
-        return IsInverted ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}
 
 public class DecimalToDoubleConverter : IValueConverter
 {
@@ -212,6 +193,48 @@ public class ProductImageToSourceConverter : IValueConverter
             }
         }
         return null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts null to false, non-null to true. Useful for enabling buttons when a selection is made.
+/// </summary>
+public class NullToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        return value != null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts string to InfoBarSeverity enum for notifications
+/// </summary>
+public class StringToInfoBarSeverityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is string severity)
+        {
+            return severity switch
+            {
+                "Success" => Microsoft.UI.Xaml.Controls.InfoBarSeverity.Success,
+                "Warning" => Microsoft.UI.Xaml.Controls.InfoBarSeverity.Warning,
+                "Error" => Microsoft.UI.Xaml.Controls.InfoBarSeverity.Error,
+                _ => Microsoft.UI.Xaml.Controls.InfoBarSeverity.Informational
+            };
+        }
+        return Microsoft.UI.Xaml.Controls.InfoBarSeverity.Informational;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
