@@ -125,7 +125,7 @@ public class StockToStatusStringConverter : IValueConverter
         if (value is int stock)
         {
             if (stock <= 0) return "OutOfStock";
-            if (stock < 10) return "LowStock";
+            if (stock < 5) return "LowStock";
             return "Published";
         }
         return "";
