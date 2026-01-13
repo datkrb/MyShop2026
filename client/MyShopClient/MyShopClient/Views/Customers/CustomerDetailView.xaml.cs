@@ -3,7 +3,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
+using MyShopClient.Views.Shared;
 using System;
+using System.Threading.Tasks;
 
 namespace MyShopClient.Views.Customers;
 
@@ -45,20 +47,24 @@ public sealed partial class CustomerDetailView : Page
         
         dialog.ViewModel.LoadFromDetailViewModel(ViewModel);
         
-        await dialog.ShowAsync();
+        var result = await dialog.ShowAsync();
         
-        // Reload customer details after edit
-        await ViewModel.LoadCustomerDetailsAsync(ViewModel.Id);
+        if (result == ContentDialogResult.Primary)
+        {
+            // Reload customer details after edit
+            await ViewModel.LoadCustomerDetailsAsync(ViewModel.Id);
+            Notification.ShowSuccess("Thông tin khách hàng đã được cập nhật!");
+        }
     }
 
     private async void DeleteCustomerButton_Click(object sender, RoutedEventArgs e)
     {
         var confirmDialog = new ContentDialog
         {
-            Title = "Delete Customer",
-            Content = $"Are you sure you want to delete {ViewModel.Name}? This action cannot be undone.",
-            PrimaryButtonText = "Delete",
-            SecondaryButtonText = "Cancel",
+            Title = "Xóa khách hàng",
+            Content = $"Bạn có chắc chắn muốn xóa {ViewModel.Name}? Hành động này không thể hoàn tác.",
+            PrimaryButtonText = "Xóa",
+            SecondaryButtonText = "Hủy",
             DefaultButton = ContentDialogButton.Secondary,
             XamlRoot = this.XamlRoot
         };
@@ -69,21 +75,21 @@ public sealed partial class CustomerDetailView : Page
         {
             var success = await ViewModel.DeleteCustomerAsync();
             
-            if (success && Frame.CanGoBack)
+            if (success)
             {
-                Frame.GoBack();
-            }
-            else if (!success)
-            {
-                // Show error dialog
-                var errorDialog = new ContentDialog
+                Notification.ShowSuccess("Khách hàng đã được xóa thành công!");
+                
+                // Wait for user to see notification, then go back
+                await Task.Delay(1500);
+                
+                if (Frame.CanGoBack)
                 {
-                    Title = "Error",
-                    Content = "Failed to delete customer. Please try again.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errorDialog.ShowAsync();
+                    Frame.GoBack();
+                }
+            }
+            else
+            {
+                Notification.ShowError("Không thể xóa khách hàng. Vui lòng thử lại.");
             }
         }
     }

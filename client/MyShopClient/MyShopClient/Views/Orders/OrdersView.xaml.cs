@@ -54,36 +54,6 @@ public sealed partial class OrdersView : Page
         Frame.Navigate(typeof(OrderDetailView), "new");
     }
     
-    private void EditOrderButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button button && button.Tag is OrderViewModel order)
-        {
-            Frame.Navigate(typeof(OrderDetailView), order.Id);
-        }
-    }
-    
-    private async void DeleteOrderButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button button && button.Tag is OrderViewModel order)
-        {
-            var confirmDialog = new ContentDialog
-            {
-                Title = "Delete Order",
-                Content = $"Are you sure you want to delete order {order.OrderId}? This action cannot be undone.",
-                PrimaryButtonText = "Delete",
-                SecondaryButtonText = "Cancel",
-                DefaultButton = ContentDialogButton.Secondary,
-                XamlRoot = this.XamlRoot
-            };
-
-            var result = await confirmDialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                await ViewModel.DeleteOrderAsync(order);
-            }
-        }
-    }
     
     private void UpdatePageButtonStyles()
     {

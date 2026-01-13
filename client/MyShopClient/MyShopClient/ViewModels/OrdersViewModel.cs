@@ -103,7 +103,7 @@ public partial class OrdersViewModel : ViewModelBase
                     FilteredOrders.Add(new OrderViewModel
                     {
                         Id = order.Id,
-                        OrderId = $"#ORD-{order.Id:D4}",
+                        OrderId = $"#{order.Id:D4}",
                         CustomerName = order.Customer?.Name ?? "Walk-in Customer",
                         CustomerEmail = order.Customer?.Email ?? "",
                         CustomerAvatar = order.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Guest&background=7C5CFC&color=fff",

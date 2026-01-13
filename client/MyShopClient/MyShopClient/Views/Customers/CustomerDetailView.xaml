@@ -5,6 +5,7 @@
     xmlns:local="using:MyShopClient.Views.Customers"
     xmlns:viewmodels="using:MyShopClient.ViewModels"
     xmlns:helpers="using:MyShopClient.Helpers"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     Background="{ThemeResource AppBackgroundBrush}">
     
     <Page.Resources>
@@ -248,6 +249,12 @@
                     HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
+
+        <!-- Slide Notification Component -->
+        <shared:SlideNotification 
+            x:Name="Notification" 
+            Grid.RowSpan="2" 
+            Canvas.ZIndex="999"/>
     </Grid>
 </Page>
 

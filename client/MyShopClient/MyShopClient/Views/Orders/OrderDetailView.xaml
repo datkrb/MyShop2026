@@ -6,6 +6,7 @@
     xmlns:local="using:MyShopClient.Views.Orders"
     xmlns:viewmodels="using:MyShopClient.ViewModels"
     xmlns:helpers="using:MyShopClient.Helpers"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     Background="{ThemeResource AppBackgroundBrush}">
     
     <Page.Resources>
@@ -14,16 +15,20 @@
         <helpers:StringVisibilityConverter x:Key="StringVisibilityConverter"/>
         <helpers:InverseStringVisibilityConverter x:Key="InverseStringVisibilityConverter"/>
         <helpers:ImageUrlConverter x:Key="ImageUrlConverter"/>
+        <helpers:StringToInfoBarSeverityConverter x:Key="StringToInfoBarSeverityConverter"/>
     </Page.Resources>
 
     <Grid Padding="24,24,4,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+
+
         <!-- Header with Back Button -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,24">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0,0,0,24">
             <Button 
                 x:Name="BackButton"
                 Click="BackButton_Click"
@@ -68,7 +73,7 @@
         </StackPanel>
 
         <!-- Main Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
             <Grid ColumnSpacing="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -156,7 +161,7 @@
                                 Text="No customer selected" 
                                 Foreground="{ThemeResource TextSecondaryBrush}"
                                 Visibility="{x:Bind ViewModel.CustomerName, Mode=OneWay, Converter={StaticResource InverseStringVisibilityConverter}}"/>
-                                
+                            
                         </StackPanel>
                     </Border>
                     
@@ -265,7 +270,7 @@
                                         <!-- Product Info -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{x:Bind FormattedUnitPrice}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{x:Bind FormattedUnitPrice, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                         
                                         <!-- Quantity (Read Only) -->
@@ -292,7 +297,7 @@
                                             Visibility="{Binding ElementName=ThisPage, Path=ViewModel.IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         
                                         <!-- Total -->
-                                        <TextBlock Grid.Column="3" Text="{x:Bind FormattedTotalPrice}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind FormattedTotalPrice, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
 
                                         <!-- Remove Button (Edit Mode Only) -->
                                         <Button
@@ -329,7 +334,7 @@
         
         <!-- Loading Overlay -->
         <Grid 
-            Grid.Row="1"
+            Grid.Row="2"
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
             Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
             <StackPanel 
@@ -343,5 +348,11 @@
                     HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
+
+        <!-- Slide Notification Component -->
+        <shared:SlideNotification 
+            x:Name="Notification" 
+            Grid.RowSpan="3" 
+            Canvas.ZIndex="999"/>
     </Grid>
 </Page>

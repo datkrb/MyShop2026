@@ -72,6 +72,19 @@ public partial class OrderDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedStatus = "DRAFT";
 
+    // Notification properties
+    [ObservableProperty]
+    private bool _isInfoBarOpen;
+
+    [ObservableProperty]
+    private bool _isTipOpen;
+
+    [ObservableProperty]
+    private string _infoBarMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _infoBarSeverity = "Informational"; // Success, Warning, Error, Informational
+
     // Order Items
     public ObservableCollection<OrderItemViewModel> OrderItems { get; } = new();
 
@@ -157,7 +170,7 @@ public partial class OrderDetailViewModel : ObservableObject
                 {
                     foreach (var item in order.OrderItems)
                     {
-                        OrderItems.Add(new OrderItemViewModel
+                        AddOrderItem(new OrderItemViewModel
                         {
                             ProductId = item.ProductId,
                             ProductName = item.Product?.Name ?? "Unknown Product",
@@ -218,7 +231,7 @@ public partial class OrderDetailViewModel : ObservableObject
         OrderStatus = "DRAFT";
         SelectedStatus = "DRAFT";
         
-        CustomerName = "Select Customer";
+        CustomerName = "";
         CustomerEmail = "";
         CustomerPhone = "";
         CustomerAddress = "";
@@ -241,6 +254,12 @@ public partial class OrderDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(FormattedSubtotal));
         OnPropertyChanged(nameof(FormattedTotal));
         OnPropertyChanged(nameof(FormattedAmount));
+    }
+
+    private void AddOrderItem(OrderItemViewModel item)
+    {
+        item.QuantityChanged += RecalculateTotals;
+        OrderItems.Add(item);
     }
 
     [RelayCommand]
@@ -292,7 +311,7 @@ public partial class OrderDetailViewModel : ObservableObject
             }
             else
             {
-                OrderItems.Add(new OrderItemViewModel
+                AddOrderItem(new OrderItemViewModel
                 {
                     ProductId = product.Id,
                     ProductName = product.Name,
@@ -317,6 +336,19 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
+        // Validate inputs
+        if (!CustomerId.HasValue)
+        {
+            ShowNotification("Vui lòng chọn khách hàng trước khi lưu đơn hàng.", "Warning");
+            return;
+        }
+
+        if (OrderItems.Count == 0)
+        {
+            ShowNotification("Vui lòng thêm ít nhất một sản phẩm vào đơn hàng.", "Warning");
+            return;
+        }
+
         IsLoading = true;
 
         try
@@ -338,9 +370,14 @@ public partial class OrderDetailViewModel : ObservableObject
                 if (result != null)
                 {
                     Id = result.Id;
-                    OrderId = $"#ORD-{result.Id:D4}";
+                    OrderId = $"#{result.Id:D4}";
                     IsNewOrder = false;
                     IsEditing = false;
+                    ShowNotification("Đơn hàng đã được tạo thành công!", "Success");
+                }
+                else
+                {
+                    ShowNotification("Không thể tạo đơn hàng. Vui lòng thử lại.", "Error");
                 }
             }
             else
@@ -361,17 +398,30 @@ public partial class OrderDetailViewModel : ObservableObject
                 {
                     OrderStatus = result.Status;
                     IsEditing = false;
+                    ShowNotification("Đơn hàng đã được cập nhật thành công!", "Success");
+                }
+                else
+                {
+                    ShowNotification("Không thể cập nhật đơn hàng. Vui lòng thử lại.", "Error");
                 }
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error saving order: {ex.Message}");
+            ShowNotification($"Đã xảy ra lỗi: {ex.Message}", "Error");
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private void ShowNotification(string message, string severity)
+    {
+        InfoBarMessage = message;
+        InfoBarSeverity = severity;
+        IsTipOpen = true;
     }
 
     [RelayCommand]
@@ -401,19 +451,33 @@ public partial class OrderDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task DeleteOrderAsync()
+    public async Task<bool> DeleteOrderAsync()
     {
+        IsLoading = true;
+        
         try
         {
             var success = await _orderApiService.DeleteOrderAsync(Id);
-            if (success && App.Current.ContentFrame.CanGoBack)
+            if (success)
             {
-                App.Current.ContentFrame.GoBack();
+                ShowNotification("Đơn hàng đã được xóa thành công!", "Success");
+                return true;
+            }
+            else
+            {
+                ShowNotification("Không thể xóa đơn hàng. Vui lòng thử lại.", "Error");
+                return false;
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error deleting order: {ex.Message}");
+            ShowNotification($"Đã xảy ra lỗi: {ex.Message}", "Error");
+            return false;
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 }
@@ -423,6 +487,11 @@ public partial class OrderDetailViewModel : ObservableObject
 /// </summary>
 public partial class OrderItemViewModel : ObservableObject
 {
+    /// <summary>
+    /// Event raised when quantity changes, used to notify parent to recalculate totals
+    /// </summary>
+    public event Action? QuantityChanged;
+
     [ObservableProperty]
     private int _productId;
 
@@ -451,5 +520,6 @@ public partial class OrderItemViewModel : ObservableObject
     {
         TotalPrice = UnitPrice * value;
         OnPropertyChanged(nameof(FormattedTotalPrice));
+        QuantityChanged?.Invoke();
     }
 }
