@@ -7,6 +7,7 @@
     xmlns:api="using:MyShopClient.Services.Api"
     xmlns:models="using:MyShopClient.Models"
     xmlns:helpers="using:MyShopClient.Helpers"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     Title="Select Product"
     PrimaryButtonText="Add to Order"
     SecondaryButtonText="Cancel"
@@ -115,60 +116,15 @@
                 </ListView>
 
                 <!-- Pagination -->
-                <Grid Margin="0,16,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="12">
-                        <Run Text="Page"/>
-                        <Run Text="{x:Bind ViewModel.CurrentPage, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                        <Run Text="of"/>
-                        <Run Text="{x:Bind ViewModel.TotalPages, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                        <Run Text="("/>
-                        <Run Text="{x:Bind ViewModel.TotalItems, Mode=OneWay}" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                        <Run Text="products)"/>
-                    </TextBlock>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                        <!-- Previous Button -->
-                        <Button 
-                            Command="{x:Bind ViewModel.PreviousPageCommand}"
-                            IsEnabled="{x:Bind ViewModel.CanGoPrev, Mode=OneWay}"
-                            Style="{StaticResource PaginationButtonStyle}">
-                            <FontIcon Glyph="&#xE76B;" FontSize="12"/>
-                        </Button>
-                        
-                        <!-- Page Number Buttons -->
-                        <ItemsControl ItemsSource="{x:Bind ViewModel.Pages, Mode=OneWay}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="4"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:PageInfo">
-                                    <Button 
-                                        Content="{x:Bind Text}"
-                                        Command="{x:Bind Command}"
-                                        IsEnabled="{x:Bind IsEnabled}"
-                                        Style="{StaticResource PaginationButtonStyle}"
-                                        Background="{x:Bind IsCurrent, Converter={StaticResource BoolToPaginationBrushConverter}}"
-                                        Foreground="{x:Bind IsCurrent, Converter={StaticResource BoolToPaginationBrushConverter}, ConverterParameter=Foreground}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        
-                        <!-- Next Button -->
-                        <Button 
-                            Command="{x:Bind ViewModel.NextPageCommand}"
-                            IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}"
-                            Style="{StaticResource PaginationButtonStyle}">
-                            <FontIcon Glyph="&#xE76C;" FontSize="12"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                <shared:PaginationControl
+                    Margin="0,16,0,0"
+                    CurrentPage="{x:Bind ViewModel.CurrentPage, Mode=OneWay}"
+                    TotalPages="{x:Bind ViewModel.TotalPages, Mode=OneWay}"
+                    TotalItems="{x:Bind ViewModel.TotalItems, Mode=OneWay}"
+                    PageSize="{x:Bind ViewModel.PageSize, Mode=OneWay}"
+                    PageNumbers="{x:Bind ViewModel.PageNumbers, Mode=OneWay}"
+                    ItemsLabel="products"
+                    PageChanged="OnPageChanged"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

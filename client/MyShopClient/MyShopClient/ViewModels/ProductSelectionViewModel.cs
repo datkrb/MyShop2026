@@ -43,6 +43,9 @@ public partial class ProductSelectionViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<PageInfo> _pages = new();
 
+    // PageNumbers for PaginationControl compatibility
+    public ObservableCollection<PageButtonModel> PageNumbers { get; } = new();
+
     [ObservableProperty]
     private bool _canGoNext;
 
@@ -98,10 +101,15 @@ public partial class ProductSelectionViewModel : ViewModelBase
     private void GeneratePagination()
     {
         var list = new ObservableCollection<PageInfo>();
+        PageNumbers.Clear();
+        
         if (TotalPages <= 5)
         {
             for (int i = 1; i <= TotalPages; i++)
+            {
                 list.Add(CreatePageInfo(i));
+                PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = i == CurrentPage });
+            }
         }
         else
         {
@@ -111,6 +119,11 @@ public partial class ProductSelectionViewModel : ViewModelBase
                 list.Add(CreatePageInfo(2));
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { PageNumber = 2, IsCurrentPage = CurrentPage == 2 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
             else if (CurrentPage >= TotalPages - 1)
             {
@@ -118,6 +131,11 @@ public partial class ProductSelectionViewModel : ViewModelBase
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages - 1));
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages - 1, IsCurrentPage = CurrentPage == TotalPages - 1 });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
             else
             {
@@ -126,6 +144,12 @@ public partial class ProductSelectionViewModel : ViewModelBase
                 list.Add(CreatePageInfo(CurrentPage));
                 list.Add(new PageInfo { Text = "...", IsEnabled = false });
                 list.Add(CreatePageInfo(TotalPages));
+                
+                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = CurrentPage, IsCurrentPage = true });
+                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
             }
         }
         Pages = list;
@@ -148,6 +172,11 @@ public partial class ProductSelectionViewModel : ViewModelBase
         if (page == CurrentPage) return;
         CurrentPage = page;
         await LoadProducts();
+    }
+
+    public async Task GoToPageAsync(int page)
+    {
+        await GoToPage(page);
     }
 
     [RelayCommand]
