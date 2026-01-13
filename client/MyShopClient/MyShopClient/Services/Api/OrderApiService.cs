@@ -59,6 +59,11 @@ public class OrderApiService : BaseApiService
         return await PutAsync<ApiOrder>($"orders/{id}/status", new { status });
     }
 
+    public async Task<ApiOrder?> AutosaveOrderAsync(int id, CreateOrderRequest request)
+    {
+        return await PostAsync<ApiOrder>($"orders/{id}/autosave", request);
+    }
+
     public async Task<bool> DeleteOrderAsync(int id)
     {
         return await DeleteAsync($"orders/{id}");
