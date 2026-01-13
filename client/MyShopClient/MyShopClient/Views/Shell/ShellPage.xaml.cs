@@ -20,7 +20,7 @@ public sealed partial class ShellPage : Page
         this.Loaded += (s, e) =>
         {
             ContentFrame.Navigate(typeof(Views.Dashboard.DashboardView));
-            NavView.SelectedItem = NavView.MenuItems[1]; // Select Dashboard (index 1, after header)
+            NavView.SelectedItem = NavView.MenuItems[0];
         };
     }
 
@@ -56,7 +56,8 @@ public sealed partial class ShellPage : Page
         {
             "Dashboard" => typeof(Views.Dashboard.DashboardView),
             "Products" => typeof(Views.Products.ProductsView),
-            // "Orders" => typeof(Views.Orders.OrdersView),
+            "Orders" => typeof(Views.Orders.OrdersView),
+            "Customers" => typeof(Views.Customers.CustomersView),
             // "Statistics" => typeof(Views.Statistics.StatisticsView),
             // "Invoices" => typeof(Views.Invoices.InvoicesView),
             // "Settings" => typeof(Views.Settings.SettingsView),
