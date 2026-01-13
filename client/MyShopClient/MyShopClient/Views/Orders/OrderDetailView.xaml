@@ -25,6 +25,32 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WindowStates">
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1000"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentLayoutGrid.ColumnDefinitions[1].Width" Value="0"/>
+                        <Setter Target="ContentLayoutGrid.ColumnDefinitions[0].Width" Value="*"/>
+                        <Setter Target="OrderItemsPanel.(Grid.Column)" Value="0"/>
+                        <Setter Target="OrderItemsPanel.(Grid.Row)" Value="1"/>
+                        <Setter Target="OrderItemsPanel.Margin" Value="0,24,0,0"/>
+
+                        <!-- Switch Buttons to Bottom of Scrollable Content -->
+                        <Setter Target="ActionButtonsInline.Visibility" Value="Collapsed"/>
+                        <Setter Target="ActionButtonsBottom.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
 
 
         <!-- Header with Back Button -->
@@ -74,7 +100,7 @@
 
         <!-- Main Content -->
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
-            <Grid ColumnSpacing="24">
+            <Grid x:Name="ContentLayoutGrid" ColumnSpacing="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -82,10 +108,12 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <!-- Bottom Action Buttons (Narrow Mode) -->
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Order Info Section -->
-                <StackPanel Grid.Column="0" Grid.Row="0" Spacing="16">
+                <StackPanel x:Name="OrderInfoPanel" Grid.Column="0" Grid.Row="0" Spacing="16">
                     
                     <!-- Order Information Card -->
                     <Border 
@@ -165,8 +193,8 @@
                         </StackPanel>
                     </Border>
                     
-                    <!-- Action Buttons -->
-                    <StackPanel Orientation="Horizontal" Spacing="12">
+                    <!-- Action Buttons (Inline - Wide Mode) -->
+                    <StackPanel x:Name="ActionButtonsInline" Orientation="Horizontal" Spacing="12">
                         <!-- View Mode Actions -->
                         <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                             <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Command="{x:Bind ViewModel.EditStatusCommand}">
@@ -205,6 +233,7 @@
 
                 <!-- Order Items Section -->
                 <Border 
+                    x:Name="OrderItemsPanel"
                     Grid.Column="1"
                     Grid.Row="0"
                     Background="{ThemeResource CardBackgroundBrush}" 
@@ -329,6 +358,52 @@
                         </StackPanel>
                     </Grid>
                 </Border>
+
+                <!-- Action Buttons (Bottom of ScrollView - Narrow Mode) -->
+                <!-- Action Buttons (Bottom of ScrollView - Narrow Mode) -->
+                <StackPanel 
+                    x:Name="ActionButtonsBottom"
+                    Grid.Row="2" 
+                    Grid.Column="0"
+                    Visibility="Collapsed"
+                    Margin="0,24,0,0"
+                    Orientation="Vertical"
+                    HorizontalAlignment="Left">
+                    
+                    <!-- View Mode Actions -->
+                    <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                        <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Command="{x:Bind ViewModel.EditStatusCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE70F;" FontSize="14"/>
+                                <TextBlock Text="Edit Order"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="#EF4444" Padding="20,10" Command="{x:Bind ViewModel.DeleteOrderCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                <TextBlock Text="Delete" Foreground="#EF4444"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Edit Mode Actions -->
+                    <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Button Style="{ThemeResource AccentButtonStyle}" Padding="20,10" Command="{x:Bind ViewModel.SaveCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74E;" FontSize="14"/>
+                                <TextBlock Text="Save Order"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.CancelCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE711;" FontSize="14"/>
+                                <TextBlock Text="Cancel"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
         </ScrollViewer>
         
@@ -348,6 +423,8 @@
                     HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
+
+
 
         <!-- Slide Notification Component -->
         <shared:SlideNotification 

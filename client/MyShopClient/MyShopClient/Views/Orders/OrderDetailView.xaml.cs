@@ -74,42 +74,5 @@ public sealed partial class OrderDetailView : Page
         }
     }
 
-    private void EditStatusButton_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.EnableEdit();
-    }
 
-    private async void DeleteOrderButton_Click(object sender, RoutedEventArgs e)
-    {
-        var confirmDialog = new ContentDialog
-        {
-            Title = "Xóa đơn hàng",
-            Content = $"Bạn có chắc chắn muốn xóa đơn hàng {ViewModel.OrderId}? Hành động này không thể hoàn tác.",
-            PrimaryButtonText = "Xóa",
-            SecondaryButtonText = "Hủy",
-            DefaultButton = ContentDialogButton.Secondary,
-            XamlRoot = this.XamlRoot
-        };
-
-        var result = await confirmDialog.ShowAsync();
-
-        if (result == ContentDialogResult.Primary)
-        {
-            var success = await ViewModel.DeleteOrderAsync();
-            
-            if (success)
-            {
-                // Show notification first
-                Notification.ShowSuccess("Đơn hàng đã được xóa thành công!");
-                
-                // Wait a bit for user to see the notification, then go back
-                await Task.Delay(1500);
-                
-                if (Frame.CanGoBack)
-                {
-                    Frame.GoBack();
-                }
-            }
-        }
-    }
 }

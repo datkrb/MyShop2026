@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 namespace MyShopClient.ViewModels;
 
@@ -59,6 +60,9 @@ public partial class OrderDetailViewModel : ObservableObject
     private decimal _amount;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayStatus))]
+    [NotifyPropertyChangedFor(nameof(StatusBackground))]
+    [NotifyPropertyChangedFor(nameof(StatusForeground))]
     private string _orderStatus = "DRAFT";
 
     [ObservableProperty]
@@ -125,10 +129,16 @@ public partial class OrderDetailViewModel : ObservableObject
         _ => "#4B5563"
     };
 
+    private readonly DispatcherTimer _autoSaveTimer;
+
     public OrderDetailViewModel()
     {
         _orderApiService = OrderApiService.Instance;
         OrderDate = DateTime.Now;
+        
+        _autoSaveTimer = new DispatcherTimer();
+        _autoSaveTimer.Interval = TimeSpan.FromMilliseconds(1000); // 1 second delay
+        _autoSaveTimer.Tick += AutoSaveTimer_Tick;
     }
 
     /// <summary>
@@ -184,9 +194,6 @@ public partial class OrderDetailViewModel : ObservableObject
                 }
 
                 RecalculateTotals();
-                OnPropertyChanged(nameof(DisplayStatus));
-                OnPropertyChanged(nameof(StatusBackground));
-                OnPropertyChanged(nameof(StatusForeground));
             }
         }
         catch (Exception ex)
@@ -254,6 +261,83 @@ public partial class OrderDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(FormattedSubtotal));
         OnPropertyChanged(nameof(FormattedTotal));
         OnPropertyChanged(nameof(FormattedAmount));
+        
+        // Trigger auto-save whenever totals change (implies items/quantity changed)
+        TriggerAutoSave();
+    }
+    
+    // Auto-save Logic
+    private void TriggerAutoSave()
+    {
+        // Only auto-save if editing or new order
+        if (!IsEditing && !IsNewOrder) return;
+        
+        // Stop previous timer and restart
+        _autoSaveTimer.Stop();
+        _autoSaveTimer.Start();
+    }
+    
+    private async void AutoSaveTimer_Tick(object sender, object e)
+    {
+        _autoSaveTimer.Stop();
+        await PerformAutoSaveAsync();
+    }
+    
+    private async Task PerformAutoSaveAsync()
+    {
+        // Conditions: Customer selected AND at least one item
+        if (!CustomerId.HasValue || OrderItems.Count == 0) return;
+        
+        try
+        {
+            if (IsNewOrder && Id == 0)
+            {
+                // Create draft order
+                var request = new CreateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Status = "DRAFT",
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                var result = await _orderApiService.CreateOrderAsync(request);
+                if (result != null)
+                {
+                    Id = result.Id;
+                    OrderId = $"#{result.Id:D4}";
+                    IsNewOrder = false; // It exists now
+                    // Keep IsEditing = true
+                    // Show subtle notification? Or just silent.
+                    // System.Diagnostics.Debug.WriteLine("Auto-saved (Created)");
+                }
+            }
+            else
+            {
+                // Update existing order (AutoSave)
+                var request = new CreateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Status = "DRAFT", // Keep as draft during autosave
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+                
+                // Use Autosave endpoint
+                await _orderApiService.AutosaveOrderAsync(Id, request);
+                // System.Diagnostics.Debug.WriteLine("Auto-saved (Updated)");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex.Message}");
+        }
     }
 
     private void AddOrderItem(OrderItemViewModel item)
@@ -283,6 +367,8 @@ public partial class OrderDetailViewModel : ObservableObject
             CustomerPhone = customer.Phone ?? "";
             CustomerAddress = customer.Address ?? "";
             CustomerAvatar = customer.AvatarUrl;
+            
+            TriggerAutoSave();
         }
     }
 
@@ -336,80 +422,61 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
-        // Validate inputs
+        // Global Validation
         if (!CustomerId.HasValue)
         {
-            ShowNotification("Vui lòng chọn khách hàng trước khi lưu đơn hàng.", "Warning");
+            ShowNotification("Vui lòng chọn khách hàng.", "Warning");
             return;
         }
 
         if (OrderItems.Count == 0)
         {
-            ShowNotification("Vui lòng thêm ít nhất một sản phẩm vào đơn hàng.", "Warning");
+            ShowNotification("Vui lòng thêm sản phẩm.", "Warning");
             return;
         }
 
         IsLoading = true;
-
         try
         {
+            // Flush any pending auto-save
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+                await PerformAutoSaveAsync();
+            }
+
+            // If still new (auto-save failed or didn't run), try creating now
             if (IsNewOrder)
             {
-                var request = new CreateOrderRequest
-                {
-                    CustomerId = CustomerId,
-                    Status = SelectedStatus,
-                    Items = OrderItems.Select(i => new CreateOrderItemRequest
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
+                await PerformAutoSaveAsync();
+            }
 
-                var result = await _orderApiService.CreateOrderAsync(request);
+            // Only proceed if we successfully have an ID
+            if (!IsNewOrder && Id > 0)
+            {
+                 // Update Status
+                var result = await _orderApiService.UpdateStatusAsync(Id, SelectedStatus);
+                
                 if (result != null)
                 {
-                    Id = result.Id;
-                    OrderId = $"#{result.Id:D4}";
-                    IsNewOrder = false;
+                    OrderStatus = result.Status;
+                    System.Diagnostics.Debug.WriteLine($"Order status updated to {OrderStatus}");
                     IsEditing = false;
-                    ShowNotification("Đơn hàng đã được tạo thành công!", "Success");
+                    ShowNotification("Đơn hàng đã được lưu thành công!", "Success");
                 }
                 else
                 {
-                    ShowNotification("Không thể tạo đơn hàng. Vui lòng thử lại.", "Error");
+                     ShowNotification("Không thể cập nhật trạng thái đơn hàng.", "Error");
                 }
             }
             else
             {
-                var request = new UpdateOrderRequest
-                {
-                    CustomerId = CustomerId,
-                    Status = SelectedStatus,
-                    Items = OrderItems.Select(i => new CreateOrderItemRequest
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
-
-                var result = await _orderApiService.UpdateOrderAsync(Id, request);
-                if (result != null)
-                {
-                    OrderStatus = result.Status;
-                    IsEditing = false;
-                    ShowNotification("Đơn hàng đã được cập nhật thành công!", "Success");
-                }
-                else
-                {
-                    ShowNotification("Không thể cập nhật đơn hàng. Vui lòng thử lại.", "Error");
-                }
+                 ShowNotification("Không thể lưu đơn hàng. Vui lòng kiểm tra lại kết nối.", "Error");
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error saving order: {ex.Message}");
-            ShowNotification($"Đã xảy ra lỗi: {ex.Message}", "Error");
+            ShowNotification($"Lỗi: {ex.Message}", "Error");
         }
         finally
         {
@@ -451,8 +518,21 @@ public partial class OrderDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task<bool> DeleteOrderAsync()
+    public async Task DeleteOrderAsync()
     {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+            Title = "Xác nhận xóa",
+            Content = "Bạn có chắc chắn muốn xóa đơn hàng này không? Hành động này không thể hoàn tác.",
+            PrimaryButtonText = "Xóa",
+            CloseButtonText = "Hủy",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary) return;
+
         IsLoading = true;
         
         try
@@ -461,19 +541,30 @@ public partial class OrderDetailViewModel : ObservableObject
             if (success)
             {
                 ShowNotification("Đơn hàng đã được xóa thành công!", "Success");
-                return true;
+                
+                // Wait briefly for user to see notification
+                await Task.Delay(1000);
+                
+                // Navigate back
+                if (App.Current.ContentFrame.CanGoBack)
+                {
+                    App.Current.ContentFrame.GoBack();
+                }
+                else
+                {
+                    // Fallback to Orders List
+                    App.Current.ContentFrame.Navigate(typeof(OrdersView));
+                }
             }
             else
             {
                 ShowNotification("Không thể xóa đơn hàng. Vui lòng thử lại.", "Error");
-                return false;
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error deleting order: {ex.Message}");
             ShowNotification($"Đã xảy ra lỗi: {ex.Message}", "Error");
-            return false;
         }
         finally
         {
