@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using MyShopClient.ViewModels;
 
@@ -22,11 +21,8 @@ public sealed partial class CustomerSelectionDialog : ContentDialog
         await ViewModel.LoadCustomersAsync();
     }
 
-    private void PageButton_Click(object sender, RoutedEventArgs e)
+    private void OnPageChanged(object sender, int pageNumber)
     {
-        if (sender is Button button && button.Tag is int pageNumber)
-        {
-            _ = ViewModel.GoToPageAsync(pageNumber);
-        }
+        _ = ViewModel.GoToPageAsync(pageNumber);
     }
 }

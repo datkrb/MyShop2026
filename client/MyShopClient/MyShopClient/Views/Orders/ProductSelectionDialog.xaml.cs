@@ -20,4 +20,9 @@ public sealed partial class ProductSelectionDialog : ContentDialog
     {
         await ViewModel.LoadProducts();
     }
+    
+    private void OnPageChanged(object sender, int pageNumber)
+    {
+        _ = ViewModel.GoToPageAsync(pageNumber);
+    }
 }
