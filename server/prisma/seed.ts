@@ -202,8 +202,8 @@ async function main() {
         images: {
           create: [
             { url: productData.imageUrl },
-            { url: 'https://placehold.co/300x300/08ffff/01?text=Image+2' },
-            { url: 'https://placehold.co/300x300/08ffff/01?text=Image+3' }
+            { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/2` },
+            { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/3` }
           ]
         }
       }
