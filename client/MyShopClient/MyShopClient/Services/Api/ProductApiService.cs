@@ -120,13 +120,27 @@ public class ProductApiService : BaseApiService
     public async Task<bool> UploadProductImagesAsync(int productId, List<string> imagePaths)
     {
         using var content = new System.Net.Http.MultipartFormDataContent();
+        
         foreach (var path in imagePaths)
         {
             var fileName = System.IO.Path.GetFileName(path);
-            var fileStream = System.IO.File.OpenRead(path);
-            var streamContent = new System.Net.Http.StreamContent(fileStream);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg"); // Adjust based on extension if needed
-            content.Add(streamContent, "images", fileName);
+            
+            // Read file into memory to avoid file locking
+            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(path);
+            var byteContent = new System.Net.Http.ByteArrayContent(fileBytes);
+            
+            // Set content type based on file extension
+            var extension = System.IO.Path.GetExtension(path).ToLower();
+            var contentType = extension switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                _ => "image/jpeg"
+            };
+            
+            byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            content.Add(byteContent, "images", fileName);
         }
 
         var response = await _httpClient.PostAsync($"products/{productId}/images", content);

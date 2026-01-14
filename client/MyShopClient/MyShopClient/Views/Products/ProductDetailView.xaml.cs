@@ -78,4 +78,11 @@ public sealed partial class ProductDetailView : Page
             ViewModel.SelectImageCommand.Execute(image);
         }
     }
+    private void RemoveSelectedImage_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string path)
+        {
+            ViewModel.RemoveSelectedImageCommand.Execute(path);
+        }
+    }
 }

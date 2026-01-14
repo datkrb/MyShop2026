@@ -135,12 +135,28 @@ public partial class ProductDetailViewModel : ViewModelBase
     public void CancelEdit()
     {
         IsEditing = false;
+        SelectedImagePaths.Clear(); // Clear selected images
         _ = LoadProduct(); // Revert changes
     }
 
     [RelayCommand]
     public async Task PickImages()
     {
+        var currentCount = (Product?.Images?.Count ?? 0) + SelectedImagePaths.Count;
+        if (currentCount >= 10)
+        {
+             ContentDialog limitDialog = new ContentDialog
+             {
+                 XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                 Title = "Limit Reached",
+                 Content = "You can only add up to 10 images per product.",
+                 CloseButtonText = "OK",
+                 DefaultButton = ContentDialogButton.Close
+             };
+             await limitDialog.ShowAsync();
+             return;
+        }
+
         var picker = new Windows.Storage.Pickers.FileOpenPicker();
         var window = App.Current.MainWindow;
         var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
@@ -155,11 +171,27 @@ public partial class ProductDetailViewModel : ViewModelBase
         var files = await picker.PickMultipleFilesAsync();
         if (files != null)
         {
+            int addedCount = 0;
             foreach (var file in files)
             {
+                if (currentCount + addedCount >= 10)
+                {
+                     ContentDialog limitDialog = new ContentDialog
+                     {
+                         XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                         Title = "Limit Reached",
+                         Content = "You have reached the maximum of 10 images. Some images were not added.",
+                         CloseButtonText = "OK",
+                         DefaultButton = ContentDialogButton.Close
+                     };
+                     await limitDialog.ShowAsync();
+                     break;
+                }
+
                 if (!SelectedImagePaths.Contains(file.Path))
                 {
                     SelectedImagePaths.Add(file.Path);
+                    addedCount++;
                 }
             }
             OnPropertyChanged(nameof(HasMinimumImages));
@@ -238,6 +270,16 @@ public partial class ProductDetailViewModel : ViewModelBase
         catch (Exception ex)
         {
              System.Diagnostics.Debug.WriteLine($"Save Error: {ex.Message}");
+             
+             ContentDialog errorDialog = new ContentDialog
+             {
+                 XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                 Title = "Save Error",
+                 Content = $"An error occurred while saving: {ex.Message}",
+                 CloseButtonText = "OK",
+                 DefaultButton = ContentDialogButton.Close
+             };
+             await errorDialog.ShowAsync();
         }
         finally
         {

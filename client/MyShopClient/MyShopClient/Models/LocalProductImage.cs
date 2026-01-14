@@ -9,6 +9,7 @@ namespace MyShopClient.Models;
 /// </summary>
 public class LocalProductImage
 {
+    public int? Id { get; set; }
     public string FilePath { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public BitmapImage? ImageSource { get; set; }
