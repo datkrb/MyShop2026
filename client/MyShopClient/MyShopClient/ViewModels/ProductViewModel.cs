@@ -59,15 +59,15 @@ public partial class ProductViewModel : ViewModelBase
     // Sort Configuration
     public List<string> SortOptions { get; } = new List<string>
     {
-        "ID (Giảm dần)",
-        "ID (Tăng dần)",
-        "Giá: Thấp -> Cao",
-        "Giá: Cao -> Thấp",
-        "Tên: A -> Z"
+        "Newest",
+        "Oldest",
+        "Price: Low to High",
+        "Price: High to Low",
+        "Name: A - Z"
     };
 
     [ObservableProperty]
-    private string _selectedSortOption = "ID (Giảm dần)";
+    private string _selectedSortOption = "Newest";
 
     partial void OnSelectedSortOptionChanged(string value)
     {
@@ -189,7 +189,7 @@ public partial class ProductViewModel : ViewModelBase
         // Ideally null works, but WinUI ComboBox is finicky.
         // Let's just create a list with "All" + API cats
         
-        var list = new List<Category> { new Category { Id = -1, Name = "Tất cả" } };
+        var list = new List<Category> { new Category { Id = -1, Name = "All Categories" } };
         if (cats != null)
         {
             list.AddRange(cats);
@@ -203,12 +203,11 @@ public partial class ProductViewModel : ViewModelBase
     {
         return uiSort switch
         {
-            "ID (Giảm dần)" => "id,desc",
-            "Mới nhất" => "id,desc",
-            "ID (Tăng dần)" => "id,asc",
-            "Giá: Thấp -> Cao" => "salePrice,asc",
-            "Giá: Cao -> Thấp" => "salePrice,desc",
-            "Tên: A -> Z" => "name,asc",
+            "Newest" => "id,desc",
+            "Oldest" => "id,asc",
+            "Price: Low to High" => "salePrice,asc",
+            "Price: High to Low" => "salePrice,desc",
+            "Name: A - Z" => "name,asc",
             _ => "id,desc"
         };
     }
