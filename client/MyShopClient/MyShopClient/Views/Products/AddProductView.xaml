@@ -261,6 +261,7 @@
                                         PlaceholderText="Select category"
                                         ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}"
                                         SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"
+                                        DisplayMemberPath="Name"
                                         HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </Grid>
