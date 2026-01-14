@@ -13,11 +13,14 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 
 using MyShopClient.Services.Api;
+using System.Collections.Generic;
 
 namespace MyShopClient.ViewModels;
 
 public partial class AddProductViewModel : ObservableValidator
 {
+    private const string ServerBaseUrl = "http://localhost:3000";
+    
     // Edit mode properties
     [ObservableProperty]
     private int _productId;
@@ -61,7 +64,7 @@ public partial class AddProductViewModel : ObservableValidator
     private double _stock;
 
     [ObservableProperty]
-    private string? _selectedCategory;
+    private Category? _selectedCategory;
 
     [ObservableProperty]
     private string _selectedStatus = "Draft";
@@ -78,14 +81,7 @@ public partial class AddProductViewModel : ObservableValidator
     [ObservableProperty]
     private bool _hasErrors;
 
-    public ObservableCollection<string> Categories { get; } = new()
-    {
-        "Electronics",
-        "Footwear",
-        "Accessories",
-        "Clothing",
-        "Home & Garden"
-    };
+    public ObservableCollection<Category> Categories { get; } = new();
 
     public ObservableCollection<string> Statuses { get; } = new()
     {
@@ -99,11 +95,36 @@ public partial class AddProductViewModel : ObservableValidator
 
     public bool HasImages => ProductImages.Count > 0;
 
+    private List<int> _originalImageIds = new();
+
     public event EventHandler<bool>? DialogCloseRequested;
 
     public AddProductViewModel()
     {
         ProductImages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasImages));
+        _ = LoadCategoriesAsync();
+    }
+    
+
+
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            var categories = await ProductApiService.Instance.GetCategoriesAsync();
+            if (categories != null)
+            {
+                Categories.Clear();
+                foreach (var category in categories)
+                {
+                    Categories.Add(category);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Lỗi khi tải danh mục: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -196,19 +217,38 @@ public partial class AddProductViewModel : ObservableValidator
                 ImportPrice = (double)product.ImportPrice;
                 SalePrice = (double)product.SalePrice;
                 Stock = product.Stock;
-                SelectedCategory = product.Category?.Name;
+                
+                // Set selected category by finding it in the loaded categories
+                if (product.CategoryId != null)
+                {
+                    SelectedCategory = Categories.FirstOrDefault(c => c.Id == product.CategoryId);
+                }
 
                 // Load existing images as display (not editable for now)
                 ProductImages.Clear();
+                _originalImageIds.Clear();
+
                 if (product.Images != null)
                 {
                     foreach (var img in product.Images)
                     {
+                        // Keep track of original image IDs
+                        _originalImageIds.Add(img.Id);
+
+                        // Convert relative URLs to absolute URLs
+                        var imageUrl = img.Url;
+                        if (!string.IsNullOrEmpty(imageUrl) && !imageUrl.StartsWith("http"))
+                        {
+                            // Remove leading slash if present and prepend server base URL
+                            imageUrl = ServerBaseUrl + (imageUrl.StartsWith("/") ? imageUrl : "/" + imageUrl);
+                        }
+
                         ProductImages.Add(new LocalProductImage
                         {
+                            Id = img.Id,
                             FilePath = img.Url,
                             FileName = img.Url.Split('/').LastOrDefault() ?? "image",
-                            ImageUrl = img.Url
+                            ImageUrl = imageUrl
                         });
                     }
                 }
@@ -246,7 +286,7 @@ public partial class AddProductViewModel : ObservableValidator
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(SelectedCategory))
+        if (SelectedCategory == null)
         {
             ErrorMessage = "Vui lòng chọn danh mục sản phẩm";
             HasErrors = true;
@@ -270,16 +310,32 @@ public partial class AddProductViewModel : ObservableValidator
                     existingProduct.ImportPrice = (decimal)ImportPrice;
                     existingProduct.SalePrice = (decimal)SalePrice;
                     existingProduct.Stock = (int)Stock;
-
-                    // Find category ID by name
-                    var categories = await ProductApiService.Instance.GetCategoriesAsync();
-                    var category = categories?.FirstOrDefault(c => c.Name == SelectedCategory);
-                    if (category != null)
-                    {
-                        existingProduct.CategoryId = category.Id;
-                    }
+                    existingProduct.CategoryId = SelectedCategory.Id;
 
                     await ProductApiService.Instance.UpdateProductAsync(ProductId, existingProduct);
+
+                    // Upload new images for existing product
+                    var imagePaths = ProductImages
+                        .Where(img => !string.IsNullOrEmpty(img.FilePath) && string.IsNullOrEmpty(img.ImageUrl))
+                        .Select(img => img.FilePath!)
+                        .ToList();
+
+                    if (imagePaths.Any())
+                    {
+                        await ProductApiService.Instance.UploadProductImagesAsync(ProductId, imagePaths);
+                    }
+
+                    // Delete removed images
+                    var currentImageIds = ProductImages
+                        .Where(img => img.Id.HasValue)
+                        .Select(img => img.Id!.Value)
+                        .ToList();
+
+                    var imagesToDelete = _originalImageIds.Except(currentImageIds).ToList();
+                    foreach (var imageId in imagesToDelete)
+                    {
+                        await ProductApiService.Instance.DeleteProductImageAsync(imageId);
+                    }
                 }
 
                 DialogCloseRequested?.Invoke(this, true);
@@ -294,16 +350,9 @@ public partial class AddProductViewModel : ObservableValidator
                     Description = Description,
                     ImportPrice = (decimal)ImportPrice,
                     SalePrice = (decimal)SalePrice,
-                    Stock = (int)Stock
+                    Stock = (int)Stock,
+                    CategoryId = SelectedCategory.Id
                 };
-
-                // Find category ID by name
-                var categories = await ProductApiService.Instance.GetCategoriesAsync();
-                var category = categories?.FirstOrDefault(c => c.Name == SelectedCategory);
-                if (category != null)
-                {
-                    newProduct.CategoryId = category.Id;
-                }
 
                 var createdProduct = await ProductApiService.Instance.CreateProductAsync(newProduct);
                 
