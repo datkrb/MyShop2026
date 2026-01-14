@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<ProductViewModel>();
-        services.AddTransient<AddProductDialogViewModel>();
+        services.AddTransient<AddProductViewModel>();
         services.AddTransient<AddCategoryDialogViewModel>();
         services.AddTransient<ProductDetailViewModel>();
         services.AddTransient<OrdersViewModel>();

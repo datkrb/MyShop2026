@@ -1,8 +1,10 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
+using MyShopClient.Models;
 
 namespace MyShopClient.Views.Products;
 
@@ -25,26 +27,55 @@ public sealed partial class ProductDetailView : Page
             await ViewModel.InitializeAsync(productId);
         }
     }
-    private void DeleteExistingImage_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+
+    private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is int id)
+        if (App.Current.ContentFrame?.CanGoBack == true)
         {
-            ViewModel.DeleteExistingImageCommand.Execute(id);
+            App.Current.ContentFrame.GoBack();
         }
     }
 
-    private void DeleteButton_Loading(Microsoft.UI.Xaml.FrameworkElement sender, object args)
+    private void EditProductButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button)
+        // Navigate to AddProductView with the product ID for editing
+        if (ViewModel.Product != null)
         {
-            var binding = new Microsoft.UI.Xaml.Data.Binding
-            {
-                Source = ViewModel,
-                Path = new Microsoft.UI.Xaml.PropertyPath("IsEditing"),
-                Converter = (Microsoft.UI.Xaml.Data.IValueConverter)Resources["BoolToVisibleConverter"],
-                Mode = Microsoft.UI.Xaml.Data.BindingMode.OneWay
-            };
-            button.SetBinding(Microsoft.UI.Xaml.UIElement.VisibilityProperty, binding);
+            App.Current.ContentFrame?.Navigate(typeof(AddProductView), ViewModel.Product.Id);
+        }
+    }
+
+    private async void DeleteProductButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ViewModel.DeleteCommand.ExecuteAsync(null);
+    }
+
+    private async void SaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ViewModel.SaveCommand.ExecuteAsync(null);
+        Notification.ShowSuccess("Product saved successfully!");
+    }
+
+    private void CancelEditButton_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.CancelEditCommand.Execute(null);
+    }
+
+    private void PreviousImage_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.PreviousImageCommand.Execute(null);
+    }
+
+    private void NextImage_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.NextImageCommand.Execute(null);
+    }
+
+    private void Thumbnail_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is ProductImage image)
+        {
+            ViewModel.SelectImageCommand.Execute(image);
         }
     }
     private void RemoveSelectedImage_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

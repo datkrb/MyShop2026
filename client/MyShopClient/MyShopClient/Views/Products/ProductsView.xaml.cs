@@ -1,10 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using MyShopClient.ViewModels;
 using MyShopClient.Services.Api;
+using MyShopClient.Models;
 
 namespace MyShopClient.Views.Products;
 
@@ -20,7 +22,7 @@ public sealed partial class ProductsView : Page
         this.Loaded += ProductsView_Loaded;
     }
 
-    private async void ProductsView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private async void ProductsView_Loaded(object sender, RoutedEventArgs e)
     {
         await ViewModel.LoadDataAsync();
     }
@@ -30,15 +32,22 @@ public sealed partial class ProductsView : Page
         ViewModel.SearchCommand.Execute(null);
     }
 
-    private void ClearPrice_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void ProductsListView_ItemClick(object sender, ItemClickEventArgs e)
     {
-        ViewModel.MinPrice = null;
-        ViewModel.MaxPrice = null;
-        ViewModel.SearchId = null;
-        ViewModel.LoadProductsCommand.Execute(null);
+        if (e.ClickedItem is ApiProduct product)
+        {
+            // Navigate to detail view
+            App.Current.ContentFrame?.Navigate(typeof(ProductDetailView), product.Id);
+        }
     }
 
-    private async void AddCategory_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void AddProductButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Navigate to add product view (using detail view with ID = 0 for create mode)
+        App.Current.ContentFrame?.Navigate(typeof(AddProductView));
+    }
+
+    private async void AddCategory_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new AddCategoryDialog
         {
@@ -52,8 +61,18 @@ public sealed partial class ProductsView : Page
             var newCat = await ProductApiService.Instance.CreateCategoryAsync(dialog.CategoryName, dialog.CategoryDescription);
             if (newCat != null)
             {
+                Notification.ShowSuccess("Category created successfully!");
                 await ViewModel.LoadDataAsync();
             }
+            else
+            {
+                Notification.ShowError("Failed to create category.");
+            }
         }
+    }
+
+    private async void OnPageChanged(object sender, int page)
+    {
+        await ViewModel.GoToPageAsync(page);
     }
 }

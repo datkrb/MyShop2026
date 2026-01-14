@@ -8,7 +8,9 @@
     xmlns:models="using:MyShopClient.Models"
     xmlns:vm="using:MyShopClient.ViewModels"
     xmlns:helpers="using:MyShopClient.Helpers"
-    mc:Ignorable="d">
+    xmlns:shared="using:MyShopClient.Views.Shared"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
 
     <Page.Resources>
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibleConverter"/>
@@ -17,149 +19,448 @@
         <helpers:IntToVisibleConverter x:Key="IntToVisibleConverter"/>
         <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter"/>
         <helpers:ImageUrlConverter x:Key="ImageUrlConverter"/>
+        <helpers:StockToStatusColorConverter x:Key="StockToStatusColorConverter"/>
+        <helpers:StockToStatusStringConverter x:Key="StockToStatusStringConverter"/>
+        <helpers:StockToStatusForegroundConverter x:Key="StockToStatusForegroundConverter"/>
+        
+        <!-- Form Label Style -->
+        <Style x:Key="FormLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        
+        <!-- Info Value Style -->
+        <Style x:Key="InfoValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
     </Page.Resources>
 
-    <Grid x:Name="RootGrid" Padding="32" Background="{ThemeResource AppBackgroundBrush}">
+    <Grid Padding="24,24,4,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Responsive Visual States -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentGrid.ColumnSpacing" Value="24"/>
+                        <Setter Target="ImageColumn.Width" Value="*"/>
+                        <Setter Target="InfoColumn.Width" Value="1.5*"/>
+                        <Setter Target="ImageSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Row)" Value="0"/>
+                        <Setter Target="InfoSection.(Grid.Column)" Value="1"/>
+                        <Setter Target="InfoSection.(Grid.Row)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentGrid.ColumnSpacing" Value="0"/>
+                        <Setter Target="ContentGrid.RowSpacing" Value="24"/>
+                        <Setter Target="ImageColumn.Width" Value="*"/>
+                        <Setter Target="InfoColumn.Width" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="ImageSection.(Grid.Row)" Value="0"/>
+                        <Setter Target="InfoSection.(Grid.Column)" Value="0"/>
+                        <Setter Target="InfoSection.(Grid.Row)" Value="1"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,18">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,24">
+            <Button 
+                x:Name="BackButton"
+                Click="BackButton_Click"
+                Style="{ThemeResource AccentButtonStyle}"
+                Background="{ThemeResource CardBackgroundBrush}"
+                BorderBrush="{ThemeResource BorderBrush}"
+                Padding="12,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE72B;" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Back" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Button>
+            
+            <TextBlock 
+                Text="Product Details" 
+                FontSize="24" 
+                FontWeight="Bold"
+                Foreground="{ThemeResource TextPrimaryBrush}"
+                VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <Button Command="{x:Bind ViewModel.GoBackCommand}" Background="Transparent" BorderThickness="0" Padding="8">
-                    <FontIcon Glyph="&#xE72B;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="18" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                </Button>
-                <TextBlock Text="Product Detail" FontSize="22" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,20,0">
+            <Grid x:Name="ContentGrid" ColumnSpacing="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ImageColumn" Width="*"/>
+                    <ColumnDefinition x:Name="InfoColumn" Width="1.5*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Image Section -->
+                <Border 
+                    x:Name="ImageSection"
+                    Grid.Column="0" 
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundBrush}" 
+                    CornerRadius="16"
+                    BorderBrush="{ThemeResource BorderBrush}"
+                    BorderThickness="1"
+                    Padding="24">
+                    <StackPanel Spacing="16">
+                        <!-- Main Image Display -->
+                        <Grid>
+                            <Border 
+                                CornerRadius="12" 
+                                Background="{ThemeResource SystemChromeLowColor}"
+                                MinHeight="300">
+                                <Grid>
+                                    <!-- Placeholder -->
+                                    <FontIcon 
+                                        Glyph="&#xE8B9;" 
+                                        FontSize="64" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"
+                                        HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"/>
+                                    
+                                    <!-- Current Image -->
+                                    <Image 
+                                        Source="{x:Bind ViewModel.CurrentImage, Mode=OneWay, Converter={StaticResource ImageUrlConverter}}" 
+                                        Stretch="Uniform"/>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Navigation Buttons -->
+                            <Button 
+                                Click="PreviousImage_Click"
+                                HorizontalAlignment="Left" 
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource CardBackgroundBrush}"
+                                BorderBrush="{ThemeResource BorderBrush}"
+                                Width="40" Height="40"
+                                CornerRadius="20"
+                                Padding="0"
+                                Margin="8,0"
+                                Visibility="{x:Bind ViewModel.HasMultipleImages, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}">
+                                <FontIcon Glyph="&#xE76B;" FontSize="14" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            </Button>
+                            
+                            <Button 
+                                Click="NextImage_Click"
+                                HorizontalAlignment="Right" 
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource CardBackgroundBrush}"
+                                BorderBrush="{ThemeResource BorderBrush}"
+                                Width="40" Height="40"
+                                CornerRadius="20"
+                                Padding="0"
+                                Margin="8,0"
+                                Visibility="{x:Bind ViewModel.HasMultipleImages, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}">
+                                <FontIcon Glyph="&#xE76C;" FontSize="14" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            </Button>
+                        </Grid>
+                        
+                        <!-- Image Counter -->
+                        <TextBlock 
+                            Text="{x:Bind ViewModel.ImageCounterText, Mode=OneWay}"
+                            HorizontalAlignment="Center"
+                            Foreground="{ThemeResource TextSecondaryBrush}"
+                            FontSize="12"
+                            Visibility="{x:Bind ViewModel.HasMultipleImages, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}"/>
+                        
+                        <!-- Thumbnail Strip -->
+                        <GridView 
+                            ItemsSource="{x:Bind ViewModel.Product.Images, Mode=OneWay}" 
+                            SelectionMode="None"
+                            IsItemClickEnabled="True"
+                            ItemClick="Thumbnail_ItemClick"
+                            HorizontalAlignment="Center"
+                            Visibility="{x:Bind ViewModel.HasMultipleImages, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}">
+                            <GridView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8"/>
+                                </ItemsPanelTemplate>
+                            </GridView.ItemsPanel>
+                            <GridView.ItemTemplate>
+                                <DataTemplate x:DataType="models:ProductImage">
+                                    <Border 
+                                        Width="60" Height="60" 
+                                        CornerRadius="8" 
+                                        BorderBrush="{ThemeResource BorderBrush}"
+                                        BorderThickness="2"
+                                        Background="{ThemeResource SystemChromeLowColor}">
+                                        <Image Source="{x:Bind Url, Converter={StaticResource ImageUrlConverter}}" Stretch="UniformToFill"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridView.ItemTemplate>
+                        </GridView>
+                    </StackPanel>
+                </Border>
+
+                <!-- Info Section -->
+                <StackPanel x:Name="InfoSection" Grid.Column="1" Grid.Row="0" Spacing="16">
+                    
+                    <!-- Product Info Card (View Mode) -->
+                    <Border 
+                        x:Name="ViewModeCard"
+                        Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToCollapsedConverter}}"
+                        Background="{ThemeResource CardBackgroundBrush}" 
+                        CornerRadius="16"
+                        BorderBrush="{ThemeResource BorderBrush}"
+                        BorderThickness="1"
+                        Padding="24">
+                        <StackPanel Spacing="20">
+                            <!-- Product Name and SKU -->
+                            <StackPanel Spacing="8">
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.Product.Name, Mode=OneWay}" 
+                                    FontSize="24" 
+                                    FontWeight="Bold" 
+                                    Foreground="{ThemeResource TextPrimaryBrush}"
+                                    TextWrapping="Wrap"/>
+                                <Border 
+                                    Background="{ThemeResource SystemChromeLowColor}" 
+                                    CornerRadius="6" 
+                                    Padding="10,4"
+                                    HorizontalAlignment="Left">
+                                    <TextBlock 
+                                        Text="{x:Bind ViewModel.Product.Sku, Mode=OneWay}" 
+                                        FontSize="12" 
+                                        Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                </Border>
+                            </StackPanel>
+                            
+                            <Rectangle Height="1" Fill="{ThemeResource BorderBrush}"/>
+                            
+                            <!-- Category -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <FontIcon Glyph="&#xE81E;" FontSize="16" Foreground="{ThemeResource TextSecondaryBrush}" Width="24"/>
+                                <StackPanel>
+                                    <TextBlock Text="Category" Style="{StaticResource FormLabelStyle}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.Product.Category.Name, Mode=OneWay}" Style="{StaticResource InfoValueStyle}"/>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <!-- Prices -->
+                            <Grid ColumnSpacing="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                    <FontIcon Glyph="&#xE8CB;" FontSize="16" Foreground="{ThemeResource TextSecondaryBrush}" Width="24"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Import Price" Style="{StaticResource FormLabelStyle}"/>
+                                        <TextBlock Text="{x:Bind ViewModel.FormattedImportPrice, Mode=OneWay}" Style="{StaticResource InfoValueStyle}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                    <FontIcon Glyph="&#xE8CB;" FontSize="16" Foreground="{ThemeResource SuccessBrush}" Width="24"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Sale Price" Style="{StaticResource FormLabelStyle}"/>
+                                        <TextBlock 
+                                            Text="{x:Bind ViewModel.FormattedSalePrice, Mode=OneWay}" 
+                                            FontSize="18" 
+                                            FontWeight="Bold" 
+                                            Foreground="{ThemeResource SuccessBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <!-- Stock -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <FontIcon Glyph="&#xE7BF;" FontSize="16" Foreground="{ThemeResource TextSecondaryBrush}" Width="24"/>
+                                <StackPanel>
+                                    <TextBlock Text="Stock" Style="{StaticResource FormLabelStyle}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <TextBlock Text="{x:Bind ViewModel.Product.Stock, Mode=OneWay}" Style="{StaticResource InfoValueStyle}"/>
+                                        <Border 
+                                            Background="{x:Bind ViewModel.Product.Stock, Mode=OneWay, Converter={StaticResource StockToStatusColorConverter}}"
+                                            Padding="10,4" 
+                                            CornerRadius="12">
+                                            <TextBlock 
+                                                Text="{x:Bind ViewModel.Product.Stock, Mode=OneWay, Converter={StaticResource StockToStatusStringConverter}}" 
+                                                Foreground="{x:Bind ViewModel.Product.Stock, Mode=OneWay, Converter={StaticResource StockToStatusForegroundConverter}}"
+                                                FontSize="11" 
+                                                FontWeight="SemiBold"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <!-- Description -->
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Description" Style="{StaticResource FormLabelStyle}" FontWeight="SemiBold"/>
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.Product.Description, Mode=OneWay}" 
+                                    Style="{StaticResource InfoValueStyle}"
+                                    TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Product Edit Card (Edit Mode) -->
+                    <Border 
+                        x:Name="EditModeCard"
+                        Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}"
+                        Background="{ThemeResource CardBackgroundBrush}" 
+                        CornerRadius="16"
+                        BorderBrush="{ThemeResource BorderBrush}"
+                        BorderThickness="1"
+                        Padding="24">
+                        <StackPanel Spacing="16">
+                            <TextBlock Text="Edit Product" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            
+                            <!-- Name -->
+                            <TextBox 
+                                Header="Name" 
+                                Text="{x:Bind ViewModel.Product.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            
+                            <!-- SKU -->
+                            <TextBox 
+                                Header="SKU" 
+                                Text="{x:Bind ViewModel.Product.Sku, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            
+                            <!-- Category -->
+                            <ComboBox 
+                                Header="Category" 
+                                ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}"
+                                SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"
+                                HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Category">
+                                        <TextBlock Text="{x:Bind Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            
+                            <!-- Prices -->
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <NumberBox 
+                                    Grid.Column="0"
+                                    Header="Import Price" 
+                                    Value="{x:Bind ViewModel.Product.ImportPrice, Mode=TwoWay, Converter={StaticResource DecimalToDoubleConverter}}" 
+                                    SpinButtonPlacementMode="Compact"/>
+                                <NumberBox 
+                                    Grid.Column="1"
+                                    Header="Sale Price" 
+                                    Value="{x:Bind ViewModel.Product.SalePrice, Mode=TwoWay, Converter={StaticResource DecimalToDoubleConverter}}" 
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            
+                            <!-- Stock -->
+                            <NumberBox 
+                                Header="Stock" 
+                                Value="{x:Bind ViewModel.Product.Stock, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" 
+                                SpinButtonPlacementMode="Compact"/>
+                            
+                            <!-- Description -->
+                            <TextBox 
+                                Header="Description" 
+                                Text="{x:Bind ViewModel.Product.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                AcceptsReturn="True" 
+                                Height="100"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <!-- View Mode Buttons -->
+                        <Button 
+                            Style="{ThemeResource AccentButtonStyle}" 
+                            Padding="20,10" 
+                            Click="EditProductButton_Click"
+                            Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToCollapsedConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE70F;" FontSize="14"/>
+                                <TextBlock Text="Edit Product"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button 
+                            Background="{ThemeResource CardBackgroundBrush}" 
+                            BorderBrush="#EF4444" 
+                            Padding="20,10" 
+                            Click="DeleteProductButton_Click"
+                            Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToCollapsedConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                <TextBlock Text="Delete" Foreground="#EF4444"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <!-- Edit Mode Buttons -->
+                        <Button 
+                            Style="{ThemeResource AccentButtonStyle}" 
+                            Padding="20,10" 
+                            Click="SaveButton_Click"
+                            Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74E;" FontSize="14"/>
+                                <TextBlock Text="Save Changes"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button 
+                            Style="{ThemeResource SecondaryButtonStyle}" 
+                            Padding="20,10" 
+                            Click="CancelEditButton_Click"
+                            Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE711;" FontSize="14"/>
+                                <TextBlock Text="Cancel"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+        
+        <!-- Loading Overlay -->
+        <Grid 
+            Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibleConverter}}"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+            <StackPanel 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Spacing="16">
+                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="48" Height="48"/>
+                <TextBlock 
+                    Text="Loading product details..." 
+                    Foreground="{ThemeResource TextSecondaryBrush}"
+                    HorizontalAlignment="Center"/>
             </StackPanel>
-
-            <CommandBar Grid.Column="2" Background="Transparent" DefaultLabelPosition="Right">
-                <AppBarButton Icon="Edit" Label="Edit" Command="{x:Bind ViewModel.EnableEditCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToCollapsedConverter}, Mode=OneWay}"/>
-                <AppBarButton Icon="Save" Label="Save" Command="{x:Bind ViewModel.SaveCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}"/>
-                <AppBarButton Icon="Cancel" Label="Cancel" Command="{x:Bind ViewModel.CancelEditCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}"/>
-                <AppBarButton Icon="Delete" Label="Delete" Command="{x:Bind ViewModel.DeleteCommand}" Visibility="{x:Bind ViewModel.Product.Id, Converter={StaticResource IntToVisibleConverter}, Mode=OneWay}"/>
-            </CommandBar>
         </Grid>
 
-        <!-- Main Content Card -->
-        <Border Grid.Row="1" Background="{ThemeResource CardBackgroundBrush}" CornerRadius="16" Padding="24" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
-            <Grid>
-                <Grid MaxWidth="1200" HorizontalAlignment="Stretch">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Left Column - Form Fields -->
-                    <StackPanel Grid.Column="0" Spacing="16">
-                        <!-- ID/SKU Row -->
-                        <Grid ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <TextBox Header="ID" Text="{x:Bind ViewModel.Product.Id, Mode=OneWay}" IsReadOnly="True" IsEnabled="False"/>
-                            <TextBox Grid.Column="1" Header="SKU" Text="{x:Bind ViewModel.Product.Sku, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"/>
-                        </Grid>
-
-                        <!-- Name -->
-                        <TextBox Header="Name" Text="{x:Bind ViewModel.Product.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"/>
-
-                        <!-- Category -->
-                        <ComboBox Header="Category" 
-                                  ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}"
-                                  SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"
-                                  IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"
-                                  HorizontalAlignment="Stretch">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:Category">
-                                    <TextBlock Text="{x:Bind Name}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-
-                        <!-- Prices -->
-                        <Grid ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <NumberBox Header="Import Price" Value="{x:Bind ViewModel.Product.ImportPrice, Mode=TwoWay, Converter={StaticResource DecimalToDoubleConverter}}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}" SpinButtonPlacementMode="Inline"/>
-                            <NumberBox Grid.Column="1" Header="Sale Price" Value="{x:Bind ViewModel.Product.SalePrice, Mode=TwoWay, Converter={StaticResource DecimalToDoubleConverter}}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}" SpinButtonPlacementMode="Inline"/>
-                        </Grid>
-
-                        <!-- Stock -->
-                        <NumberBox Header="Stock" Value="{x:Bind ViewModel.Product.Stock, Mode=TwoWay, Converter={StaticResource IntToDoubleConverter}}" IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}" SpinButtonPlacementMode="Inline" HorizontalAlignment="Stretch"/>
-
-                        <!-- Description -->
-                        <TextBox Header="Description" 
-                                 Text="{x:Bind ViewModel.Product.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                 AcceptsReturn="True" 
-                                 Height="80" 
-                                 IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"/>
-                    </StackPanel>
-
-                    <!-- Right Column - Images -->
-                    <StackPanel Grid.Column="2" Spacing="12">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="Images" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"/>
-                            <AppBarButton Icon="Add" Label="Add" Command="{x:Bind ViewModel.PickImagesCommand}" Visibility="{x:Bind ViewModel.IsEditing, Converter={StaticResource BoolToVisibleConverter}, Mode=OneWay}" HorizontalAlignment="Right"/>
-                        </StackPanel>
-
-                        <ScrollViewer MaxHeight="450" VerticalScrollBarVisibility="Auto">
-                            <StackPanel Spacing="8">
-                                <!-- Existing Images -->
-                                <GridView ItemsSource="{x:Bind ViewModel.Product.Images, Mode=OneWay}" SelectionMode="None">
-                                    <GridView.ItemTemplate>
-                                        <DataTemplate x:DataType="models:ProductImage">
-                                            <Grid Margin="4" Width="80" Height="80" CornerRadius="8" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
-                                                <Image Source="{x:Bind Url, Converter={StaticResource ImageUrlConverter}}" Stretch="UniformToFill"/>
-                                                <Button Click="DeleteExistingImage_Click" 
-                                                        Tag="{x:Bind Id}"
-                                                        Loading="DeleteButton_Loading"
-                                                        VerticalAlignment="Top" HorizontalAlignment="Right" 
-                                                        Background="#D32F2F" Foreground="White" Padding="4" MinWidth="0" Margin="2">
-                                                    <FontIcon Glyph="&#xE711;" FontSize="8"/>
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridView.ItemTemplate>
-                                </GridView>
-
-                                <!-- Newly Selected Images -->
-                                <GridView ItemsSource="{x:Bind ViewModel.SelectedImagePaths, Mode=OneWay}" SelectionMode="None">
-                                    <GridView.ItemTemplate>
-                                        <DataTemplate x:DataType="x:String">
-                                            <Grid Margin="4" Width="80" Height="80" CornerRadius="8" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
-                                                <Image Source="{x:Bind Converter={StaticResource ImageUrlConverter}}" Stretch="UniformToFill"/>
-                                                <Button Click="RemoveSelectedImage_Click" 
-                                                        Tag="{x:Bind}"
-                                                        VerticalAlignment="Top" HorizontalAlignment="Right" 
-                                                        Background="#D32F2F" Foreground="White" Padding="4" MinWidth="0" Margin="2">
-                                                    <FontIcon Glyph="&#xE711;" FontSize="8"/>
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridView.ItemTemplate>
-                                </GridView>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Loading -->
-                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="60" Height="60" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+        <!-- Slide Notification Component -->
+        <shared:SlideNotification 
+            x:Name="Notification" 
+            Grid.RowSpan="2" 
+            Canvas.ZIndex="999"/>
     </Grid>
 </Page>
