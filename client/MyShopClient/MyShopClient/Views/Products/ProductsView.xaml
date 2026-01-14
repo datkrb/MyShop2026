@@ -534,9 +534,11 @@
                     TotalPages="{x:Bind ViewModel.TotalPages, Mode=OneWay}"
                     TotalItems="{x:Bind ViewModel.TotalItems, Mode=OneWay}"
                     PageSize="{x:Bind ViewModel.PageSize, Mode=OneWay}"
+                    PageSizeOptions="{x:Bind ViewModel.PageSizeOptions}"
                     PageNumbers="{x:Bind ViewModel.PageNumbers, Mode=OneWay}"
                     ItemsLabel="products"
-                    PageChanged="OnPageChanged"/>
+                    PageChanged="OnPageChanged"
+                    PageSizeChanged="OnPageSizeChanged"/>
 
             </StackPanel>
         </ScrollViewer>
