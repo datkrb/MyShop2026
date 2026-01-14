@@ -132,6 +132,14 @@
                     <!-- Action Buttons -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                         <Button 
+                            Click="ImportProducts_Click"
+                            Style="{ThemeResource SecondaryButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8B5;" FontSize="16" Foreground="{ThemeResource SuccessBrush}"/>
+                                <TextBlock Text="Import Products"/>
+                            </StackPanel>
+                        </Button>
+                        <Button 
                             Click="AddCategory_Click"
                             Style="{ThemeResource SecondaryButtonStyle}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
