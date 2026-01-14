@@ -251,4 +251,9 @@ public sealed partial class ProductsView : Page
     {
         await ViewModel.GoToPageAsync(page);
     }
+
+    private void OnPageSizeChanged(object sender, int pageSize)
+    {
+        ViewModel.PageSize = pageSize;
+    }
 }

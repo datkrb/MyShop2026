@@ -82,6 +82,15 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private int _pageSize = 10;
 
+    // Page Size Options for user selection
+    public List<int> PageSizeOptions { get; } = new List<int> { 5, 10, 15, 20 };
+
+    partial void OnPageSizeChanged(int value)
+    {
+        _currentPage = 1;
+        _ = LoadProducts();
+    }
+
     [ObservableProperty]
     private int _totalPages = 0;
 
