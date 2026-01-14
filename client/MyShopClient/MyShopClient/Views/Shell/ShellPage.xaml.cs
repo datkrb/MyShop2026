@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels;
 
 namespace MyShopClient.Views;
@@ -9,18 +11,21 @@ namespace MyShopClient.Views;
 public sealed partial class ShellPage : Page
 {
     public ShellViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public ShellPage()
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<ShellViewModel>()!;
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         App.Current.ContentFrame = ContentFrame;
         
-        // Navigate to Dashboard by default
+        // Navigate to last visited page (or Dashboard as default)
         this.Loaded += (s, e) =>
         {
-            ContentFrame.Navigate(typeof(Views.Dashboard.DashboardView));
-            NavView.SelectedItem = NavView.MenuItems[0];
+            var lastPage = _navigationService.GetLastVisitedPage();
+            NavigateToPage(lastPage);
+            SelectNavItemByTag(lastPage);
         };
     }
 
@@ -68,6 +73,31 @@ public sealed partial class ShellPage : Page
         if (pageType != null && ContentFrame.CurrentSourcePageType != pageType)
         {
             ContentFrame.Navigate(pageType);
+            
+            // Save the current page to local settings
+            _navigationService.SaveLastVisitedPage(tag);
+        }
+    }
+
+    /// <summary>
+    /// Selects the NavigationViewItem that matches the given tag.
+    /// </summary>
+    private void SelectNavItemByTag(string tag)
+    {
+        foreach (var item in NavView.MenuItems)
+        {
+            if (item is NavigationViewItem navItem && navItem.Tag?.ToString() == tag)
+            {
+                NavView.SelectedItem = navItem;
+                return;
+            }
+        }
+        
+        // Fallback to first item (Dashboard) if tag not found
+        if (NavView.MenuItems.Count > 0)
+        {
+            NavView.SelectedItem = NavView.MenuItems[0];
         }
     }
 }
+
