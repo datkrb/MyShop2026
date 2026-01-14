@@ -33,6 +33,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(DashboardApiService.Instance);
         services.AddSingleton(ProductApiService.Instance);
         services.AddTransient<Services.Import.ImportService>();
+        services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         
         return services;
     }
