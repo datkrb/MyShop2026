@@ -47,10 +47,6 @@ public sealed partial class PaginationControl : UserControl
         DependencyProperty.Register(nameof(ItemsLabel), typeof(string), typeof(PaginationControl),
             new PropertyMetadata("items", OnItemsLabelChanged));
 
-    public static readonly DependencyProperty PageSizeOptionsProperty =
-        DependencyProperty.Register(nameof(PageSizeOptions), typeof(IList<int>), typeof(PaginationControl),
-            new PropertyMetadata(new List<int> { 5, 10, 15, 20 }, OnPageSizeOptionsChanged));
-
     public int CurrentPage
     {
         get => (int)GetValue(CurrentPageProperty);
@@ -87,12 +83,6 @@ public sealed partial class PaginationControl : UserControl
         set => SetValue(ItemsLabelProperty, value);
     }
 
-    public IList<int> PageSizeOptions
-    {
-        get => (IList<int>)GetValue(PageSizeOptionsProperty);
-        set => SetValue(PageSizeOptionsProperty, value);
-    }
-
     #endregion
 
     #region Events
@@ -105,9 +95,6 @@ public sealed partial class PaginationControl : UserControl
     public PaginationControl()
     {
         this.InitializeComponent();
-        // Initialize with default page size options
-        PageSizeComboBox.ItemsSource = PageSizeOptions;
-        PageSizeComboBox.SelectedItem = PageSize;
     }
 
     private static void OnPaginationPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -146,21 +133,7 @@ public sealed partial class PaginationControl : UserControl
         }
     }
 
-    private static void OnPageSizeOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is PaginationControl control && e.NewValue is IList<int> options)
-        {
-            control.PageSizeComboBox.ItemsSource = options;
-            if (options.Count > 0 && !options.Contains(control.PageSize))
-            {
-                control.PageSizeComboBox.SelectedItem = options[0];
-            }
-            else
-            {
-                control.PageSizeComboBox.SelectedItem = control.PageSize;
-            }
-        }
-    }
+
 
     private void PageNumbers_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -260,13 +233,7 @@ public sealed partial class PaginationControl : UserControl
         }
     }
 
-    private void PageSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (PageSizeComboBox.SelectedItem is int selectedSize)
-        {
-            PageSizeChanged?.Invoke(this, selectedSize);
-        }
-    }
+
 
     private static T? FindChild<T>(DependencyObject parent) where T : DependencyObject
     {

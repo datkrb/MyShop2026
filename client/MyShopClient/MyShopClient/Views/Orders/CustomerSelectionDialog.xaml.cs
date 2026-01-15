@@ -11,8 +11,7 @@ public sealed partial class CustomerSelectionDialog : ContentDialog
     public CustomerSelectionDialog()
     {
         this.InitializeComponent();
-        ViewModel = App.Current.Services.GetService<CustomersViewModel>() 
-            ?? new CustomersViewModel();
+        ViewModel = App.Current.Services.GetRequiredService<CustomersViewModel>();
         ViewModel.IsSelectionMode = true;
     }
 

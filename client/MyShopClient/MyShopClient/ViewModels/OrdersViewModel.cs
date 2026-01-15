@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Config;
 using MyShopClient.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
@@ -52,7 +53,7 @@ public partial class OrdersViewModel : ViewModelBase
     private int _currentPage = 1;
 
     [ObservableProperty]
-    private int _pageSize = 2;
+    private int _pageSize = 10;
 
     [ObservableProperty]
     private int _totalPages = 1;
@@ -72,10 +73,15 @@ public partial class OrdersViewModel : ViewModelBase
 
     // Debounce
     private System.Threading.CancellationTokenSource? _searchDebounceToken;
+    private readonly AppSettingsService _appSettingsService;
 
-    public OrdersViewModel()
+    public OrdersViewModel(AppSettingsService appSettingsService)
     {
         _orderApiService = OrderApiService.Instance;
+        _appSettingsService = appSettingsService;
+        
+        // Load PageSize from settings
+        _pageSize = _appSettingsService.GetPageSize();
     }
 
     public async Task LoadOrdersAsync()
