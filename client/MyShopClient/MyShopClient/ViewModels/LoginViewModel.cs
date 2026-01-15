@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using MyShopClient.ViewModels.Base;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Auth;
 using System.Threading.Tasks;
 
 namespace MyShopClient.ViewModels;
@@ -11,12 +12,13 @@ namespace MyShopClient.ViewModels;
 public partial class LoginViewModel : ViewModelBase
 {
     private readonly AuthApiService _authApiService;
+    private readonly CredentialService _credentialService;
 
     [ObservableProperty]
-    private string _username = "admin";
+    private string _username = string.Empty;
 
     [ObservableProperty]
-    private string _password = "123456";
+    private string _password = string.Empty;
 
     [ObservableProperty]
     private bool _rememberMe;
@@ -27,9 +29,39 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
-    public LoginViewModel(AuthApiService authApiService)
+    public LoginViewModel(AuthApiService authApiService, CredentialService credentialService)
     {
         _authApiService = authApiService;
+        _credentialService = credentialService;
+    }
+
+    /// <summary>
+    /// Thử auto-login với credentials đã lưu
+    /// </summary>
+    /// <returns>True nếu login thành công</returns>
+    public async Task<bool> TryAutoLoginAsync()
+    {
+        var credentials = _credentialService.GetCredentials();
+        if (credentials == null) return false;
+
+        try
+        {
+            var response = await _authApiService.LoginAsync(credentials.Value.Username, credentials.Value.Password);
+            
+            if (response != null && !string.IsNullOrEmpty(response.Token))
+            {
+                System.Diagnostics.Debug.WriteLine("Auto-login successful");
+                return true;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Auto-login failed: {ex.Message}");
+            // Xóa credentials không hợp lệ
+            _credentialService.ClearCredentials();
+        }
+
+        return false;
     }
 
     [RelayCommand]
@@ -50,11 +82,15 @@ public partial class LoginViewModel : ViewModelBase
 
             if (response != null && !string.IsNullOrEmpty(response.Token))
             {
-                // Save token for future requests
+                // Lưu credentials nếu RememberMe được chọn
                 if (RememberMe)
                 {
-                    // TODO: Save token to local storage
-                    System.Diagnostics.Debug.WriteLine($"Token: {response.Token}");
+                    _credentialService.SaveCredentials(Username, Password);
+                }
+                else
+                {
+                    // Xóa credentials nếu không chọn RememberMe
+                    _credentialService.ClearCredentials();
                 }
 
                 // Navigate to ShellPage
