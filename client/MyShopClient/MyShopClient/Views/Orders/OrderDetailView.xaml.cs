@@ -17,7 +17,7 @@ public sealed partial class OrderDetailView : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<OrderDetailViewModel>() 
-            ?? new OrderDetailViewModel();
+            ?? new OrderDetailViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.OrderApiService>());
         
         // Subscribe to notification property changes
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;

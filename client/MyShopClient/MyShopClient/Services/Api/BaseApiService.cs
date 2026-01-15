@@ -1,3 +1,4 @@
+using MyShopClient.Services.Config;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -18,11 +19,10 @@ public class ApiResponse<T>
 public abstract class BaseApiService
 {
     protected readonly HttpClient _httpClient;
-    protected readonly string _baseUrl;
+    protected readonly string _baseUrl; // This will now be set by the constructor or derived classes
 
-    // Static URL shared across all API services (no default - must be configured)
-    private static string _currentBaseUrl = string.Empty;
-    public static string CurrentBaseUrl => _currentBaseUrl;
+    // Static URL shared across all API services
+    protected static string _currentBaseUrl = string.Empty;
     
     /// <summary>
     /// Check if server URL has been configured
@@ -30,84 +30,51 @@ public abstract class BaseApiService
     public static bool IsConfigured => !string.IsNullOrEmpty(_currentBaseUrl);
 
     // Static token shared across all API services
-    public static string? CurrentToken { get; private set; }
+    protected static string _currentToken = string.Empty;
+
+    protected BaseApiService(HttpClient httpClient)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _baseUrl = _currentBaseUrl; // Initialize _baseUrl for this instance from the static _currentBaseUrl
+        
+        // Apply existing token if available to the injected HttpClient
+        if (!string.IsNullOrEmpty(_currentToken))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _currentToken);
+        }
+    }
 
     /// <summary>
     /// Initialize base URL from LocalSettings on app startup
     /// </summary>
     public static void InitializeBaseUrl()
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values["ServerUrl"];
-            if (value is string url && !string.IsNullOrEmpty(url))
-            {
-                _currentBaseUrl = url;
-            }
-            else
-            {
-                _currentBaseUrl = string.Empty;
-            }
-        }
-        catch
-        {
-            _currentBaseUrl = string.Empty;
-        }
+        var settingsService = new AppSettingsService();
+        var url = settingsService.GetServerUrl();
+        var port = settingsService.GetServerPort();
+        
+        // Remove trailing slash if present
+        if (url.EndsWith("/")) url = url.Substring(0, url.Length - 1);
+        
+        SetBaseUrl($"{url}:{port}/api/v1/");
+
+        System.Diagnostics.Debug.WriteLine($"[BaseApiService] Initialized Base URL: {_currentBaseUrl}");
     }
 
     /// <summary>
     /// Update base URL at runtime
     /// </summary>
-    public static void UpdateBaseUrl(string newUrl)
+    public static void SetBaseUrl(string url)
     {
-        if (!string.IsNullOrEmpty(newUrl))
-        {
-            _currentBaseUrl = newUrl;
-        }
+        _currentBaseUrl = url;
+        if (!_currentBaseUrl.EndsWith("/")) _currentBaseUrl += "/";
     }
 
-    protected BaseApiService()
-    {
-        _baseUrl = _currentBaseUrl;
-        try
-        {
-            if (!string.IsNullOrEmpty(_baseUrl))
-            {
-                _httpClient = new HttpClient
-                {
-                    BaseAddress = new Uri(_baseUrl),
-                    Timeout = TimeSpan.FromSeconds(15)
-                };
-                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            }
-            else
-            {
-                // Fallback: Initialize without base address, enabling later configuration or error handling
-                _httpClient = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(15)
-                };
-            }
-
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"HttpClient initialization error: {ex.Message}");
-            // Ensure _httpClient is not null to prevent crashes, even if dysfunctional
-            _httpClient = new HttpClient(); 
-        }
-
-        // Apply existing token if available
-        if (!string.IsNullOrEmpty(CurrentToken) && _httpClient != null)
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
-        }
-    }
+    public static void UpdateBaseUrl(string url) => SetBaseUrl(url);
 
     protected void SetAuthToken(string token)
     {
-        CurrentToken = token;
+        _currentToken = token; // fixed
         if (_httpClient != null)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -116,7 +83,7 @@ public abstract class BaseApiService
 
     public static void ClearAuthToken()
     {
-        CurrentToken = null;
+        _currentToken = null; // fixed
     }
 
     /// <summary>
@@ -127,9 +94,9 @@ public abstract class BaseApiService
     {
         if (_httpClient == null) return;
 
-        if (!string.IsNullOrEmpty(CurrentToken))
+        if (!string.IsNullOrEmpty(_currentToken)) // fixed
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _currentToken); // fixed
         }
         else
         {

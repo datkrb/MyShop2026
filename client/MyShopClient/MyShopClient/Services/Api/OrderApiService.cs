@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using MyShopClient.Models;
@@ -7,10 +8,9 @@ namespace MyShopClient.Services.Api;
 
 public class OrderApiService : BaseApiService
 {
-    private static OrderApiService? _instance;
-    public static OrderApiService Instance => _instance ??= new OrderApiService();
-
-    public OrderApiService() : base() { }
+    public OrderApiService(HttpClient httpClient) : base(httpClient)
+    {
+    }
 
     public async Task<PagedResult<ApiOrder>?> GetOrdersAsync(
         int page = 1, 

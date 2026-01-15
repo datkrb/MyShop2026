@@ -131,9 +131,9 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel()
+    public OrderDetailViewModel(OrderApiService orderApiService)
     {
-        _orderApiService = OrderApiService.Instance;
+        _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();

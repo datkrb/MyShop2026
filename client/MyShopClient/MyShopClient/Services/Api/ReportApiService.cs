@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MyShopClient.Models;
@@ -7,10 +8,9 @@ namespace MyShopClient.Services.Api;
 
 public class ReportApiService : BaseApiService, IReportApiService
 {
-    private static ReportApiService? _instance;
-    public static ReportApiService Instance => _instance ??= new ReportApiService();
-
-    private ReportApiService() : base() { }
+    public ReportApiService(HttpClient httpClient) : base(httpClient)
+    {
+    }
 
     public async Task<List<RevenueReportItem>> GetRevenueReportAsync(DateTime startDate, DateTime endDate, string type = "day")
     {
