@@ -38,6 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         services.AddSingleton<ServerConfigService>();
         services.AddSingleton<CredentialService>();
+        services.AddSingleton<AppSettingsService>();
         
         return services;
     }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.Services.Navigation;
+using MyShopClient.Services.Config;
 using MyShopClient.ViewModels;
 
 namespace MyShopClient.Views;
@@ -12,20 +13,34 @@ public sealed partial class ShellPage : Page
 {
     public ShellViewModel ViewModel { get; }
     private readonly INavigationService _navigationService;
+    private readonly AppSettingsService _appSettingsService;
 
     public ShellPage()
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<ShellViewModel>()!;
         _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
+        _appSettingsService = App.Current.Services.GetRequiredService<AppSettingsService>();
         App.Current.ContentFrame = ContentFrame;
         
-        // Navigate to last visited page (or Dashboard as default)
+        // Navigate to appropriate page based on settings
         this.Loaded += (s, e) =>
         {
-            var lastPage = _navigationService.GetLastVisitedPage();
-            NavigateToPage(lastPage);
-            SelectNavItemByTag(lastPage);
+            string startPage;
+            
+            if (_appSettingsService.GetRememberLastScreen())
+            {
+                // Use last visited page if RememberLastScreen is ON
+                startPage = _navigationService.GetLastVisitedPage();
+            }
+            else
+            {
+                // Use default screen if RememberLastScreen is OFF
+                startPage = _appSettingsService.GetDefaultScreen();
+            }
+            
+            NavigateToPage(startPage);
+            SelectNavItemByTag(startPage);
         };
     }
 

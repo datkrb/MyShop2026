@@ -1,12 +1,18 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.ViewModels.Base;
+using MyShopClient.Services.Config;
+using MyShopClient.Services.Navigation;
 
 namespace MyShopClient.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
+    private readonly AppSettingsService _appSettingsService;
+    private readonly INavigationService _navigationService;
+
     // Pagination settings
     [ObservableProperty]
     private int _selectedPageSize = 10;
@@ -29,24 +35,58 @@ public partial class SettingsViewModel : ViewModelBase
         new ScreenOption { Tag = "Products", DisplayName = "Products", Icon = "\uE781" },
         new ScreenOption { Tag = "Orders", DisplayName = "Orders", Icon = "\uE7BF" },
         new ScreenOption { Tag = "Customers", DisplayName = "Customers", Icon = "\uE77B" },
-        new ScreenOption { Tag = "Statistics", DisplayName = "Statistics", Icon = "\uE9D2" },
-        new ScreenOption { Tag = "Invoices", DisplayName = "Invoices", Icon = "\uE946" }
+        new ScreenOption { Tag = "Settings", DisplayName = "Settings", Icon = "\uE713" }
     };
 
     // Default start screen
     [ObservableProperty]
     private ScreenOption? _selectedDefaultScreen;
 
-    public SettingsViewModel()
+    public SettingsViewModel(AppSettingsService appSettingsService, INavigationService navigationService)
     {
-        // Initialize default screen selection
-        SelectedDefaultScreen = AvailableScreens[0];
+        _appSettingsService = appSettingsService;
+        _navigationService = navigationService;
+        
+        // Load saved settings
+        SelectedPageSize = _appSettingsService.GetPageSize();
+        RememberLastScreen = _appSettingsService.GetRememberLastScreen();
+        CurrentLastScreen = _navigationService.GetLastVisitedPage();
+        
+        // Load default screen
+        var savedDefault = _appSettingsService.GetDefaultScreen();
+        SelectedDefaultScreen = AvailableScreens.FirstOrDefault(s => s.Tag == savedDefault) ?? AvailableScreens[0];
+    }
+
+    // Auto-save when PageSize changes
+    partial void OnSelectedPageSizeChanged(int value)
+    {
+        _appSettingsService.SavePageSize(value);
+    }
+
+    // Auto-save when RememberLastScreen changes
+    partial void OnRememberLastScreenChanged(bool value)
+    {
+        _appSettingsService.SaveRememberLastScreen(value);
+    }
+
+    // Auto-save when DefaultScreen changes
+    partial void OnSelectedDefaultScreenChanged(ScreenOption? value)
+    {
+        if (value != null)
+        {
+            _appSettingsService.SaveDefaultScreen(value.Tag);
+        }
     }
 
     [RelayCommand]
     private void SaveSettings()
     {
-        // TODO: Implement save logic
+        _appSettingsService.SavePageSize(SelectedPageSize);
+        _appSettingsService.SaveRememberLastScreen(RememberLastScreen);
+        if (SelectedDefaultScreen != null)
+        {
+            _appSettingsService.SaveDefaultScreen(SelectedDefaultScreen.Tag);
+        }
     }
 
     [RelayCommand]
