@@ -204,16 +204,18 @@
                                 TextWrapping="Wrap"
                                 Visibility="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringToVisibilityConverter}}"/>
                             
-                            <!-- Loading Indicator -->
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}">
-                                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20"/>
-                                <TextBlock Text="Logging in..." Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <Button Content="Login" 
-                                    Command="{x:Bind ViewModel.LoginCommand}" 
+                            <!-- Login Button with inline loading spinner -->
+                            <Button Command="{x:Bind ViewModel.LoginCommand}" 
                                     IsEnabled="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource InvertBoolConverter}}"
-                                    Style="{StaticResource LoginButtonStyle}"/>
+                                    Style="{StaticResource LoginButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" 
+                                                  Width="16" Height="16"
+                                                  Foreground="White"
+                                                  Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}"/>
+                                    <TextBlock Text="Login" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
 
                         <!-- Server Config Button -->
