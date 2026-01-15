@@ -191,7 +191,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <CheckBox Content="Remember Me" IsChecked="{x:Bind ViewModel.RememberMe, Mode=TwoWay}"/>
-                                <HyperlinkButton Grid.Column="1" Content="Forgot Password?" Command="{x:Bind ViewModel.ForgotPasswordCommand}" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                                <!--<HyperlinkButton Grid.Column="1" Content="Forgot Password?" Command="{x:Bind ViewModel.ForgotPasswordCommand}" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>-->
                             </Grid>
                         </StackPanel>
 
