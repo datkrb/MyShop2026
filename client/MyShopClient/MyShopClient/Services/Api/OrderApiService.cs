@@ -44,6 +44,11 @@ public class OrderApiService : BaseApiService
         return await GetAsync<ApiOrder>($"orders/{id}");
     }
 
+    public async Task<ApiOrder?> GetDraftOrderAsync()
+    {
+        return await GetAsync<ApiOrder>("orders/draft");
+    }
+
     public async Task<ApiOrder?> CreateOrderAsync(CreateOrderRequest request)
     {
         return await PostAsync<ApiOrder>("orders", request);

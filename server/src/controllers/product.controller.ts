@@ -100,7 +100,7 @@ export class ProductController {
     }
   }
 
-  async getStats(req: AuthRequest, res: Response) {
+  async getStats(_req: AuthRequest, res: Response) {
     try {
       const stats = await productService.getStats();
       sendSuccess(res, stats);
