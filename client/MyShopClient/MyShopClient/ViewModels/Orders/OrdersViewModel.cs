@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Config;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
@@ -14,6 +15,7 @@ namespace MyShopClient.ViewModels;
 public partial class OrdersViewModel : ViewModelBase
 {
     private readonly OrderApiService _orderApiService;
+    private readonly INavigationService _navigationService;
 
     // Loading state
     [ObservableProperty]
@@ -75,10 +77,11 @@ public partial class OrdersViewModel : ViewModelBase
     private System.Threading.CancellationTokenSource? _searchDebounceToken;
     private readonly AppSettingsService _appSettingsService;
 
-    public OrdersViewModel(AppSettingsService appSettingsService)
+    public OrdersViewModel(OrderApiService orderApiService, AppSettingsService appSettingsService, INavigationService navigationService)
     {
-        _orderApiService = OrderApiService.Instance;
+        _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
         _appSettingsService = appSettingsService;
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         
         // Load PageSize from settings
         _pageSize = _appSettingsService.GetPageSize();
@@ -252,7 +255,7 @@ public partial class OrdersViewModel : ViewModelBase
     [RelayCommand]
     private void CreateOrder()
     {
-        App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), "new");
+        _navigationService.Navigate(typeof(Views.Orders.OrderDetailView), "new");
     }
 
     [RelayCommand]
@@ -260,7 +263,7 @@ public partial class OrdersViewModel : ViewModelBase
     {
         if (order != null)
         {
-            App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
+            _navigationService.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
         }
     }
 
@@ -289,7 +292,7 @@ public partial class OrdersViewModel : ViewModelBase
     {
         if (order != null)
         {
-            App.Current.ContentFrame.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
+            _navigationService.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
         }
     }
 

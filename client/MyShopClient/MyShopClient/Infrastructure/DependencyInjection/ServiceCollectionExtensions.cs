@@ -25,15 +25,23 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ShellViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ServerConfigViewModel>();
+        services.AddTransient<ReportViewModel>();
         return services;
     }
 
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        // Register API Services as Singletons
-        services.AddSingleton(AuthApiService.Instance);
-        services.AddSingleton(DashboardApiService.Instance);
-        services.AddSingleton(ProductApiService.Instance);
+        // Register HttpClient
+        services.AddSingleton<System.Net.Http.HttpClient>();
+
+        // Register API Services
+        services.AddSingleton<AuthApiService>();
+        services.AddSingleton<DashboardApiService>();
+        services.AddSingleton<ProductApiService>();
+        services.AddSingleton<IReportApiService, ReportApiService>();
+        services.AddSingleton<OrderApiService>();
+        services.AddSingleton<CustomerApiService>();
+
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         services.AddSingleton<ServerConfigService>();

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels;
 using MyShopClient.Views.Shared;
 using System;
@@ -11,11 +12,12 @@ namespace MyShopClient.Views.Customers;
 public sealed partial class CustomersView : Page
 {
     public CustomersViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public CustomersView()
     {
         this.InitializeComponent();
-        
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetService<CustomersViewModel>()!;
     }
     
@@ -31,7 +33,7 @@ public sealed partial class CustomersView : Page
     {
         if (e.ClickedItem is CustomerViewModel customer)
         {
-            Frame.Navigate(typeof(CustomerDetailView), customer);
+            _navigationService.Navigate(typeof(CustomerDetailView), customer);
         }
     }
     

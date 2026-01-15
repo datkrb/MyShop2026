@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels.Base;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
@@ -14,6 +15,7 @@ namespace MyShopClient.ViewModels;
 public partial class ProductDetailViewModel : ViewModelBase
 {
     private readonly ProductApiService _productApiService;
+    private readonly INavigationService _navigationService;
     private int _productId;
 
     [ObservableProperty]
@@ -52,9 +54,10 @@ public partial class ProductDetailViewModel : ViewModelBase
     public string FormattedImportPrice => Product?.ImportPrice.ToString("N0") + " VND" ?? "0 VND";
     public string FormattedSalePrice => Product?.SalePrice.ToString("N0") + " VND" ?? "0 VND";
 
-    public ProductDetailViewModel(ProductApiService productApiService)
+    public ProductDetailViewModel(ProductApiService productApiService, INavigationService navigationService)
     {
         _productApiService = productApiService;
+        _navigationService = navigationService;
     }
 
     [RelayCommand]
@@ -341,7 +344,7 @@ public partial class ProductDetailViewModel : ViewModelBase
             if (success)
             {
                 // Go back
-                App.Current.ContentFrame?.GoBack();
+                _navigationService.GoBack();
             }
         }
     }
@@ -349,9 +352,6 @@ public partial class ProductDetailViewModel : ViewModelBase
     [RelayCommand]
     public void GoBack()
     {
-        if (App.Current.ContentFrame?.CanGoBack == true)
-        {
-             App.Current.ContentFrame.GoBack();
-        }
+        _navigationService.GoBack();
     }
 }

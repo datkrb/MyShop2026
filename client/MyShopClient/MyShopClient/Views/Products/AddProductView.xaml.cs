@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.ViewModels;
 using MyShopClient.Models;
+using MyShopClient.Services.Navigation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
@@ -14,11 +15,14 @@ namespace MyShopClient.Views.Products;
 public sealed partial class AddProductView : Page
 {
     public AddProductViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public AddProductView()
     {
         this.InitializeComponent();
-        ViewModel = new AddProductViewModel();
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
+        ViewModel = App.Current.Services.GetService<AddProductViewModel>() 
+            ?? new AddProductViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>());
         this.DataContext = this;
         
         // Subscribe to dialog close event for navigation
@@ -44,19 +48,13 @@ public sealed partial class AddProductView : Page
             Notification.ShowSuccess(message);
         }
         
-        // Navigate back
-        if (App.Current.ContentFrame?.CanGoBack == true)
-        {
-            App.Current.ContentFrame.GoBack();
-        }
+        // Navigate back using NavigationService
+        _navigationService.GoBack();
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (App.Current.ContentFrame?.CanGoBack == true)
-        {
-            App.Current.ContentFrame.GoBack();
-        }
+        _navigationService.GoBack();
     }
 
     private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -70,10 +68,7 @@ public sealed partial class AddProductView : Page
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
-        if (App.Current.ContentFrame?.CanGoBack == true)
-        {
-            App.Current.ContentFrame.GoBack();
-        }
+        _navigationService.GoBack();
     }
 
     private void DropZone_DragOver(object sender, DragEventArgs e)

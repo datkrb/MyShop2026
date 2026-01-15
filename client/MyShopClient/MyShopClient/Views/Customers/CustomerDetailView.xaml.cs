@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels;
 using MyShopClient.Views.Shared;
 using System;
@@ -12,12 +13,14 @@ namespace MyShopClient.Views.Customers;
 public sealed partial class CustomerDetailView : Page
 {
     public CustomerDetailViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public CustomerDetailView()
     {
         this.InitializeComponent();
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetService<CustomerDetailViewModel>() 
-            ?? new CustomerDetailViewModel();
+            ?? new CustomerDetailViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.CustomerApiService>());
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -32,10 +35,7 @@ public sealed partial class CustomerDetailView : Page
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Frame.CanGoBack)
-        {
-            Frame.GoBack();
-        }
+        _navigationService.GoBack();
     }
 
     private async void EditCustomerButton_Click(object sender, RoutedEventArgs e)
@@ -81,11 +81,7 @@ public sealed partial class CustomerDetailView : Page
                 
                 // Wait for user to see notification, then go back
                 await Task.Delay(1500);
-                
-                if (Frame.CanGoBack)
-                {
-                    Frame.GoBack();
-                }
+                _navigationService.GoBack();
             }
             else
             {

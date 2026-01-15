@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text;
@@ -9,8 +10,9 @@ namespace MyShopClient.Services.Api;
 
 public class ProductApiService : BaseApiService
 {
-    private static ProductApiService? _instance;
-    public static ProductApiService Instance => _instance ??= new ProductApiService();
+    public ProductApiService(HttpClient httpClient) : base(httpClient)
+    {
+    }
 
     public async Task<PagedResult<ApiProduct>?> GetProductsAsync(
         int page = 1, 

@@ -146,5 +146,35 @@ public class AppSettingsService
         }
     }
 
+    public string GetServerUrl()
+    {
+        try
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var value = localSettings.Values["ServerUrl"];
+            if (value is string url && !string.IsNullOrEmpty(url))
+            {
+                return url;
+            }
+        }
+        catch { }
+        return "http://localhost"; // Default
+    }
+
+    public int GetServerPort()
+    {
+        try
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var value = localSettings.Values["ServerPort"];
+            if (value is int port && port > 0)
+            {
+                return port;
+            }
+        }
+        catch { }
+        return 8888; // Default
+    }
+
     #endregion
 }

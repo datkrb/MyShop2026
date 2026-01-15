@@ -99,8 +99,11 @@ public partial class AddProductViewModel : ObservableValidator
 
     public event EventHandler<bool>? DialogCloseRequested;
 
-    public AddProductViewModel()
+    private readonly ProductApiService _productApiService;
+
+    public AddProductViewModel(ProductApiService productApiService)
     {
+        _productApiService = productApiService ?? throw new ArgumentNullException(nameof(productApiService));
         ProductImages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasImages));
         _ = LoadCategoriesAsync();
     }
@@ -111,7 +114,7 @@ public partial class AddProductViewModel : ObservableValidator
     {
         try
         {
-            var categories = await ProductApiService.Instance.GetCategoriesAsync();
+            var categories = await _productApiService.GetCategoriesAsync();
             if (categories != null)
             {
                 Categories.Clear();
@@ -208,7 +211,7 @@ public partial class AddProductViewModel : ObservableValidator
 
         try
         {
-            var product = await ProductApiService.Instance.GetProductAsync(productId);
+            var product = await _productApiService.GetProductAsync(productId);
             if (product != null)
             {
                 Name = product.Name;
@@ -301,7 +304,7 @@ public partial class AddProductViewModel : ObservableValidator
             if (IsEditMode)
             {
                 // Update existing product
-                var existingProduct = await ProductApiService.Instance.GetProductAsync(ProductId);
+                var existingProduct = await _productApiService.GetProductAsync(ProductId);
                 if (existingProduct != null)
                 {
                     existingProduct.Name = Name;
@@ -312,7 +315,7 @@ public partial class AddProductViewModel : ObservableValidator
                     existingProduct.Stock = (int)Stock;
                     existingProduct.CategoryId = SelectedCategory.Id;
 
-                    await ProductApiService.Instance.UpdateProductAsync(ProductId, existingProduct);
+                    await _productApiService.UpdateProductAsync(ProductId, existingProduct);
 
                     // Upload new images for existing product
                     var imagePaths = ProductImages
@@ -322,7 +325,7 @@ public partial class AddProductViewModel : ObservableValidator
 
                     if (imagePaths.Any())
                     {
-                        await ProductApiService.Instance.UploadProductImagesAsync(ProductId, imagePaths);
+                        await _productApiService.UploadProductImagesAsync(ProductId, imagePaths);
                     }
 
                     // Delete removed images
@@ -334,7 +337,7 @@ public partial class AddProductViewModel : ObservableValidator
                     var imagesToDelete = _originalImageIds.Except(currentImageIds).ToList();
                     foreach (var imageId in imagesToDelete)
                     {
-                        await ProductApiService.Instance.DeleteProductImageAsync(imageId);
+                        await _productApiService.DeleteProductImageAsync(imageId);
                     }
                 }
 
@@ -354,7 +357,7 @@ public partial class AddProductViewModel : ObservableValidator
                     CategoryId = SelectedCategory.Id
                 };
 
-                var createdProduct = await ProductApiService.Instance.CreateProductAsync(newProduct);
+                var createdProduct = await _productApiService.CreateProductAsync(newProduct);
                 
                 if (createdProduct != null)
                 {
@@ -366,7 +369,7 @@ public partial class AddProductViewModel : ObservableValidator
 
                     if (imagePaths.Any())
                     {
-                        await ProductApiService.Instance.UploadProductImagesAsync(createdProduct.Id, imagePaths);
+                        await _productApiService.UploadProductImagesAsync(createdProduct.Id, imagePaths);
                     }
                 }
 

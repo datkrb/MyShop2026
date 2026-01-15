@@ -1,57 +1,65 @@
-import orderRepo from '../repositories/order.repo';
-import prisma from '../config/prisma';
-import { OrderStatus } from '../constants/order-status';
+import prisma from "../config/prisma";
+import { OrderStatus } from "../constants/order-status";
 
 export class ReportService {
-  async getRevenueReport(type: 'day' | 'month' | 'year', year: number, month?: number) {
-    if (type === 'month' && month) {
-      const orders = await prisma.order.findMany({
-        where: {
-          status: OrderStatus.PAID,
-          createdTime: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
+  async getRevenueReport(
+    startDate: Date,
+    endDate: Date,
+    type: "day" | "month" | "year" = "day"
+  ) {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
         },
-        select: {
-          finalPrice: true,
-          createdTime: true,
-        },
-      });
+      },
+      select: {
+        finalPrice: true,
+        createdTime: true,
+      },
+    });
 
-      const dailyRevenue: { [key: number]: number } = {};
-      orders.forEach((order) => {
-        const day = order.createdTime.getDate();
-        dailyRevenue[day] = (dailyRevenue[day] || 0) + order.finalPrice;
-      });
+    console.log(`[RevenueReport] Range: ${startDate.toISOString()} - ${endDate.toISOString()}`);
+    console.log(`[RevenueReport] Found ${orders.length} orders.`);
 
-      return dailyRevenue;
-    } else if (type === 'year') {
-      return orderRepo.getRevenueByMonth(year);
-    }
+    const revenueData: { [key: string]: number } = {};
 
-    throw new Error('Invalid report type');
+    orders.forEach((order) => {
+      let key = "";
+      const date = new Date(order.createdTime);
+
+      if (type === "day") {
+        key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+      } else if (type === "month") {
+        key = `${date.getFullYear()}-${(date.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}`; // YYYY-MM
+      } else if (type === "year") {
+        key = `${date.getFullYear()}`; // YYYY
+      }
+
+      revenueData[key] = (revenueData[key] || 0) + order.finalPrice;
+    });
+
+    // Sort by date key
+    const sortedData = Object.entries(revenueData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, revenue]) => ({ date, revenue }));
+
+    return sortedData;
   }
 
-  async getProfitReport(year: number, month?: number) {
-    const where: any = {
-      status: OrderStatus.PAID,
-    };
-
-    if (month) {
-      where.createdTime = {
-        gte: new Date(year, month - 1, 1),
-        lt: new Date(year, month, 1),
-      };
-    } else {
-      where.createdTime = {
-        gte: new Date(year, 0, 1),
-        lt: new Date(year + 1, 0, 1),
-      };
-    }
-
+  async getProfitReport(startDate: Date, endDate: Date) {
     const orders = await prisma.order.findMany({
-      where,
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
       include: {
         orderItems: {
           include: {
@@ -75,29 +83,22 @@ export class ReportService {
       revenue: totalRevenue,
       cost: totalCost,
       profit: totalRevenue - totalCost,
-      profitMargin: totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0,
+      profitMargin:
+        totalRevenue > 0
+          ? ((totalRevenue - totalCost) / totalRevenue) * 100
+          : 0,
     };
   }
 
-  async getProductSalesReport(year: number, month?: number) {
-    const where: any = {
-      status: OrderStatus.PAID,
-    };
-
-    if (month) {
-      where.createdTime = {
-        gte: new Date(year, month - 1, 1),
-        lt: new Date(year, month, 1),
-      };
-    } else {
-      where.createdTime = {
-        gte: new Date(year, 0, 1),
-        lt: new Date(year + 1, 0, 1),
-      };
-    }
-
+  async getProductSalesReport(startDate: Date, endDate: Date) {
     const orders = await prisma.order.findMany({
-      where,
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
       include: {
         orderItems: {
           include: {
@@ -111,7 +112,9 @@ export class ReportService {
       },
     });
 
-    const productSales: { [key: number]: { product: any; quantity: number; revenue: number } } = {};
+    const productSales: {
+      [key: number]: { product: any; quantity: number; revenue: number };
+    } = {};
 
     orders.forEach((order) => {
       order.orderItems.forEach((item) => {
@@ -161,7 +164,14 @@ export class ReportService {
       },
     });
 
-    const salesData: { [key: number]: { user: any; orders: number; revenue: number; commission: number } } = {};
+    const salesData: {
+      [key: number]: {
+        user: any;
+        orders: number;
+        revenue: number;
+        commission: number;
+      };
+    } = {};
 
     orders.forEach((order) => {
       if (!order.createdById) return;
@@ -186,4 +196,3 @@ export class ReportService {
 }
 
 export default new ReportService();
-
