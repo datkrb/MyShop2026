@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels;
 using MyShopClient.Models;
 
@@ -11,10 +12,12 @@ namespace MyShopClient.Views.Products;
 public sealed partial class ProductDetailView : Page
 {
     public ProductDetailViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public ProductDetailView()
     {
         this.InitializeComponent();
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetRequiredService<ProductDetailViewModel>();
     }
 
@@ -30,10 +33,7 @@ public sealed partial class ProductDetailView : Page
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (App.Current.ContentFrame?.CanGoBack == true)
-        {
-            App.Current.ContentFrame.GoBack();
-        }
+        _navigationService.GoBack();
     }
 
     private void EditProductButton_Click(object sender, RoutedEventArgs e)
@@ -41,7 +41,7 @@ public sealed partial class ProductDetailView : Page
         // Navigate to AddProductView with the product ID for editing
         if (ViewModel.Product != null)
         {
-            App.Current.ContentFrame?.Navigate(typeof(AddProductView), ViewModel.Product.Id);
+            _navigationService.Navigate(typeof(AddProductView), ViewModel.Product.Id);
         }
     }
 
