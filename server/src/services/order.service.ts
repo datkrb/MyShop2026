@@ -13,6 +13,25 @@ export class OrderService {
     return orderRepo.findAll(filters);
   }
 
+  async getDraft(userId: number) {
+    // 1. Check if user already has a draft
+    const existingDraft = await orderRepo.findDraft(userId);
+    
+    if (existingDraft) {
+      return existingDraft;
+    }
+
+    // 2. If no draft exists, create a new one
+    // Create an empty draft
+    return orderRepo.create({
+      createdById: userId,
+      status: OrderStatus.DRAFT,
+      items: [],
+      finalPrice: 0,
+      customerId: undefined
+    });
+  }
+
   async getById(id: number, userRole: string, userId?: number) {
     const order = await orderRepo.findById(id);
 

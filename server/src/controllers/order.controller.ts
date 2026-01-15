@@ -23,7 +23,23 @@ export class OrderController {
     }
   }
 
+  async getDraft(req: AuthRequest, res: Response) {
+    console.log('OrderController.getDraft hit'); // DEBUG
+    try {
+      if (!req.user) {
+        return sendError(res, 'UNAUTHORIZED', 'Unauthorized', 401);
+      }
+      const userId = req.user.userId;
+      const order = await orderService.getDraft(userId);
+      sendSuccess(res, order);
+    } catch (error: any) {
+      console.error('OrderController.getDraft Error:', error); // DEBUG
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
+
   async getById(req: AuthRequest, res: Response) {
+    console.log('OrderController.getById hit', req.params.id); // DEBUG
     try {
       const id = parseInt(req.params.id);
       const userRole = req.user?.role || '';

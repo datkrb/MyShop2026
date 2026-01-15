@@ -70,13 +70,21 @@ public abstract class BaseApiService
     protected BaseApiService()
     {
         _baseUrl = _currentBaseUrl;
-        _httpClient = new HttpClient
+        try
         {
-            BaseAddress = new Uri(_baseUrl),
-            Timeout = TimeSpan.FromSeconds(10)
-        };
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(_baseUrl),
+                Timeout = TimeSpan.FromSeconds(15)
+            };
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"HttpClient initialization error: {ex.Message}");
+        }
+
         // Apply existing token if available
         if (!string.IsNullOrEmpty(CurrentToken))
         {
