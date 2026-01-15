@@ -6,6 +6,9 @@ import { createOrderDto, updateOrderStatusDto } from '../dtos/order.dto';
 
 const router = Router();
 
+// Define specific routes first
+router.get('/draft', authMiddleware, orderController.getDraft.bind(orderController));
+
 router.get('/', authMiddleware, orderController.getAll.bind(orderController));
 router.get('/:id', authMiddleware, orderController.getById.bind(orderController));
 router.post('/', authMiddleware, validate(createOrderDto), orderController.create.bind(orderController));

@@ -1,65 +1,62 @@
-import { PrismaClient, UserRole, OrderStatus } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import { PrismaClient, UserRole, OrderStatus } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 // Helper function to generate random number in range
 function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // Helper function to generate placeholder image URLs
 function getPlaceholderImages(index: number): string[] {
-  return [
-    `https://placehold.co/300x300/08ffff/01?text=Image+2`,
-    `https://placehold.co/300x300/08ffff/01?text=Image+3`
-  ];
+    return [`https://placehold.co/300x300/08ffff/01?text=Image+2`, `https://placehold.co/300x300/08ffff/01?text=Image+3`];
 }
 
 async function main() {
-  console.log('🌱 Start seeding database...');
+    console.log("🌱 Start seeding database...");
 
-  // =========================
-  // 1. CLEAN DATABASE
-  // =========================
-  await prisma.orderItem.deleteMany();
-  await prisma.productImage.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.user.deleteMany();
+    // =========================
+    // 1. CLEAN DATABASE
+    // =========================
+    await prisma.orderItem.deleteMany();
+    await prisma.productImage.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.customer.deleteMany();
+    await prisma.user.deleteMany();
 
-  // =========================
-  // 2. CREATE USERS
-  // =========================
-  const hashedPassword = await bcrypt.hash('123456', 10);
+    // =========================
+    // 2. CREATE USERS
+    // =========================
+    const hashedPassword = await bcrypt.hash("123456", 10);
 
-  const admin = await prisma.user.create({
-    data: {
-      username: 'admin',
-      password: hashedPassword,
-      role: UserRole.ADMIN
-    }
-  });
+    const admin = await prisma.user.create({
+        data: {
+            username: "admin",
+            password: hashedPassword,
+            role: UserRole.ADMIN,
+        },
+    });
 
-  const sale1 = await prisma.user.create({
-    data: {
-      username: 'sale1',
-      password: hashedPassword,
-      role: UserRole.SALE
-    }
-  });
+    const sale1 = await prisma.user.create({
+        data: {
+            username: "sale1",
+            password: hashedPassword,
+            role: UserRole.SALE,
+        },
+    });
 
-  const sale2 = await prisma.user.create({
-    data: {
-      username: 'sale2',
-      password: hashedPassword,
-      role: UserRole.SALE
-    }
-  });
+    const sale2 = await prisma.user.create({
+        data: {
+            username: "sale2",
+            password: hashedPassword,
+            role: UserRole.SALE,
+        },
+    });
 
-  console.log('✅ Users created');
+    console.log("✅ Users created");
 
   // =========================
   // 3. CREATE CUSTOMERS (10 customers)
@@ -176,82 +173,88 @@ async function main() {
     { name: 'Hộp Đựng Quà Kraft Kèm Trang Trí', sku: 'NC-HOP-001', importPrice: 25000, salePrice: 49000, description: 'Hộp đựng quà tặng Kraft kèm trang trí nơ, kích thước 20x15x10cm, phù hợp làm quà sinh nhật và lễ tết.', imageUrl: 'https://res.cloudinary.com/dd6hyrrdf/image/upload/v1768327431/h57gl4elimaxiiwyiqyt.jpg' }
   ];
 
-  // Create products with images
-  const dienTuCategory = categoryList.find(c => c.name === 'Điện Tử')!;
-  const thoiTrangCategory = categoryList.find(c => c.name === 'Thời Trang')!;
-  const nhaCuaCategory = categoryList.find(c => c.name === 'Nhà Cửa & Trang Trí')!;
+    // Create products with images
+    const dienTuCategory = categoryList.find((c) => c.name === "Điện Tử")!;
+    const thoiTrangCategory = categoryList.find((c) => c.name === "Thời Trang")!;
+    const nhaCuaCategory = categoryList.find((c) => c.name === "Nhà Cửa & Trang Trí")!;
 
-  const allProductsData = [
-    ...dienTuProducts.map(p => ({ ...p, categoryId: dienTuCategory.id })),
-    ...thoiTrangProducts.map(p => ({ ...p, categoryId: thoiTrangCategory.id })),
-    ...nhaCuaProducts.map(p => ({ ...p, categoryId: nhaCuaCategory.id }))
-  ];
+    const allProductsData = [
+        ...dienTuProducts.map((p) => ({ ...p, categoryId: dienTuCategory.id })),
+        ...thoiTrangProducts.map((p) => ({ ...p, categoryId: thoiTrangCategory.id })),
+        ...nhaCuaProducts.map((p) => ({ ...p, categoryId: nhaCuaCategory.id })),
+    ];
 
-  // Create each product with 3 images
-  for (const productData of allProductsData) {
-    const stock = randomInt(2, 20);
-    const product = await prisma.product.create({
-      data: {
-        sku: productData.sku,
-        name: productData.name,
-        importPrice: productData.importPrice,
-        salePrice: productData.salePrice,
-        stock: stock,
-        description: productData.description,
-        categoryId: productData.categoryId,
-        images: {
-          create: [
-            { url: productData.imageUrl },
-            { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/2` },
-            { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/3` }
-          ]
-        }
-      }
-    });
-  }
+    // Create each product with 3 images
+    for (const productData of allProductsData) {
+        const stock = randomInt(2, 20);
+        const product = await prisma.product.create({
+            data: {
+                sku: productData.sku,
+                name: productData.name,
+                importPrice: productData.importPrice,
+                salePrice: productData.salePrice,
+                stock: stock,
+                description: productData.description,
+                categoryId: productData.categoryId,
+                images: {
+                    create: [
+                        { url: productData.imageUrl },
+                        { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/2` },
+                        { url: `https://dummyimage.com/300x300/08ffff/01.png?text=${productData.sku}/3` },
+                    ],
+                },
+            },
+        });
+    }
 
-  const products = await prisma.product.findMany({ include: { images: true } });
-  console.log('✅ Products and ProductImages created');
+    const products = await prisma.product.findMany({ include: { images: true } });
+    console.log("✅ Products and ProductImages created");
 
   // =========================
-  // 6. CREATE ORDERS FOR CUSTOMERS
-  // Each customer gets 3 orders, each with ~3 random products
+  // 6. CREATE ORDERS (Last 30 days)
+  // Ensure we have data for EVERY day in the last 30 days for better charts
   // =========================
-  const statuses = [OrderStatus.PAID, OrderStatus.PENDING, OrderStatus.DRAFT];
+  // ensure best report data
+  const statuses = [OrderStatus.PAID]; // All PAID to populate reports
   const users = [admin, sale1, sale2];
 
-  for (const customer of customerList) {
-    for (let orderIndex = 0; orderIndex < 3; orderIndex++) {
+  console.log('... Generating orders for the last 30 days');
+
+  for (let i = 0; i < 30; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i); // Go back i days
+
+    // Generate 2 to 5 orders per day
+    const ordersPerDay = randomInt(2, 5);
+
+    for (let k = 0; k < ordersPerDay; k++) {
+      const customer = customerList[randomInt(0, customerList.length - 1)];
+      const randomUser = users[randomInt(0, users.length - 1)];
+      const randomStatus = statuses[randomInt(0, statuses.length - 1)];
+
       const orderItems = [];
       let finalPrice = 0;
 
-      // Random 3 products for each order
+      // Random 1 to 4 products per order
+      const numberOfProducts = randomInt(1, 4);
       const selectedProducts = products
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
-
-      const randomUser = users[Math.floor(Math.random() * users.length)];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-
-      // Generate random date within the last 30 days
-      const daysAgo = Math.floor(Math.random() * 30);
-      const orderDate = new Date();
-      orderDate.setDate(orderDate.getDate() - daysAgo);
+        .slice(0, numberOfProducts);
 
       for (const product of selectedProducts) {
-        const quantity = randomInt(1, 4);
+        const quantity = randomInt(1, 5);
         const unitSalePrice = product.salePrice;
         const totalPrice = quantity * unitSalePrice;
 
-        finalPrice += totalPrice;
+                finalPrice += totalPrice;
 
-        orderItems.push({
-          productId: product.id,
-          quantity,
-          unitSalePrice,
-          totalPrice
-        });
-      }
+                orderItems.push({
+                    productId: product.id,
+                    quantity,
+                    unitSalePrice,
+                    totalPrice,
+                });
+            }
 
       await prisma.order.create({
         data: {
@@ -259,7 +262,7 @@ async function main() {
           status: randomStatus,
           customerId: customer.id,
           createdById: randomUser.id,
-          createdTime: orderDate,
+          createdTime: date,
           orderItems: {
             create: orderItems
           }
@@ -276,14 +279,14 @@ async function main() {
   console.log(`   - Customers: ${customerList.length}`);
   console.log(`   - Categories: ${categoryList.length}`);
   console.log(`   - Products: ${products.length}`);
-  console.log(`   - Orders: ${customerList.length * 3}`);
+  console.log(`   - Orders: ~100 (Generated daily for last 30 days)`);
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Seeding error:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+    .catch((e) => {
+        console.error("❌ Seeding error:", e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });

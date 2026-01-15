@@ -43,9 +43,9 @@ public partial class CustomerDetailViewModel : ObservableObject
 
     public ObservableCollection<CustomerOrderViewModel> RecentOrders { get; } = new();
 
-    public CustomerDetailViewModel()
+    public CustomerDetailViewModel(CustomerApiService customerApiService)
     {
-        _customerApiService = CustomerApiService.Instance;
+        _customerApiService = customerApiService ?? throw new ArgumentNullException(nameof(customerApiService));
     }
 
     /// <summary>

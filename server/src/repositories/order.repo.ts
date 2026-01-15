@@ -11,6 +11,35 @@ interface OrderFilters {
 }
 
 export class OrderRepository {
+  async findDraft(userId: number) {
+    return prisma.order.findFirst({
+      where: {
+        createdById: userId,
+        status: OrderStatus.DRAFT,
+      },
+      include: {
+        customer: true,
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                category: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async findAll(filters: OrderFilters = {}) {
     const {
       page = 1,

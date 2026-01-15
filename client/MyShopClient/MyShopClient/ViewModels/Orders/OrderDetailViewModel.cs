@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Navigation;
 using MyShopClient.Views.Orders;
 using System;
 using System.Collections.ObjectModel;
@@ -18,6 +19,7 @@ namespace MyShopClient.ViewModels;
 public partial class OrderDetailViewModel : ObservableObject
 {
     private readonly OrderApiService _orderApiService;
+    private readonly INavigationService _navigationService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -131,9 +133,10 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel()
+    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService)
     {
-        _orderApiService = OrderApiService.Instance;
+        _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();
@@ -228,16 +231,104 @@ public partial class OrderDetailViewModel : ObservableObject
         _ = LoadOrderAsync(order.Id);
     }
     
-    public void InitializeNewOrder()
+    public async void InitializeNewOrder()
     {
-        IsNewOrder = true;
-        IsEditing = true;
-        
-        OrderId = "NEW";
-        OrderDate = DateTime.Now;
-        OrderStatus = "DRAFT";
-        SelectedStatus = "DRAFT";
-        
+        IsLoading = true;
+        try
+        {
+            // Get user's single draft order (Get or Create)
+            var draftOrder = await _orderApiService.GetDraftOrderAsync();
+            
+            if (draftOrder != null)
+            {
+                Id = draftOrder.Id;
+                OrderId = $"#ORD-{draftOrder.Id:D4}";
+                OrderStatus = "DRAFT";
+                SelectedStatus = "DRAFT";
+                OrderDate = draftOrder.CreatedTime;
+                
+                // If draft has content (items or customer), prompt user
+                if (draftOrder.CustomerId.HasValue || (draftOrder.OrderItems != null && draftOrder.OrderItems.Count > 0))
+                {
+                    var dialog = new ContentDialog
+                    {
+                        XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                        Title = "Đơn hàng chưa hoàn thành",
+                        Content = "Bạn có một đơn hàng đang soạn dở. Bạn có muốn tiếp tục không?",
+                        PrimaryButtonText = "Tiếp tục đơn cũ",
+                        SecondaryButtonText = "Tạo mới (Xóa cũ)",
+                        DefaultButton = ContentDialogButton.Primary
+                    };
+
+                    var result = await dialog.ShowAsync();
+
+                    if (result == ContentDialogResult.Primary)
+                    {
+                        // Load existing draft content
+                        LoadDraftContent(draftOrder);
+                    }
+                    else
+                    {
+                        // Clear draft content (reset to empty) via AutoSave with empty data? 
+                        // Or just clear UI and let next AutoSave overwrite it.
+                        // Better to clear UI and set IsEditing = true immediately.
+                        ClearForm();
+                        // Trigger immediate autosave to clear backend
+                        await PerformAutoSaveAsync();
+                    }
+                }
+                else
+                {
+                    // Empty draft, just use it
+                    ClearForm();
+                }
+
+                IsNewOrder = false; // Effectively it's an existing draft order in DB
+                IsEditing = true;   // But we are editing it
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Lỗi tải đơn nháp: {ex.Message}", "Error");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void LoadDraftContent(ApiOrder order)
+    {
+        CustomerId = order.CustomerId;
+        CustomerName = order.Customer?.Name ?? "";
+        CustomerEmail = order.Customer?.Email ?? "";
+        CustomerPhone = order.Customer?.Phone ?? "";
+        CustomerAddress = order.Customer?.Address ?? "";
+        CustomerAvatar = order.Customer?.AvatarUrl ?? "";
+
+        OrderItems.Clear();
+        if (order.OrderItems != null)
+        {
+            foreach (var item in order.OrderItems)
+            {
+                AddOrderItem(new OrderItemViewModel
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.Product?.Name ?? "Unknown",
+                    ProductSku = item.Product?.Sku ?? "",
+                    ProductImage = (item.Product?.Images?.Count > 0) ? item.Product?.Images[0].Url : "",
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitSalePrice,
+                    TotalPrice = item.TotalPrice
+                });
+            }
+        }
+        RecalculateTotals();
+    }
+
+    private void ClearForm()
+    {
+        CustomerId = null;
         CustomerName = "";
         CustomerEmail = "";
         CustomerPhone = "";
@@ -269,8 +360,8 @@ public partial class OrderDetailViewModel : ObservableObject
     // Auto-save Logic
     private void TriggerAutoSave()
     {
-        // Only auto-save if editing or new order
-        if (!IsEditing && !IsNewOrder) return;
+        // Only auto-save if editing
+        if (!IsEditing) return;
         
         // Stop previous timer and restart
         _autoSaveTimer.Stop();
@@ -285,54 +376,24 @@ public partial class OrderDetailViewModel : ObservableObject
     
     private async Task PerformAutoSaveAsync()
     {
-        // Conditions: Customer selected AND at least one item
-        if (!CustomerId.HasValue || OrderItems.Count == 0) return;
+        // Must have an ID (which we should, from InitializeNewOrder)
+        if (Id == 0) return;
         
         try
         {
-            if (IsNewOrder && Id == 0)
+            var request = new CreateOrderRequest
             {
-                // Create draft order
-                var request = new CreateOrderRequest
+                CustomerId = CustomerId,
+                Status = "DRAFT",
+                Items = OrderItems.Select(i => new CreateOrderItemRequest
                 {
-                    CustomerId = CustomerId,
-                    Status = "DRAFT",
-                    Items = OrderItems.Select(i => new CreateOrderItemRequest
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
-
-                var result = await _orderApiService.CreateOrderAsync(request);
-                if (result != null)
-                {
-                    Id = result.Id;
-                    OrderId = $"#{result.Id:D4}";
-                    IsNewOrder = false; // It exists now
-                    // Keep IsEditing = true
-                    // Show subtle notification? Or just silent.
-                    // System.Diagnostics.Debug.WriteLine("Auto-saved (Created)");
-                }
-            }
-            else
-            {
-                // Update existing order (AutoSave)
-                var request = new CreateOrderRequest
-                {
-                    CustomerId = CustomerId,
-                    Status = "DRAFT", // Keep as draft during autosave
-                    Items = OrderItems.Select(i => new CreateOrderItemRequest
-                    {
-                        ProductId = i.ProductId,
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
-                
-                // Use Autosave endpoint
-                await _orderApiService.AutosaveOrderAsync(Id, request);
-                // System.Diagnostics.Debug.WriteLine("Auto-saved (Updated)");
-            }
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity
+                }).ToList()
+            };
+            
+            // Allow autosave even with empty items/customer to support clearing draft
+            await _orderApiService.AutosaveOrderAsync(Id, request);
         }
         catch (Exception ex)
         {
@@ -445,33 +506,27 @@ public partial class OrderDetailViewModel : ObservableObject
                 await PerformAutoSaveAsync();
             }
 
-            // If still new (auto-save failed or didn't run), try creating now
-            if (IsNewOrder)
+            // Finalize the order: Update status to PENDING
+            // Since we always have an ID (draft), we just update status
+            var result = await _orderApiService.UpdateStatusAsync(Id, "PENDING");
+            
+            if (result != null)
             {
-                await PerformAutoSaveAsync();
-            }
-
-            // Only proceed if we successfully have an ID
-            if (!IsNewOrder && Id > 0)
-            {
-                 // Update Status
-                var result = await _orderApiService.UpdateStatusAsync(Id, SelectedStatus);
+                OrderStatus = result.Status;
+                SelectedStatus = result.Status;
                 
-                if (result != null)
-                {
-                    OrderStatus = result.Status;
-                    System.Diagnostics.Debug.WriteLine($"Order status updated to {OrderStatus}");
-                    IsEditing = false;
-                    ShowNotification("Đơn hàng đã được lưu thành công!", "Success");
-                }
-                else
-                {
-                     ShowNotification("Không thể cập nhật trạng thái đơn hàng.", "Error");
-                }
+                System.Diagnostics.Debug.WriteLine($"Order finalized with status {OrderStatus}");
+                IsEditing = false;
+                IsNewOrder = false; // It's no longer a 'new' creation flow
+                
+                ShowNotification("Đơn hàng đã được tạo thành công!", "Success");
+                
+                // Perhaps navigate back or clear form for next order?
+                // For now, stay on detail view as finalized order
             }
             else
             {
-                 ShowNotification("Không thể lưu đơn hàng. Vui lòng kiểm tra lại kết nối.", "Error");
+                 ShowNotification("Không thể lưu đơn hàng.", "Error");
             }
         }
         catch (Exception ex)
@@ -496,8 +551,7 @@ public partial class OrderDetailViewModel : ObservableObject
     {
         if (IsNewOrder)
         {
-            if (App.Current.ContentFrame.CanGoBack)
-                App.Current.ContentFrame.GoBack();
+            _navigationService.GoBack();
         }
         else
         {
@@ -546,14 +600,14 @@ public partial class OrderDetailViewModel : ObservableObject
                 await Task.Delay(1000);
                 
                 // Navigate back
-                if (App.Current.ContentFrame.CanGoBack)
+                if (_navigationService.CanGoBack)
                 {
-                    App.Current.ContentFrame.GoBack();
+                    _navigationService.GoBack();
                 }
                 else
                 {
                     // Fallback to Orders List
-                    App.Current.ContentFrame.Navigate(typeof(OrdersView));
+                    _navigationService.Navigate(typeof(OrdersView));
                 }
             }
             else

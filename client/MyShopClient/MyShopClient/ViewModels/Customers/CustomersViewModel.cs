@@ -65,9 +65,9 @@ public partial class CustomersViewModel : ViewModelBase
     private System.Threading.CancellationTokenSource? _searchDebounceToken;
     private readonly AppSettingsService _appSettingsService;
 
-    public CustomersViewModel(AppSettingsService appSettingsService)
+    public CustomersViewModel(CustomerApiService customerApiService, AppSettingsService appSettingsService)
     {
-        _customerApiService = CustomerApiService.Instance;
+        _customerApiService = customerApiService ?? throw new ArgumentNullException(nameof(customerApiService));
         _appSettingsService = appSettingsService;
         
         // Load PageSize from settings

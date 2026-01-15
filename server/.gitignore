@@ -34,9 +34,6 @@ Thumbs.db
 uploads/
 *.tmp
 
-# Prisma
-prisma/migrations/
-
 # Testing
 coverage/
 .nyc_output/

@@ -78,7 +78,7 @@ public sealed partial class ShellPage : Page
             "Products" => typeof(Views.Products.ProductsView),
             "Orders" => typeof(Views.Orders.OrdersView),
             "Customers" => typeof(Views.Customers.CustomersView),
-            // "Statistics" => typeof(Views.Statistics.StatisticsView),
+            "Statistics" => typeof(Views.Reports.ReportPage),
             // "Invoices" => typeof(Views.Invoices.InvoicesView),
             "Settings" => typeof(Views.Settings.SettingsView),
             // "Help" => typeof(Views.Help.HelpView),
