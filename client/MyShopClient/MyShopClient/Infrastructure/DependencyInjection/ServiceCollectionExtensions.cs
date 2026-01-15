@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MyShopClient.ViewModels;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Config;
+using MyShopClient.Services.Auth;
 
 namespace MyShopClient.Infrastructure.DependencyInjection;
 
@@ -36,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         services.AddSingleton<ServerConfigService>();
+        services.AddSingleton<CredentialService>();
         
         return services;
     }
