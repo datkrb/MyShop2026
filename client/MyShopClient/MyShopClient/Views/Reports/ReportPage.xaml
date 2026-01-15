@@ -24,6 +24,8 @@
                 <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" Header="End Date"/>
                 
                 <ComboBox Header="View By" SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}" MinWidth="120"/>
+                
+                <ComboBox Header="Product Category" ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}" MinWidth="150"/>
 
                 <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" VerticalAlignment="Bottom" Style="{StaticResource AccentButtonStyle}"/>
                 <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" VerticalAlignment="Bottom"/>
@@ -32,39 +34,172 @@
 
         <!-- Content -->
         <ScrollViewer Grid.Row="1">
-            <Grid RowSpacing="24" ColumnSpacing="24">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="400"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="400"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
+            <StackPanel Spacing="24">
+                
                 <!-- Revenue Section -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Revenue &amp; Trends" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                <Grid Grid.Row="1" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12">
-                     <lvc:CartesianChart Series="{x:Bind ViewModel.RevenueSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.RevenueXAxes, Mode=OneWay}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Revenue Chart -->
+                    <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12" Height="350" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Revenue &amp; Trends" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <lvc:CartesianChart Grid.Row="1" Series="{x:Bind ViewModel.RevenueSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.RevenueXAxes, Mode=OneWay}"/>
+                    </Grid>
+                    
+                    <!-- Revenue Summary Table -->
+                    <Grid Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Height="350">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Revenue Summary" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <StackPanel Grid.Row="1" Spacing="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Total Revenue" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TotalRevenue, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Highest Day" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.HighestRevenueDay, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Average/Day" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AverageRevenue, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Data Points" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.RevenueDataPoints, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
 
-                <!-- Product Sales Section -->
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="Top 5 Products (Quantity)" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                <Grid Grid.Row="1" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12">
-                    <lvc:CartesianChart Series="{x:Bind ViewModel.ProductSalesSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.ProductSalesXAxes, Mode=OneWay}"/>
+                <!-- Top 5 Products Section -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Products Chart -->
+                    <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12" Height="350" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Top 5 Products (by Quantity)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <lvc:CartesianChart Grid.Row="1" Series="{x:Bind ViewModel.ProductSalesSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.ProductSalesXAxes, Mode=OneWay}" TooltipPosition="Top"/>
+                    </Grid>
+                    
+                    <!-- Products Summary Table -->
+                    <Grid Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Height="350">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Top Products" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.TopProductsList, Mode=OneWay}" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Quantity}" FontWeight="SemiBold" Margin="8,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
                 </Grid>
 
                 <!-- Profit Section -->
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Profit vs Cost" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                <Grid Grid.Row="3" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12">
-                     <lvc:PieChart Series="{x:Bind ViewModel.ProfitSeries, Mode=OneWay}" LegendPosition="Right"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Profit Chart -->
+                    <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12" Height="350" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Profit vs Cost" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <lvc:PieChart Grid.Row="1" Series="{x:Bind ViewModel.ProfitSeries, Mode=OneWay}" LegendPosition="Right"/>
+                    </Grid>
+                    
+                    <!-- Profit Summary Table -->
+                    <Grid Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Height="350">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Profit Summary" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <StackPanel Grid.Row="1" Spacing="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Total Revenue" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProfitRevenue, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Total Cost" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProfitCost, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Net Profit" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.NetProfit, Mode=OneWay}" FontWeight="SemiBold" Foreground="Green"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Profit Margin" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProfitMargin, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
-
-                <!-- Empty space or other metrics -->
-                <!-- Could add KPI cards here nicely, but for now empty is fine or expand chart logic -->
-            </Grid>
+                
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </Page>
