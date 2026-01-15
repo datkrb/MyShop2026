@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Navigation;
 using MyShopClient.Views.Orders;
 using System;
 using System.Collections.ObjectModel;
@@ -18,6 +19,7 @@ namespace MyShopClient.ViewModels;
 public partial class OrderDetailViewModel : ObservableObject
 {
     private readonly OrderApiService _orderApiService;
+    private readonly INavigationService _navigationService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -131,9 +133,10 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel(OrderApiService orderApiService)
+    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService)
     {
         _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();
@@ -548,8 +551,7 @@ public partial class OrderDetailViewModel : ObservableObject
     {
         if (IsNewOrder)
         {
-            if (App.Current.ContentFrame.CanGoBack)
-                App.Current.ContentFrame.GoBack();
+            _navigationService.GoBack();
         }
         else
         {
@@ -598,14 +600,14 @@ public partial class OrderDetailViewModel : ObservableObject
                 await Task.Delay(1000);
                 
                 // Navigate back
-                if (App.Current.ContentFrame.CanGoBack)
+                if (_navigationService.CanGoBack)
                 {
-                    App.Current.ContentFrame.GoBack();
+                    _navigationService.GoBack();
                 }
                 else
                 {
                     // Fallback to Orders List
-                    App.Current.ContentFrame.Navigate(typeof(OrdersView));
+                    _navigationService.Navigate(typeof(OrdersView));
                 }
             }
             else

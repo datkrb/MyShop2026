@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels;
 using MyShopClient.Views.Shared;
 using System;
@@ -12,12 +13,16 @@ namespace MyShopClient.Views.Orders;
 public sealed partial class OrderDetailView : Page
 {
     public OrderDetailViewModel ViewModel { get; }
+    private readonly INavigationService _navigationService;
 
     public OrderDetailView()
     {
         this.InitializeComponent();
+        _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetService<OrderDetailViewModel>() 
-            ?? new OrderDetailViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.OrderApiService>());
+            ?? new OrderDetailViewModel(
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Api.OrderApiService>(),
+                _navigationService);
         
         // Subscribe to notification property changes
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -68,11 +73,6 @@ public sealed partial class OrderDetailView : Page
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Frame.CanGoBack)
-        {
-            Frame.GoBack();
-        }
+        _navigationService.GoBack();
     }
-
-
 }
