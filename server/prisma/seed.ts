@@ -214,32 +214,38 @@ async function main() {
   console.log('✅ Products and ProductImages created');
 
   // =========================
-  // 6. CREATE ORDERS FOR CUSTOMERS
-  // Each customer gets 3 orders, each with ~3 random products
+  // 6. CREATE ORDERS (Last 30 days)
+  // Ensure we have data for EVERY day in the last 30 days for better charts
   // =========================
-  const statuses = [OrderStatus.PAID, OrderStatus.PENDING, OrderStatus.DRAFT];
+  // ensure best report data
+  const statuses = [OrderStatus.PAID]; // All PAID to populate reports
   const users = [admin, sale1, sale2];
 
-  for (const customer of customerList) {
-    for (let orderIndex = 0; orderIndex < 3; orderIndex++) {
+  console.log('... Generating orders for the last 30 days');
+
+  for (let i = 0; i < 30; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i); // Go back i days
+
+    // Generate 2 to 5 orders per day
+    const ordersPerDay = randomInt(2, 5);
+
+    for (let k = 0; k < ordersPerDay; k++) {
+      const customer = customerList[randomInt(0, customerList.length - 1)];
+      const randomUser = users[randomInt(0, users.length - 1)];
+      const randomStatus = statuses[randomInt(0, statuses.length - 1)];
+
       const orderItems = [];
       let finalPrice = 0;
 
-      // Random 3 products for each order
+      // Random 1 to 4 products per order
+      const numberOfProducts = randomInt(1, 4);
       const selectedProducts = products
         .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
-
-      const randomUser = users[Math.floor(Math.random() * users.length)];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-
-      // Generate random date within the last 30 days
-      const daysAgo = Math.floor(Math.random() * 30);
-      const orderDate = new Date();
-      orderDate.setDate(orderDate.getDate() - daysAgo);
+        .slice(0, numberOfProducts);
 
       for (const product of selectedProducts) {
-        const quantity = randomInt(1, 4);
+        const quantity = randomInt(1, 5);
         const unitSalePrice = product.salePrice;
         const totalPrice = quantity * unitSalePrice;
 
@@ -259,7 +265,7 @@ async function main() {
           status: randomStatus,
           customerId: customer.id,
           createdById: randomUser.id,
-          createdTime: orderDate,
+          createdTime: date,
           orderItems: {
             create: orderItems
           }
@@ -276,7 +282,7 @@ async function main() {
   console.log(`   - Customers: ${customerList.length}`);
   console.log(`   - Categories: ${categoryList.length}`);
   console.log(`   - Products: ${products.length}`);
-  console.log(`   - Orders: ${customerList.length * 3}`);
+  console.log(`   - Orders: ~100 (Generated daily for last 30 days)`);
 }
 
 main()

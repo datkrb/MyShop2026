@@ -72,21 +72,34 @@ public abstract class BaseApiService
         _baseUrl = _currentBaseUrl;
         try
         {
-            _httpClient = new HttpClient
+            if (!string.IsNullOrEmpty(_baseUrl))
             {
-                BaseAddress = new Uri(_baseUrl),
-                Timeout = TimeSpan.FromSeconds(15)
-            };
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(_baseUrl),
+                    Timeout = TimeSpan.FromSeconds(15)
+                };
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            }
+            else
+            {
+                // Fallback: Initialize without base address, enabling later configuration or error handling
+                _httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromSeconds(15)
+                };
+            }
 
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"HttpClient initialization error: {ex.Message}");
+            // Ensure _httpClient is not null to prevent crashes, even if dysfunctional
+            _httpClient = new HttpClient(); 
         }
 
         // Apply existing token if available
-        if (!string.IsNullOrEmpty(CurrentToken))
+        if (!string.IsNullOrEmpty(CurrentToken) && _httpClient != null)
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
         }
@@ -95,7 +108,10 @@ public abstract class BaseApiService
     protected void SetAuthToken(string token)
     {
         CurrentToken = token;
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (_httpClient != null)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
     }
 
     public static void ClearAuthToken()
@@ -109,6 +125,8 @@ public abstract class BaseApiService
     /// </summary>
     public void ApplyCurrentToken()
     {
+        if (_httpClient == null) return;
+
         if (!string.IsNullOrEmpty(CurrentToken))
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CurrentToken);
@@ -125,6 +143,8 @@ public abstract class BaseApiService
     /// </summary>
     public void ApplyCurrentBaseUrl()
     {
+        if (_httpClient == null) return;
+
         if (_httpClient.BaseAddress?.ToString() != _currentBaseUrl)
         {
             // Note: HttpClient.BaseAddress can only be set once, so we need to recreate the client
