@@ -14,6 +14,9 @@ namespace MyShopClient.Views.Products;
 public sealed partial class ProductsView : Page
 {
     public ProductViewModel ViewModel { get; }
+    
+    // Helper to get service from DI
+    private ProductApiService ProductApiService => App.Current.Services.GetRequiredService<ProductApiService>();
 
     public ProductsView()
     {
@@ -59,7 +62,7 @@ public sealed partial class ProductsView : Page
 
         if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(dialog.CategoryName))
         {
-            var newCat = await ProductApiService.Instance.CreateCategoryAsync(dialog.CategoryName, dialog.CategoryDescription);
+            var newCat = await ProductApiService.CreateCategoryAsync(dialog.CategoryName, dialog.CategoryDescription);
             if (newCat != null)
             {
                 Notification.ShowSuccess("Category created successfully!");
@@ -132,7 +135,7 @@ public sealed partial class ProductsView : Page
             {
                 try
                 {
-                    var created = await ProductApiService.Instance.CreateProductAsync(product);
+                    var created = await ProductApiService.CreateProductAsync(product);
                     
                     if (created != null)
                     {
@@ -150,12 +153,12 @@ public sealed partial class ProductsView : Page
 
                                 if (imagePaths.Any())
                                 {
-                                    await ProductApiService.Instance.UploadProductImagesAsync(created.Id, imagePaths);
+                                    await ProductApiService.UploadProductImagesAsync(created.Id, imagePaths);
                                 }
 
                                 // Clean description (remove IMAGE: part)
                                 created.Description = parts[0].Trim();
-                                await ProductApiService.Instance.UpdateProductAsync(created.Id, created);
+                                await ProductApiService.UpdateProductAsync(created.Id, created);
                             }
                         }
                         

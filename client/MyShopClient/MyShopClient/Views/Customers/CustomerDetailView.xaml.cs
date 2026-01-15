@@ -17,7 +17,7 @@ public sealed partial class CustomerDetailView : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<CustomerDetailViewModel>() 
-            ?? new CustomerDetailViewModel();
+            ?? new CustomerDetailViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.CustomerApiService>());
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

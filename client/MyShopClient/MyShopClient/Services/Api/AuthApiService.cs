@@ -1,12 +1,14 @@
 using System.Threading.Tasks;
+using System.Net.Http;
 using MyShopClient.Models;
 
 namespace MyShopClient.Services.Api;
 
 public class AuthApiService : BaseApiService
 {
-    private static AuthApiService? _instance;
-    public static AuthApiService Instance => _instance ??= new AuthApiService();
+    public AuthApiService(HttpClient httpClient) : base(httpClient)
+    {
+    }
 
     public async Task<LoginResponse?> LoginAsync(string username, string password)
     {

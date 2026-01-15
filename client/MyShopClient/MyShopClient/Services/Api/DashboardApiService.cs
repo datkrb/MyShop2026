@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Linq;
 using System.Threading.Tasks;
 using MyShopClient.Models;
@@ -7,8 +8,9 @@ namespace MyShopClient.Services.Api;
 
 public class DashboardApiService : BaseApiService
 {
-    private static DashboardApiService? _instance;
-    public static DashboardApiService Instance => _instance ??= new DashboardApiService();
+    public DashboardApiService(HttpClient httpClient) : base(httpClient)
+    {
+    }
 
     /// <summary>
     /// Get dashboard summary (total products, orders today, revenue today)

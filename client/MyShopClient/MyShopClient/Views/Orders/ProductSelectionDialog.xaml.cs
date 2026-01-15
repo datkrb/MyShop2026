@@ -13,7 +13,7 @@ public sealed partial class ProductSelectionDialog : ContentDialog
     public ProductSelectionDialog()
     {
         this.InitializeComponent();
-        ViewModel = new ProductSelectionViewModel(ProductApiService.Instance);
+        ViewModel = new ProductSelectionViewModel(App.Current.Services.GetRequiredService<ProductApiService>());
     }
 
     public async void LoadProducts()

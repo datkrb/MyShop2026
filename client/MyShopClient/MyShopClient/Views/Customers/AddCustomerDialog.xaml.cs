@@ -14,7 +14,7 @@ public sealed partial class AddCustomerDialog : ContentDialog
         this.InitializeComponent();
         
         ViewModel = App.Current.Services.GetService<AddCustomerDialogViewModel>() 
-            ?? new AddCustomerDialogViewModel();
+            ?? new AddCustomerDialogViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.CustomerApiService>());
         
         this.DataContext = this;
     }

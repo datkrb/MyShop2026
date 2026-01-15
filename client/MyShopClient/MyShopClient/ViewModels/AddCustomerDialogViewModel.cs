@@ -64,9 +64,9 @@ public partial class AddCustomerDialogViewModel : ObservableObject
     // Events
     public event EventHandler<bool>? DialogCloseRequested;
 
-    public AddCustomerDialogViewModel()
+    public AddCustomerDialogViewModel(CustomerApiService customerApiService)
     {
-        _customerApiService = CustomerApiService.Instance;
+        _customerApiService = customerApiService ?? throw new ArgumentNullException(nameof(customerApiService));
     }
 
     /// <summary>

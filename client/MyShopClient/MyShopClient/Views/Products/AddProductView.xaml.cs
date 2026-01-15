@@ -18,7 +18,8 @@ public sealed partial class AddProductView : Page
     public AddProductView()
     {
         this.InitializeComponent();
-        ViewModel = new AddProductViewModel();
+        ViewModel = App.Current.Services.GetService<AddProductViewModel>() 
+            ?? new AddProductViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>());
         this.DataContext = this;
         
         // Subscribe to dialog close event for navigation
