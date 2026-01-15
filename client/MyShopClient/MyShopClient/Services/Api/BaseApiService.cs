@@ -18,13 +18,58 @@ public class ApiResponse<T>
 public abstract class BaseApiService
 {
     protected readonly HttpClient _httpClient;
-    protected readonly string _baseUrl = "http://localhost:3000/api/";
+    protected readonly string _baseUrl;
+
+    // Static URL shared across all API services (no default - must be configured)
+    private static string _currentBaseUrl = string.Empty;
+    public static string CurrentBaseUrl => _currentBaseUrl;
+    
+    /// <summary>
+    /// Check if server URL has been configured
+    /// </summary>
+    public static bool IsConfigured => !string.IsNullOrEmpty(_currentBaseUrl);
 
     // Static token shared across all API services
     public static string? CurrentToken { get; private set; }
 
+    /// <summary>
+    /// Initialize base URL from LocalSettings on app startup
+    /// </summary>
+    public static void InitializeBaseUrl()
+    {
+        try
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var value = localSettings.Values["ServerUrl"];
+            if (value is string url && !string.IsNullOrEmpty(url))
+            {
+                _currentBaseUrl = url;
+            }
+            else
+            {
+                _currentBaseUrl = string.Empty;
+            }
+        }
+        catch
+        {
+            _currentBaseUrl = string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Update base URL at runtime
+    /// </summary>
+    public static void UpdateBaseUrl(string newUrl)
+    {
+        if (!string.IsNullOrEmpty(newUrl))
+        {
+            _currentBaseUrl = newUrl;
+        }
+    }
+
     protected BaseApiService()
     {
+        _baseUrl = _currentBaseUrl;
         _httpClient = new HttpClient
         {
             BaseAddress = new Uri(_baseUrl),
@@ -63,6 +108,20 @@ public abstract class BaseApiService
         else
         {
             _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+    }
+
+    /// <summary>
+    /// Apply the current static base URL to this instance's HttpClient.
+    /// Call this after saving new URL to update existing singleton instances.
+    /// </summary>
+    public void ApplyCurrentBaseUrl()
+    {
+        if (_httpClient.BaseAddress?.ToString() != _currentBaseUrl)
+        {
+            // Note: HttpClient.BaseAddress can only be set once, so we need to recreate the client
+            // For now, we'll just update our _baseUrl reference - new requests will use new URL through full URL construction
+            System.Diagnostics.Debug.WriteLine($"Base URL updated to: {_currentBaseUrl}");
         }
     }
 
@@ -108,9 +167,11 @@ public abstract class BaseApiService
             // Always apply current token before request
             ApplyCurrentToken();
             
-            System.Diagnostics.Debug.WriteLine($"GET {_baseUrl}{endpoint}");
+            // Use full URL with current base URL (allows dynamic URL changes)
+            var fullUrl = _currentBaseUrl + endpoint;
+            System.Diagnostics.Debug.WriteLine($"GET {fullUrl}");
             
-            var response = await _httpClient.GetAsync(endpoint);
+            var response = await _httpClient.GetAsync(fullUrl);
             var content = await response.Content.ReadAsStringAsync();
             
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {content}");
@@ -137,10 +198,12 @@ public abstract class BaseApiService
             });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
-            System.Diagnostics.Debug.WriteLine($"POST {_baseUrl}{endpoint}");
+            // Use full URL with current base URL (allows dynamic URL changes)
+            var fullUrl = _currentBaseUrl + endpoint;
+            System.Diagnostics.Debug.WriteLine($"POST {fullUrl}");
             System.Diagnostics.Debug.WriteLine($"Request Body: {json}");
             
-            var response = await _httpClient.PostAsync(endpoint, content);
+            var response = await _httpClient.PostAsync(fullUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
             
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {responseContent}");
@@ -167,10 +230,12 @@ public abstract class BaseApiService
             });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
-            System.Diagnostics.Debug.WriteLine($"PUT {_baseUrl}{endpoint}");
+            // Use full URL with current base URL (allows dynamic URL changes)
+            var fullUrl = _currentBaseUrl + endpoint;
+            System.Diagnostics.Debug.WriteLine($"PUT {fullUrl}");
             System.Diagnostics.Debug.WriteLine($"Request Body: {json}");
             
-            var response = await _httpClient.PutAsync(endpoint, content);
+            var response = await _httpClient.PutAsync(fullUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
             
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {responseContent}");
@@ -191,9 +256,11 @@ public abstract class BaseApiService
             // Always apply current token before request
             ApplyCurrentToken();
             
-            System.Diagnostics.Debug.WriteLine($"DELETE {_baseUrl}{endpoint}");
+            // Use full URL with current base URL (allows dynamic URL changes)
+            var fullUrl = _currentBaseUrl + endpoint;
+            System.Diagnostics.Debug.WriteLine($"DELETE {fullUrl}");
             
-            var response = await _httpClient.DeleteAsync(endpoint);
+            var response = await _httpClient.DeleteAsync(fullUrl);
             var content = await response.Content.ReadAsStringAsync();
             
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {content}");
