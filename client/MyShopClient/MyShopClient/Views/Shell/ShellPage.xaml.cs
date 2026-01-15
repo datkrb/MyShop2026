@@ -47,7 +47,7 @@ public sealed partial class ShellPage : Page
             // Handle Logout separately
             if (tag == "Logout")
             {
-                // TODO: Implement logout logic
+                ViewModel.LogoutCommand.Execute(null);
                 return;
             }
         }
@@ -99,5 +99,12 @@ public sealed partial class ShellPage : Page
             NavView.SelectedItem = NavView.MenuItems[0];
         }
     }
-}
 
+    /// <summary>
+    /// Handler for Logout button tap - calls ViewModel LogoutCommand
+    /// </summary>
+    private void LogoutButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        ViewModel.LogoutCommand.Execute(null);
+    }
+}
