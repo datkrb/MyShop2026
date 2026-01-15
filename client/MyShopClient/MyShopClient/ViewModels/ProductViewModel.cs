@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Config;
 using MyShopClient.ViewModels.Base;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -82,9 +83,6 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private int _pageSize = 10;
 
-    // Page Size Options for user selection
-    public List<int> PageSizeOptions { get; } = new List<int> { 5, 10, 15, 20 };
-
     partial void OnPageSizeChanged(int value)
     {
         _currentPage = 1;
@@ -108,11 +106,16 @@ public partial class ProductViewModel : ViewModelBase
 
     private readonly Services.Import.ImportService _importService;
     private readonly ProductApiService _productApiService;
+    private readonly AppSettingsService _appSettingsService;
     
-    public ProductViewModel(ProductApiService productApiService, Services.Import.ImportService importService)
+    public ProductViewModel(ProductApiService productApiService, Services.Import.ImportService importService, AppSettingsService appSettingsService)
     {
         _productApiService = productApiService;
         _importService = importService;
+        _appSettingsService = appSettingsService;
+        
+        // Load PageSize from settings
+        _pageSize = _appSettingsService.GetPageSize();
     }
 
     [RelayCommand]

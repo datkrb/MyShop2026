@@ -17,6 +17,8 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using MyShopClient.Infrastructure.DependencyInjection;
+using MyShopClient.Services.Api;
+using MyShopClient.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -43,6 +45,9 @@ namespace MyShopClient
 
         public App()
         {
+            // Initialize base URL from saved settings before configuring services
+            BaseApiService.InitializeBaseUrl();
+            
             Services = ConfigureServices();
             InitializeComponent();
         }
@@ -57,14 +62,37 @@ namespace MyShopClient
             return services.BuildServiceProvider();
         }
 
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
             _rootFrame = new Frame();
             _window.Content = _rootFrame;
-            _rootFrame.Navigate(typeof(Views.Login.LoginView));
-
+            
+            // Hiển thị window ngay lập tức
             _window.Activate();
+
+            // Thử auto-login với credentials đã lưu
+            var loginViewModel = Services.GetService<LoginViewModel>();
+            if (loginViewModel != null && BaseApiService.IsConfigured)
+            {
+                try
+                {
+                    var autoLoginSuccess = await loginViewModel.TryAutoLoginAsync();
+                    if (autoLoginSuccess)
+                    {
+                        // Auto-login thành công, navigate thẳng tới ShellPage
+                        _rootFrame.Navigate(typeof(Views.ShellPage));
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Auto-login error: {ex.Message}");
+                }
+            }
+
+            // Nếu auto-login không thành công, hiển thị LoginView
+            _rootFrame.Navigate(typeof(Views.Login.LoginView));
         }
     }
 }

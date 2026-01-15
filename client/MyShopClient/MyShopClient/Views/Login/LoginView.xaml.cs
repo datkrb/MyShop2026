@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml;
 using MyShopClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -14,6 +15,14 @@ public sealed partial class LoginView : Page
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<LoginViewModel>()!;
+    }
+
+    private void ConfigButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (App.Current.RootFrame != null)
+        {
+            App.Current.RootFrame.Navigate(typeof(ServerConfigView));
+        }
     }
 }
 

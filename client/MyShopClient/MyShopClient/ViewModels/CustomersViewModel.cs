@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Config;
 using MyShopClient.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
@@ -47,7 +48,7 @@ public partial class CustomersViewModel : ViewModelBase
     private int _currentPage = 1;
 
     [ObservableProperty]
-    private int _pageSize = 2;
+    private int _pageSize = 10;
 
     [ObservableProperty]
     private int _totalPages = 1;
@@ -62,10 +63,15 @@ public partial class CustomersViewModel : ViewModelBase
 
     // Debounce timer for search
     private System.Threading.CancellationTokenSource? _searchDebounceToken;
+    private readonly AppSettingsService _appSettingsService;
 
-    public CustomersViewModel()
+    public CustomersViewModel(AppSettingsService appSettingsService)
     {
         _customerApiService = CustomerApiService.Instance;
+        _appSettingsService = appSettingsService;
+        
+        // Load PageSize from settings
+        _pageSize = _appSettingsService.GetPageSize();
     }
 
     public async Task LoadCustomersAsync()

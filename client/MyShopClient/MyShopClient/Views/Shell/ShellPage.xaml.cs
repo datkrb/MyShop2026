@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using MyShopClient.Services.Navigation;
+using MyShopClient.Services.Config;
 using MyShopClient.ViewModels;
 
 namespace MyShopClient.Views;
@@ -12,20 +13,34 @@ public sealed partial class ShellPage : Page
 {
     public ShellViewModel ViewModel { get; }
     private readonly INavigationService _navigationService;
+    private readonly AppSettingsService _appSettingsService;
 
     public ShellPage()
     {
         this.InitializeComponent();
         ViewModel = App.Current.Services.GetService<ShellViewModel>()!;
         _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
+        _appSettingsService = App.Current.Services.GetRequiredService<AppSettingsService>();
         App.Current.ContentFrame = ContentFrame;
         
-        // Navigate to last visited page (or Dashboard as default)
+        // Navigate to appropriate page based on settings
         this.Loaded += (s, e) =>
         {
-            var lastPage = _navigationService.GetLastVisitedPage();
-            NavigateToPage(lastPage);
-            SelectNavItemByTag(lastPage);
+            string startPage;
+            
+            if (_appSettingsService.GetRememberLastScreen())
+            {
+                // Use last visited page if RememberLastScreen is ON
+                startPage = _navigationService.GetLastVisitedPage();
+            }
+            else
+            {
+                // Use default screen if RememberLastScreen is OFF
+                startPage = _appSettingsService.GetDefaultScreen();
+            }
+            
+            NavigateToPage(startPage);
+            SelectNavItemByTag(startPage);
         };
     }
 
@@ -47,7 +62,7 @@ public sealed partial class ShellPage : Page
             // Handle Logout separately
             if (tag == "Logout")
             {
-                // TODO: Implement logout logic
+                ViewModel.LogoutCommand.Execute(null);
                 return;
             }
         }
@@ -65,7 +80,7 @@ public sealed partial class ShellPage : Page
             "Customers" => typeof(Views.Customers.CustomersView),
             // "Statistics" => typeof(Views.Statistics.StatisticsView),
             // "Invoices" => typeof(Views.Invoices.InvoicesView),
-            // "Settings" => typeof(Views.Settings.SettingsView),
+            "Settings" => typeof(Views.Settings.SettingsView),
             // "Help" => typeof(Views.Help.HelpView),
             _ => (Type?)null
         };
@@ -99,5 +114,12 @@ public sealed partial class ShellPage : Page
             NavView.SelectedItem = NavView.MenuItems[0];
         }
     }
-}
 
+    /// <summary>
+    /// Handler for Logout button tap - calls ViewModel LogoutCommand
+    /// </summary>
+    private void LogoutButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        ViewModel.LogoutCommand.Execute(null);
+    }
+}
