@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ShellViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ServerConfigViewModel>();
+        services.AddTransient<ReportViewModel>();
         return services;
     }
 
@@ -34,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(AuthApiService.Instance);
         services.AddSingleton(DashboardApiService.Instance);
         services.AddSingleton(ProductApiService.Instance);
+        services.AddSingleton<IReportApiService>(ReportApiService.Instance);
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         services.AddSingleton<ServerConfigService>();
