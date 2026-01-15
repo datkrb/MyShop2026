@@ -17,6 +17,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using MyShopClient.Infrastructure.DependencyInjection;
+using MyShopClient.Services.Api;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -43,6 +44,9 @@ namespace MyShopClient
 
         public App()
         {
+            // Initialize base URL from saved settings before configuring services
+            BaseApiService.InitializeBaseUrl();
+            
             Services = ConfigureServices();
             InitializeComponent();
         }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using MyShopClient.ViewModels;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Config;
 
 namespace MyShopClient.Infrastructure.DependencyInjection;
 
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AddCustomerDialogViewModel>();
         services.AddTransient<ShellViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<ServerConfigViewModel>();
         return services;
     }
 
@@ -33,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(ProductApiService.Instance);
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
+        services.AddSingleton<ServerConfigService>();
         
         return services;
     }
