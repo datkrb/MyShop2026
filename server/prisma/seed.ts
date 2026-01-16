@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, OrderStatus } from "@prisma/client";
+import { PrismaClient, UserRole, OrderStatus, DiscountType } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -209,6 +209,63 @@ async function main() {
 
     const products = await prisma.product.findMany({ include: { images: true } });
     console.log("✅ Products and ProductImages created");
+
+    // =========================
+    // 5.5. CREATE PROMOTIONS
+    // =========================
+    const promotionsData = [
+        {
+            code: "WELCOME10",
+            description: "Giảm 10% cho đơn hàng đầu tiên",
+            discountType: DiscountType.PERCENTAGE,
+            discountValue: 10,
+            maxDiscount: 500000,
+            minOrderValue: 200000,
+            isActive: true,
+            startDate: new Date(),
+            endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            usageLimit: 1000
+        },
+        {
+            code: "SUMMER20",
+            description: "Giảm 20% chào hè",
+            discountType: DiscountType.PERCENTAGE,
+            discountValue: 20,
+            maxDiscount: 1000000,
+            minOrderValue: 500000,
+            isActive: true,
+            startDate: new Date(),
+            endDate: new Date(new Date().setMonth(new Date().getMonth() + 3)),
+            usageLimit: 500
+        },
+        {
+            code: "FLAT50",
+            description: "Giảm 50k cho đơn từ 500k",
+            discountType: DiscountType.FIXED,
+            discountValue: 50000,
+            minOrderValue: 500000,
+            isActive: true,
+            startDate: new Date(),
+            endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            usageLimit: 200
+        },
+        {
+            code: "EXPIRED",
+            description: "Mã giảm giá hết hạn",
+            discountType: DiscountType.PERCENTAGE,
+            discountValue: 50,
+            isActive: true,
+            startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
+            endDate: new Date(new Date().setMonth(new Date().getMonth() - 1)), // Expired last month
+            usageLimit: 100
+        }
+    ];
+
+    await prisma.promotion.deleteMany(); // Clear old promotions
+    for (const p of promotionsData) {
+        await prisma.promotion.create({ data: p });
+    }
+    console.log("✅ Promotions created");
 
   // =========================
   // 6. CREATE ORDERS (Last 30 days)

@@ -43,6 +43,16 @@ namespace MyShopClient
         public Frame? RootFrame => _rootFrame;
         public Frame? ContentFrame { get; set; }
 
+        /// <summary>
+        /// Current logged-in user's role (ADMIN or SALE)
+        /// </summary>
+        public string CurrentUserRole { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Helper property to check if current user is ADMIN
+        /// </summary>
+        public bool IsAdmin => CurrentUserRole == "ADMIN";
+
         public App()
         {
             // Initialize base URL from saved settings before configuring services

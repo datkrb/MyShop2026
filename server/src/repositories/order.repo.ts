@@ -158,6 +158,8 @@ export class OrderRepository {
       totalPrice: number;
     }>;
     finalPrice: number;
+    discountAmount?: number;
+    promotionId?: number;
   }) {
     return prisma.order.create({
       data: {
@@ -165,6 +167,8 @@ export class OrderRepository {
         createdById: data.createdById,
         status: data.status || OrderStatus.DRAFT,
         finalPrice: data.finalPrice,
+        discountAmount: data.discountAmount || 0,
+        promotionId: data.promotionId,
         orderItems: {
           create: data.items,
         },
@@ -178,6 +182,7 @@ export class OrderRepository {
             role: true,
           },
         },
+        promotion: true,
         orderItems: {
           include: {
             product: {
@@ -201,6 +206,8 @@ export class OrderRepository {
       totalPrice: number;
     }>;
     finalPrice?: number;
+    discountAmount?: number;
+    promotionId?: number | null;
   }) {
     if (data.items) {
       // Delete existing items and create new ones
@@ -215,6 +222,8 @@ export class OrderRepository {
         ...(data.customerId !== undefined && { customerId: data.customerId }),
         ...(data.status && { status: data.status }),
         ...(data.finalPrice !== undefined && { finalPrice: data.finalPrice }),
+        ...(data.discountAmount !== undefined && { discountAmount: data.discountAmount }),
+        ...(data.promotionId !== undefined && { promotionId: data.promotionId }),
         ...(data.items && {
           orderItems: {
             create: data.items,

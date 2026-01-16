@@ -118,7 +118,8 @@ public partial class OrdersViewModel : ViewModelBase
                         CustomerAvatar = order.Customer?.AvatarUrl ?? $"https://ui-avatars.com/api/?name=Guest&background=7C5CFC&color=fff",
                         OrderDate = order.CreatedTime,
                         Amount = order.FinalPrice,
-                        OrderStatus = order.Status
+                        OrderStatus = order.Status,
+                        CreatedByName = order.CreatedBy?.Username ?? "Unknown"
                     });
                 }
 
@@ -334,6 +335,9 @@ public partial class OrderViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isSelected;
+
+    [ObservableProperty]
+    private string _createdByName = string.Empty;
 
     // Computed properties for status styling
     public string OrderStatusBackground => OrderStatus switch
