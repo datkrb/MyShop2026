@@ -102,8 +102,11 @@ public partial class AddProductViewModel : ObservableValidator
     private List<int> _originalImageIds = new();
 
     public event EventHandler<bool>? DialogCloseRequested;
-
-
+    
+    /// <summary>
+    /// Event fired when a notification should be shown. Args: (message, isError)
+    /// </summary>
+    public event Action<string, bool>? NotificationRequested;
 
     private readonly ProductApiService _productApiService;
     private readonly ILocalDraftService _localDraftService;
@@ -116,6 +119,7 @@ public partial class AddProductViewModel : ObservableValidator
         
         ProductImages.CollectionChanged += (s, e) => 
         {
+            System.Diagnostics.Debug.WriteLine($"ProductImages.CollectionChanged fired! Count: {ProductImages.Count}, Action: {e.Action}");
             OnPropertyChanged(nameof(HasImages));
             TriggerAutoSave();
         };
@@ -328,7 +332,6 @@ public partial class AddProductViewModel : ObservableValidator
 
         if (base.HasErrors)
         {
-            HasErrors = true;
             var allErrors = new System.Collections.Generic.List<string>();
             foreach (var error in GetErrors())
             {
@@ -337,18 +340,16 @@ public partial class AddProductViewModel : ObservableValidator
                     allErrors.Add(vr.ErrorMessage);
                 }
             }
-            ErrorMessage = string.Join(Environment.NewLine, allErrors);
+            NotificationRequested?.Invoke(string.Join(", ", allErrors), true);
             return;
         }
 
         if (SelectedCategory == null)
         {
-            ErrorMessage = "Vui lòng chọn danh mục sản phẩm";
-            HasErrors = true;
+            NotificationRequested?.Invoke("Vui lòng chọn danh mục sản phẩm", true);
             return;
         }
 
-        HasErrors = false;
         IsSaving = true;
 
         try
@@ -504,7 +505,18 @@ public partial class AddProductViewModel : ObservableValidator
         try
         {
             var draft = await _localDraftService.GetProductDraftAsync();
-            if (draft != null && !string.IsNullOrEmpty(draft.Name))
+            // Check if draft has ANY data (any field has value)
+            bool hasDraftData = draft != null && 
+                (!string.IsNullOrEmpty(draft.Name) || 
+                 !string.IsNullOrEmpty(draft.Sku) || 
+                 !string.IsNullOrEmpty(draft.Description) ||
+                 draft.ImportPrice > 0 ||
+                 draft.SalePrice > 0 ||
+                 draft.Stock > 0 ||
+                 draft.CategoryId > 0 ||
+                 (draft.Images != null && draft.Images.Count > 0));
+            
+            if (hasDraftData)
             {
                  var dialog = new ContentDialog
                  {
@@ -525,6 +537,7 @@ public partial class AddProductViewModel : ObservableValidator
                      Description = draft.Description;
                      ImportPrice = (double)draft.ImportPrice;
                      SalePrice = (double)draft.SalePrice;
+                     Stock = draft.Stock;
                      // Category logic might need waiting for categories to load
                      if (draft.CategoryId > 0)
                      {
@@ -590,10 +603,12 @@ public partial class AddProductViewModel : ObservableValidator
 
     private void TriggerAutoSave()
     {
+        System.Diagnostics.Debug.WriteLine($"TriggerAutoSave called. IsEditMode: {IsEditMode}");
         if (IsEditMode) return; 
         
         _autoSaveTimer.Stop();
         _autoSaveTimer.Start();
+        System.Diagnostics.Debug.WriteLine("AutoSaveTimer started");
     }
     
     private async void AutoSaveTimer_Tick(object sender, object e)
@@ -616,6 +631,7 @@ public partial class AddProductViewModel : ObservableValidator
                 ImportPrice = (decimal)ImportPrice,
                 SalePrice = (decimal)SalePrice,
                 CategoryId = SelectedCategory?.Id ?? 0,
+                Stock = (int)Stock,
                 Images = ProductImages.Select(i => i.FilePath ?? "").ToList()
             };
             
