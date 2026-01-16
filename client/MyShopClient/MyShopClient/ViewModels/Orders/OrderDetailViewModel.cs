@@ -66,7 +66,7 @@ public partial class OrderDetailViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(DisplayStatus))]
     [NotifyPropertyChangedFor(nameof(StatusBackground))]
     [NotifyPropertyChangedFor(nameof(StatusForeground))]
-    private string _orderStatus = "DRAFT";
+    private string _orderStatus = "PENDING";
 
     [ObservableProperty]
     private string _createdByUsername = string.Empty;
@@ -77,7 +77,7 @@ public partial class OrderDetailViewModel : ObservableObject
     };
 
     [ObservableProperty]
-    private string _selectedStatus = "DRAFT";
+    private string _selectedStatus = "PENDING";
 
     // Notification properties
     [ObservableProperty]
