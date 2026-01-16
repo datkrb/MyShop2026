@@ -6,16 +6,12 @@ import { createOrderDto, updateOrderStatusDto } from '../dtos/order.dto';
 
 const router = Router();
 
-// Define specific routes first
-router.get('/draft', authMiddleware, orderController.getDraft.bind(orderController));
-
 router.get('/', authMiddleware, orderController.getAll.bind(orderController));
 router.get('/:id', authMiddleware, orderController.getById.bind(orderController));
 router.post('/', authMiddleware, validate(createOrderDto), orderController.create.bind(orderController));
 router.put('/:id', authMiddleware, orderController.update.bind(orderController));
 router.delete('/:id', authMiddleware, orderController.delete.bind(orderController));
 router.put('/:id/status', authMiddleware, validate(updateOrderStatusDto), orderController.updateStatus.bind(orderController));
-router.post('/:id/autosave', authMiddleware, orderController.autosave.bind(orderController));
 router.get('/:id/export', authMiddleware, orderController.export.bind(orderController));
 
 export default router;

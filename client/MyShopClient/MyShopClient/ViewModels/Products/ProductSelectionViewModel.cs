@@ -14,6 +14,7 @@ namespace MyShopClient.ViewModels;
 public partial class ProductSelectionViewModel : ViewModelBase
 {
     private readonly ProductApiService _productApiService;
+    private System.Threading.CancellationTokenSource? _searchDebounceToken;
 
     [ObservableProperty]
     private string _searchKeyword = string.Empty;
@@ -40,8 +41,8 @@ public partial class ProductSelectionViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalItems = 0;
 
-    [ObservableProperty]
-    private ObservableCollection<PageInfo> _pages = new();
+    // [ObservableProperty]
+    // private ObservableCollection<PageInfo> _pages = new();
 
     // PageNumbers for PaginationControl compatibility
     public ObservableCollection<PageButtonModel> PageNumbers { get; } = new();
@@ -64,12 +65,35 @@ public partial class ProductSelectionViewModel : ViewModelBase
         await LoadProducts();
     }
 
+    partial void OnSearchKeywordChanged(string value)
+    {
+        _searchDebounceToken?.Cancel();
+        _searchDebounceToken = new System.Threading.CancellationTokenSource();
+        var token = _searchDebounceToken.Token;
+
+        _ = DebounceSearchAsync(token);
+    }
+
+    private async Task DebounceSearchAsync(System.Threading.CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(500, token);
+            if (!token.IsCancellationRequested)
+            {
+                CurrentPage = 1;
+                await LoadProducts();
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
     public async Task LoadProducts()
     {
         IsLoading = true;
         try
         {
-            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, null, SearchKeyword);
+            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, null, SearchKeyword, inStock: true);
             
             if (result != null)
             {
@@ -100,71 +124,37 @@ public partial class ProductSelectionViewModel : ViewModelBase
 
     private void GeneratePagination()
     {
-        var list = new ObservableCollection<PageInfo>();
         PageNumbers.Clear();
-        
-        if (TotalPages <= 5)
-        {
-            for (int i = 1; i <= TotalPages; i++)
-            {
-                list.Add(CreatePageInfo(i));
-                PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = i == CurrentPage });
-            }
-        }
-        else
-        {
-            if (CurrentPage <= 2)
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(CreatePageInfo(2));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { PageNumber = 2, IsCurrentPage = CurrentPage == 2 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
-            else if (CurrentPage >= TotalPages - 1)
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages - 1));
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages - 1, IsCurrentPage = CurrentPage == TotalPages - 1 });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
-            else
-            {
-                list.Add(CreatePageInfo(1));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(CurrentPage));
-                list.Add(new PageInfo { Text = "...", IsEnabled = false });
-                list.Add(CreatePageInfo(TotalPages));
-                
-                PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = CurrentPage, IsCurrentPage = true });
-                PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
-                PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
-            }
-        }
-        Pages = list;
-    }
 
-    private PageInfo CreatePageInfo(int page)
-    {
-        return new PageInfo 
-        { 
-            Text = page.ToString(), 
-            PageNumber = page, 
-            IsCurrent = page == CurrentPage,
-            IsEnabled = true,
-            Command = new RelayCommand(async () => await GoToPage(page))
-        };
+        if (TotalPages <= 1) return;
+
+        PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+
+        int startPage = Math.Max(2, CurrentPage - 1);
+        int endPage = Math.Min(TotalPages - 1, CurrentPage + 1);
+
+        if (startPage > 2)
+        {
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+        }
+
+        for (int i = startPage; i <= endPage; i++)
+        {
+            PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = CurrentPage == i });
+        }
+
+        if (endPage < TotalPages - 1)
+        {
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+        }
+
+        if (TotalPages > 1)
+        {
+            PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
+        }
+        
+        // Update unused Pages collection just in case, or we can remove it if not used in XAML (it wasn't used in the XAML snippet I saw)
+        // referencing clean up 
     }
 
     private async Task GoToPage(int page)
