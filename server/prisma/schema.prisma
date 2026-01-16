@@ -83,7 +83,7 @@ model Customer {
 
 model Order {
   id             Int         @id @default(autoincrement())
-  status         OrderStatus @default(DRAFT)
+  status         OrderStatus @default(PENDING)
   createdTime    DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   finalPrice     Int
