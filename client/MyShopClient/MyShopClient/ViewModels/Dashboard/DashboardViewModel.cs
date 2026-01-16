@@ -89,7 +89,7 @@ public partial class DashboardViewModel : ViewModelBase
         {
             new Axis
             {
-                Labeler = value => $"${value / 1000}k",
+                Labeler = value => Helpers.CurrencyHelper.FormatVNDShort((decimal)value),
                 LabelsPaint = new SolidColorPaint(SKColors.Gray),
                 SeparatorsPaint = new SolidColorPaint(new SKColor(200, 200, 200, 50)) { PathEffect = new DashEffect(new float[] { 5, 5 }) }
             }
@@ -118,7 +118,7 @@ public partial class DashboardViewModel : ViewModelBase
             if (summary != null)
             {
                 TotalProducts = summary.TotalProducts.ToString("N0");
-                DailyRevenue = $"${summary.RevenueToday:N0}";
+                DailyRevenue = Helpers.CurrencyHelper.FormatVND(summary.RevenueToday);
                 DailyOrders = summary.TotalOrdersToday.ToString("N0");
                 PendingOrders = summary.PendingOrders.ToString("N0");
 

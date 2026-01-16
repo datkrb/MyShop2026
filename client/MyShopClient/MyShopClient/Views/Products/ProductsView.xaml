@@ -492,7 +492,7 @@
                                             <!-- Price -->
                                             <TextBlock 
                                                 Grid.Column="2" 
-                                                Text="{x:Bind SalePrice}" 
+                                                Text="{x:Bind SalePrice, Converter={StaticResource CurrencyConverter}}" 
                                                 FontWeight="SemiBold" 
                                                 VerticalAlignment="Center" 
                                                 HorizontalAlignment="Center"

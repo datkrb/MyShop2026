@@ -52,8 +52,8 @@ public partial class ProductDetailViewModel : ViewModelBase
     public string ImageCounterText => $"{CurrentImageIndex + 1} / {Product?.Images?.Count ?? 0}";
 
     // Formatted display properties
-    public string FormattedImportPrice => Product?.ImportPrice.ToString("N0") + " VND" ?? "0 VND";
-    public string FormattedSalePrice => Product?.SalePrice.ToString("N0") + " VND" ?? "0 VND";
+    public string FormattedImportPrice => Helpers.CurrencyHelper.FormatVND(Product?.ImportPrice ?? 0);
+    public string FormattedSalePrice => Helpers.CurrencyHelper.FormatVND(Product?.SalePrice ?? 0);
 
     public ProductDetailViewModel(ProductApiService productApiService, INavigationService navigationService)
     {

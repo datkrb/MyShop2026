@@ -107,9 +107,9 @@ public partial class ReportViewModel : ObservableObject
 
     // Computed properties for My KPI display (avoids null binding issues in XAML)
     public string MyKpiOrders => MyKpi?.Orders.ToString() ?? "0";
-    public string MyKpiRevenue => MyKpi != null ? $"{MyKpi.Revenue:N0} đ" : "0 đ";
+    public string MyKpiRevenue => MyKpi != null ? Helpers.CurrencyHelper.FormatVND(MyKpi.Revenue) : "0 đ";
     public string MyKpiRate => MyKpi != null ? $"{MyKpi.CommissionRate}%" : "0%";
-    public string MyKpiCommission => MyKpi != null ? $"{MyKpi.Commission:N0} đ" : "0 đ";
+    public string MyKpiCommission => MyKpi != null ? Helpers.CurrencyHelper.FormatVND(MyKpi.Commission) : "0 đ";
 
     public ReportViewModel(IReportApiService reportApiService, ProductApiService productApiService)
     {
@@ -220,16 +220,16 @@ public partial class ReportViewModel : ObservableObject
 
         // Update Revenue Summary
         var totalRev = data.Sum(x => x.Revenue);
-        TotalRevenue = $"{totalRev:N0} đ";
+        TotalRevenue = Helpers.CurrencyHelper.FormatVND(totalRev);
         RevenueDataPoints = data.Count.ToString();
         
         if (data.Count > 0)
         {
             var avgRev = totalRev / data.Count;
-            AverageRevenue = $"{avgRev:N0} đ";
+            AverageRevenue = Helpers.CurrencyHelper.FormatVND(avgRev);
             
             var maxItem = data.OrderByDescending(x => x.Revenue).First();
-            HighestRevenueDay = $"{maxItem.Date}: {maxItem.Revenue:N0} đ";
+            HighestRevenueDay = $"{maxItem.Date}: {Helpers.CurrencyHelper.FormatVND(maxItem.Revenue)}";
         }
         else
         {
@@ -250,9 +250,9 @@ public partial class ReportViewModel : ObservableObject
         };
 
         // Update Profit Summary
-        ProfitRevenue = $"{data.Revenue:N0} đ";
-        ProfitCost = $"{data.Cost:N0} đ";
-        NetProfit = $"{data.Profit:N0} đ";
+        ProfitRevenue = Helpers.CurrencyHelper.FormatVND(data.Revenue);
+        ProfitCost = Helpers.CurrencyHelper.FormatVND(data.Cost);
+        NetProfit = Helpers.CurrencyHelper.FormatVND(data.Profit);
         ProfitMargin = $"{data.ProfitMargin:N1}%";
     }
 

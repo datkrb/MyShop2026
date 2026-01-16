@@ -97,13 +97,13 @@ public partial class OrderDetailViewModel : ObservableObject
 
     // Computed properties
     public string FormattedDate => OrderDate.ToString("dd/MM/yyyy HH:mm");
-    public string FormattedAmount => $"{Amount:N0}đ";
+    public string FormattedAmount => Helpers.CurrencyHelper.FormatVND(Amount);
     
     public decimal Subtotal => OrderItems.Sum(x => x.TotalPrice);
     public decimal Total => Subtotal; // No tax calculation for simplicity
     
-    public string FormattedSubtotal => $"{Subtotal:N0}đ";
-    public string FormattedTotal => $"{Total:N0}đ";
+    public string FormattedSubtotal => Helpers.CurrencyHelper.FormatVND(Subtotal);
+    public string FormattedTotal => Helpers.CurrencyHelper.FormatVND(Total);
 
     public string DisplayStatus => OrderStatus switch
     {
@@ -720,8 +720,8 @@ public partial class OrderItemViewModel : ObservableObject
     public int MaxQuantity => Stock + OriginalQuantity;
     public int RemainingStock => MaxQuantity - Quantity;
 
-    public string FormattedUnitPrice => $"{UnitPrice:N0}đ";
-    public string FormattedTotalPrice => $"{TotalPrice:N0}đ";
+    public string FormattedUnitPrice => Helpers.CurrencyHelper.FormatVND(UnitPrice);
+    public string FormattedTotalPrice => Helpers.CurrencyHelper.FormatVND(TotalPrice);
     
     partial void OnQuantityChanged(int value)
     {
