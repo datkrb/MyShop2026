@@ -47,6 +47,33 @@ public class ReportApiService : BaseApiService, IReportApiService
         }
         return await GetAsync<TopProductsTimeSeriesReport>(query) ?? new TopProductsTimeSeriesReport();
     }
+
+    /// <summary>
+    /// Get KPI sales report for all users (ADMIN only)
+    /// </summary>
+    public async Task<List<KpiSalesItem>> GetKpiSalesReportAsync(int year, int? month = null)
+    {
+        var query = $"reports/kpi-sales?year={year}";
+        if (month.HasValue)
+        {
+            query += $"&month={month.Value}";
+        }
+        return await GetAsync<List<KpiSalesItem>>(query) ?? new List<KpiSalesItem>();
+    }
+
+    /// <summary>
+    /// Get own KPI report (for SALE users)
+    /// </summary>
+    public async Task<KpiSalesItem?> GetMyKpiAsync(int year, int? month = null)
+    {
+        var query = $"reports/my-kpi?year={year}";
+        if (month.HasValue)
+        {
+            query += $"&month={month.Value}";
+        }
+        var result = await GetAsync<List<KpiSalesItem>>(query);
+        return result?.Count > 0 ? result[0] : null;
+    }
 }
 
 public interface IReportApiService
@@ -55,5 +82,7 @@ public interface IReportApiService
     Task<ProfitReport> GetProfitReportAsync(DateTime startDate, DateTime endDate, int? categoryId = null);
     Task<List<ProductSalesItem>> GetProductSalesReportAsync(DateTime startDate, DateTime endDate);
     Task<TopProductsTimeSeriesReport> GetTopProductsTimeSeriesAsync(DateTime startDate, DateTime endDate, int? categoryId = null);
+    Task<List<KpiSalesItem>> GetKpiSalesReportAsync(int year, int? month = null);
+    Task<KpiSalesItem?> GetMyKpiAsync(int year, int? month = null);
 }
 

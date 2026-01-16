@@ -225,6 +225,34 @@
                 </Border>
             </StackPanel>
             
+            <!-- Promotion Code Section -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Promotion Code" Style="{StaticResource FormLabelStyle}"/>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox 
+                        PlaceholderText="Enter code (e.g. SAVE10)"
+                        Text="{x:Bind ViewModel.PromotionCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        HorizontalAlignment="Stretch"/>
+                        
+                    <Button 
+                        Grid.Column="1"
+                        Content="Apply"
+                        Command="{x:Bind ViewModel.ApplyPromotionCommand}"/>
+                </Grid>
+                
+                <!-- Promotion Message -->
+                <TextBlock 
+                    Text="{x:Bind ViewModel.PromotionMessage, Mode=OneWay}"
+                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" 
+                    FontSize="12"
+                    Visibility="{x:Bind ViewModel.PromotionMessage, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            </StackPanel>
+
             <!-- Order Summary -->
             <Border Background="{ThemeResource SystemChromeLowColor}" CornerRadius="8" Padding="16">
                 <StackPanel Spacing="8">
@@ -234,6 +262,13 @@
                         <TextBlock Text="Subtotal" Foreground="{ThemeResource TextSecondaryBrush}"/>
                         <TextBlock Text="{x:Bind ViewModel.FormattedSubtotal, Mode=OneWay}" HorizontalAlignment="Right" Foreground="{ThemeResource TextPrimaryBrush}"/>
                     </Grid>
+                    
+                    <!-- Discount Row -->
+                    <Grid Visibility="{x:Bind ViewModel.IsPromotionValid, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Discount" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                        <TextBlock Text="{x:Bind ViewModel.FormattedDiscount, Mode=OneWay}" HorizontalAlignment="Right" Foreground="{ThemeResource SystemFillColorSuccessBrush}"/>
+                    </Grid>
+
                     <Grid>
                         <TextBlock Text="Tax (10%)" Foreground="{ThemeResource TextSecondaryBrush}"/>
                         <TextBlock Text="{x:Bind ViewModel.FormattedTax, Mode=OneWay}" HorizontalAlignment="Right" Foreground="{ThemeResource TextPrimaryBrush}"/>

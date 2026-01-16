@@ -16,6 +16,10 @@
             <helpers:BoolToChangeBrushConverter x:Key="BoolToChangeBrushConverter" />
             <helpers:BoolToChangeGlyphConverter x:Key="BoolToChangeGlyphConverter" />
             <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <helpers:DateTimeFormatConverter x:Key="DateTimeFormatConverter" />
+            <helpers:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
+            <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter" />
+            <helpers:NullableIntToDoubleConverter x:Key="NullableIntToDoubleConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

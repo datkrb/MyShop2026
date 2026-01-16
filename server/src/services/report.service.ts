@@ -6,7 +6,8 @@ export class ReportService {
     startDate: Date,
     endDate: Date,
     type: "day" | "month" | "year" = "day",
-    categoryId?: number
+    categoryId?: number,
+    createdById?: number
   ) {
     const orders = await prisma.order.findMany({
       where: {
@@ -15,6 +16,7 @@ export class ReportService {
           gte: startDate,
           lte: endDate,
         },
+        ...(createdById && { createdById }),
       },
       include: {
         orderItems: {
@@ -68,7 +70,7 @@ export class ReportService {
     return sortedData;
   }
 
-  async getProfitReport(startDate: Date, endDate: Date, categoryId?: number) {
+  async getProfitReport(startDate: Date, endDate: Date, categoryId?: number, createdById?: number) {
     const orders = await prisma.order.findMany({
       where: {
         status: OrderStatus.PAID,
@@ -76,6 +78,7 @@ export class ReportService {
           gte: startDate,
           lte: endDate,
         },
+        ...(createdById && { createdById }),
       },
       include: {
         orderItems: {
@@ -122,7 +125,7 @@ export class ReportService {
     };
   }
 
-  async getProductSalesReport(startDate: Date, endDate: Date) {
+  async getProductSalesReport(startDate: Date, endDate: Date, createdById?: number) {
     const orders = await prisma.order.findMany({
       where: {
         status: OrderStatus.PAID,
@@ -130,6 +133,7 @@ export class ReportService {
           gte: startDate,
           lte: endDate,
         },
+        ...(createdById && { createdById }),
       },
       include: {
         orderItems: {
@@ -165,7 +169,7 @@ export class ReportService {
     return Object.values(productSales).sort((a, b) => b.quantity - a.quantity);
   }
 
-  async getTopProductsSalesTimeSeries(startDate: Date, endDate: Date, categoryId?: number) {
+  async getTopProductsSalesTimeSeries(startDate: Date, endDate: Date, categoryId?: number, createdById?: number) {
     // First, get top 5 products by total quantity sold
     const orders = await prisma.order.findMany({
       where: {
@@ -174,6 +178,7 @@ export class ReportService {
           gte: startDate,
           lte: endDate,
         },
+        ...(createdById && { createdById }),
       },
       include: {
         orderItems: {
@@ -283,7 +288,7 @@ export class ReportService {
     };
   }
 
-  async getKPISalesReport(year: number, month?: number) {
+  async getKPISalesReport(year: number, month?: number, userId?: number) {
     const where: any = {
       status: OrderStatus.PAID,
     };
@@ -298,6 +303,11 @@ export class ReportService {
         gte: new Date(year, 0, 1),
         lt: new Date(year + 1, 0, 1),
       };
+    }
+
+    // If userId is provided, filter orders by that specific user (for SALE viewing own KPI)
+    if (userId) {
+      where.createdById = userId;
     }
 
     const orders = await prisma.order.findMany({
@@ -320,9 +330,11 @@ export class ReportService {
         orders: number;
         revenue: number;
         commission: number;
+        commissionRate: number;
       };
     } = {};
 
+    // Aggregate orders and revenue per user
     orders.forEach((order) => {
       if (!order.createdById) return;
 
@@ -332,13 +344,30 @@ export class ReportService {
           orders: 0,
           revenue: 0,
           commission: 0,
+          commissionRate: 0,
         };
       }
 
       salesData[order.createdById].orders += 1;
       salesData[order.createdById].revenue += order.finalPrice;
-      // Commission: 5% of revenue
-      salesData[order.createdById].commission += order.finalPrice * 0.05;
+    });
+
+    // Calculate tiered commission based on total revenue
+    const calculateTieredCommission = (revenue: number): { commission: number; rate: number } => {
+      if (revenue >= 50000000) {
+        return { commission: revenue * 0.07, rate: 7 }; // 7% for 50M+
+      } else if (revenue >= 10000000) {
+        return { commission: revenue * 0.05, rate: 5 }; // 5% for 10M-50M
+      } else {
+        return { commission: revenue * 0.03, rate: 3 }; // 3% for below 10M
+      }
+    };
+
+    // Apply tiered commission to each sales person
+    Object.values(salesData).forEach((data) => {
+      const { commission, rate } = calculateTieredCommission(data.revenue);
+      data.commission = commission;
+      data.commissionRate = rate;
     });
 
     return Object.values(salesData).sort((a, b) => b.revenue - a.revenue);

@@ -7,6 +7,7 @@ import orderRoutes from './order.routes';
 import reportRoutes from './report.routes';
 import dashboardRoutes from './dashboard.routes';
 import adminRoutes from './admin.routes';
+import promotionRoutes from './promotion.routes';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { requireRole } from '../middlewares/role.middleware';
 import { UserRole } from '../constants/roles';
@@ -28,6 +29,7 @@ router.use('/customers', customerRoutes);
 router.use('/orders', orderRoutes);
 router.use('/reports', reportRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/promotions', promotionRoutes);
 router.use('/admin', authMiddleware, requireRole(UserRole.ADMIN), adminRoutes);
 
 export default router;

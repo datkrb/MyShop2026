@@ -23,7 +23,8 @@ export class ProductController {
         id: req.query.id ? parseInt(req.query.id as string) : undefined,
       };
 
-      const result = await productService.getAll(filters);
+      const userRole = req.user?.role;
+      const result = await productService.getAll(filters, userRole);
       sendSuccess(res, result);
     } catch (error: any) {
       sendError(res, "INTERNAL_ERROR", error.message, 500);

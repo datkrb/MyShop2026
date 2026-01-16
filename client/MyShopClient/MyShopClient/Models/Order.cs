@@ -53,6 +53,16 @@ public class Order
     public decimal Price { get; set; }
     
     /// <summary>
+    /// Người thực hiện đơn hàng (sale/admin username)
+    /// </summary>
+    public string CreatedByName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Role của người thực hiện (ADMIN/SALE)
+    /// </summary>
+    public string CreatedByRole { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Create Order from ApiOrder for UI display
     /// </summary>
     public static Order FromApiOrder(ApiOrder apiOrder)
@@ -65,7 +75,9 @@ public class Order
             ItemName = apiOrder.FirstItemName,
             OrderDate = apiOrder.CreatedTime,
             Status = apiOrder.Status,
-            Price = apiOrder.FinalPrice
+            Price = apiOrder.FinalPrice,
+            CreatedByName = apiOrder.CreatedBy?.Username ?? "Unknown",
+            CreatedByRole = apiOrder.CreatedBy?.Role ?? ""
         };
     }
 }
