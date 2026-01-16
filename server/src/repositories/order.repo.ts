@@ -133,8 +133,8 @@ export class OrderRepository {
     finalPrice: number;
     discountAmount?: number;
     promotionId?: number;
-  }) {
-    return prisma.order.create({
+  }, tx: any = prisma) {
+    return tx.order.create({
       data: {
         customerId: data.customerId,
         createdById: data.createdById,
@@ -181,7 +181,7 @@ export class OrderRepository {
     finalPrice?: number;
     discountAmount?: number;
     promotionId?: number | null;
-  }) {
+  }, tx: any = prisma) {
     if (data.items) {
       // Delete existing items and create new ones
       await tx.orderItem.deleteMany({
