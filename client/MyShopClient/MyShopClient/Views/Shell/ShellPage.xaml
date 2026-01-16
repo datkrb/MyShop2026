@@ -16,6 +16,7 @@
             <Setter Property="OpenPaneLength" Value="200"/>
             <Setter Property="CompactPaneLength" Value="50"/>
         </Style>
+
     </Page.Resources>
 
     <Grid>
@@ -73,6 +74,13 @@
             <NavigationViewItem Content="Products" Tag="Products">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE781;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            
+            <NavigationViewItem Content="Promotions" Tag="Promotions" 
+                                Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8D4;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 

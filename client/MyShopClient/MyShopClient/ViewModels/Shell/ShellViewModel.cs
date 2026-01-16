@@ -24,6 +24,8 @@ public partial class ShellViewModel : ViewModelBase
         _credentialService = credentialService;
     }
 
+    public bool IsAdmin => App.Current.IsAdmin;
+
     [RelayCommand]
     public async Task LogoutAsync()
     {

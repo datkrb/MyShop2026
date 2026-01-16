@@ -347,11 +347,12 @@
                                 <ListView.Header>
                                 <Grid Background="{ThemeResource SystemChromeLowColor}" Padding="16,12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" MinWidth="120"/>
+                                        <ColumnDefinition Width="*" MinWidth="100"/>
                                         <ColumnDefinition Width="2*" MinWidth="180"/>
+                                        <ColumnDefinition Width="*" MinWidth="90"/>
                                         <ColumnDefinition Width="*" MinWidth="100"/>
                                         <ColumnDefinition Width="*" MinWidth="100"/>
-                                        <ColumnDefinition Width="*" MinWidth="100"/>
+                                        <ColumnDefinition Width="*" MinWidth="90"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Text="ORDER ID" Style="{StaticResource TableHeaderTextStyle}"/>
@@ -359,6 +360,7 @@
                                     <TextBlock Grid.Column="2" Text="DATE" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
                                     <TextBlock Grid.Column="3" Text="AMOUNT" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
                                     <TextBlock Grid.Column="4" Text="STATUS" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
+                                    <TextBlock Grid.Column="5" Text="CREATED BY" HorizontalAlignment="Center" Style="{StaticResource TableHeaderTextStyle}"/>
                                 </Grid>
                             </ListView.Header>
                             <ListView.ItemContainerStyle>
@@ -376,11 +378,12 @@
                                         BorderBrush="{ThemeResource BorderBrush}" 
                                         BorderThickness="0,0,0,1">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" MinWidth="120"/>
+                                            <ColumnDefinition Width="*" MinWidth="100"/>
                                             <ColumnDefinition Width="2*" MinWidth="180"/>
+                                            <ColumnDefinition Width="*" MinWidth="90"/>
                                             <ColumnDefinition Width="*" MinWidth="100"/>
                                             <ColumnDefinition Width="*" MinWidth="100"/>
-                                            <ColumnDefinition Width="*" MinWidth="100"/>
+                                            <ColumnDefinition Width="*" MinWidth="90"/>
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Order ID -->
@@ -450,6 +453,15 @@
                                                 FontWeight="SemiBold" 
                                                 Foreground="{x:Bind OrderStatusForeground}"/>
                                         </Border>
+
+                                        <!-- Created By -->
+                                        <TextBlock 
+                                            Grid.Column="5" 
+                                            Margin="5,0"
+                                            Text="{x:Bind CreatedByName}" 
+                                            VerticalAlignment="Center" 
+                                            HorizontalAlignment="Center"
+                                            Foreground="{ThemeResource TextSecondaryBrush}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>

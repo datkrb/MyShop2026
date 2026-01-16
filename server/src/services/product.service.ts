@@ -4,8 +4,18 @@ import fs from 'fs';
 import path from 'path';
 
 export class ProductService {
-  async getAll(filters: any) {
-    return productRepo.findAll(filters);
+  async getAll(filters: any, userRole?: string) {
+    const result = await productRepo.findAll(filters);
+
+    // SALE role cannot see importPrice
+    if (userRole !== 'ADMIN') {
+      result.data = result.data.map((product: any) => {
+        const { importPrice, ...productWithoutImportPrice } = product;
+        return productWithoutImportPrice;
+      });
+    }
+
+    return result;
   }
 
   async getById(id: number, userRole?: string) {
