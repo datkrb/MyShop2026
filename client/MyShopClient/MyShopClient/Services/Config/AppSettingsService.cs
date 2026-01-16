@@ -176,5 +176,58 @@ public class AppSettingsService
         return 8888; // Default
     }
 
+    /// <summary>
+    /// Lưu Server URL vào Settings
+    /// </summary>
+    public void SaveServerUrl(string url)
+    {
+        try
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["ServerUrl"] = url ?? "http://localhost";
+            
+            System.Diagnostics.Debug.WriteLine($"ServerUrl saved: {url}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error saving ServerUrl: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Lưu Server Port vào Settings
+    /// </summary>
+    public void SaveServerPort(int port)
+    {
+        try
+        {
+            if (port <= 0) port = 8888;
+            
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["ServerPort"] = port;
+            
+            System.Diagnostics.Debug.WriteLine($"ServerPort saved: {port}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error saving ServerPort: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Get full server URL with port (e.g., http://localhost:8888/api/)
+    /// </summary>
+    public string GetFullServerUrl()
+    {
+        var url = GetServerUrl();
+        var port = GetServerPort();
+        
+        // Remove trailing slash from URL if present
+        url = url.TrimEnd('/');
+        
+        // Build full URL
+        return $"{url}:{port}/api/";
+    }
+
     #endregion
 }
