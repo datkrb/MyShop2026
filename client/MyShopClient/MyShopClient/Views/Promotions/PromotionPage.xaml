@@ -21,21 +21,74 @@
             <Setter Property="Foreground" Value="{ThemeResource TextSecondaryBrush}"/>
             <Setter Property="CharacterSpacing" Value="50"/>
         </Style>
-        
-        <!-- Status Badge Styles -->
-        <Style x:Key="ActiveBadgeStyle" TargetType="Border">
-            <Setter Property="Background" Value="#DCFCE7"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="CornerRadius" Value="12"/>
-        </Style>
-        <Style x:Key="InactiveBadgeStyle" TargetType="Border">
-            <Setter Property="Background" Value="#FEE2E2"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="CornerRadius" Value="12"/>
-        </Style>
     </Page.Resources>
 
-    <Grid Padding="24,12,2,12">
+    <Grid x:Name="RootGrid" Padding="24,12,2,12">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <!-- Large: 3 columns stats, inline filters -->
+                <VisualState x:Name="LargeState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1200"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
+                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard2.(Grid.Column)" Value="1"/>
+                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.Column)" Value="2"/>
+                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard2.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard3.(Grid.Row)" Value="0"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
+                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Medium: 3 columns stats, flyout filters -->
+                <VisualState x:Name="MediumState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
+                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard2.(Grid.Column)" Value="1"/>
+                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.Column)" Value="2"/>
+                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard2.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard3.(Grid.Row)" Value="0"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Small: stacked stats, flyout filters -->
+                <VisualState x:Name="SmallState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
+                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="3"/>
+                        <Setter Target="StatCard2.(Grid.Column)" Value="0"/>
+                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="3"/>
+                        <Setter Target="StatCard3.(Grid.Column)" Value="0"/>
+                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="3"/>
+                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard2.(Grid.Row)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.Row)" Value="2"/>
+                        <Setter Target="StatsGrid.RowSpacing" Value="16"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,22,0">
             <StackPanel Spacing="24">
                 
@@ -81,15 +134,20 @@
                 </Grid>
 
                 <!-- Stats Cards -->
-                <Grid ColumnSpacing="16">
+                <Grid x:Name="StatsGrid" ColumnSpacing="16" RowSpacing="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
                     <!-- Active Promotions Card -->
-                    <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard1" Grid.Column="0" Grid.Row="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -119,7 +177,7 @@
                     </Border>
 
                     <!-- Total Promotions Card -->
-                    <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard2" Grid.Column="1" Grid.Row="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -149,7 +207,7 @@
                     </Border>
 
                     <!-- Expired Promotions Card -->
-                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard3" Grid.Column="2" Grid.Row="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -201,10 +259,10 @@
                                 PlaceholderText="Search by code or description..."
                                 Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 QueryIcon="Find"
-                                MinWidth="280"/>
+                                MinWidth="250"/>
 
-                            <!-- Filter Options -->
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" Margin="24,0,0,0">
+                            <!-- Inline Filter Options (Large screens) -->
+                            <StackPanel x:Name="InlineFiltersPanel" Grid.Column="1" Orientation="Horizontal" Spacing="16" Margin="24,0,0,0" Visibility="Visible">
                                 <!-- Status Filter -->
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
@@ -232,8 +290,59 @@
                                         Width="140"/>
                                 </StackPanel>
                             </StackPanel>
+                            
+                            <!-- Filter Button with Flyout (Medium/Small screens) -->
+                            <Button 
+                                x:Name="FilterButton"
+                                Grid.Column="1"
+                                Visibility="Collapsed"
+                                Style="{ThemeResource SecondaryButtonStyle}"
+                                Margin="16,0,0,0"
+                                HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE71C;" FontSize="16"/>
+                                    <TextBlock Text="Filters"/>
+                                </StackPanel>
+                                <Button.Flyout>
+                                    <Flyout Placement="BottomEdgeAlignedLeft">
+                                        <StackPanel Spacing="16" MinWidth="280" Padding="8">
+                                            <TextBlock Text="Filter Promotions" FontWeight="SemiBold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                            
+                                            <!-- Status -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Status" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <ComboBox 
+                                                    HorizontalAlignment="Stretch"
+                                                    ItemsSource="{x:Bind ViewModel.StatusOptions}" 
+                                                    SelectedItem="{x:Bind ViewModel.SelectedStatusFilter, Mode=TwoWay}"/>
+                                            </StackPanel>
 
-                            <!-- Apply Button -->
+                                            <!-- Type -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Type" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <ComboBox 
+                                                    HorizontalAlignment="Stretch"
+                                                    ItemsSource="{x:Bind ViewModel.TypeOptions}" 
+                                                    SelectedItem="{x:Bind ViewModel.SelectedTypeFilter, Mode=TwoWay}"/>
+                                            </StackPanel>
+
+                                            <!-- Sort -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Sort By" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <ComboBox 
+                                                    HorizontalAlignment="Stretch"
+                                                    ItemsSource="{x:Bind ViewModel.SortOptions}" 
+                                                    SelectedItem="{x:Bind ViewModel.SelectedSortOption, Mode=TwoWay}"/>
+                                            </StackPanel>
+
+                                            <Button Content="Apply" Command="{x:Bind ViewModel.ApplyFiltersCommand}" 
+                                                    Style="{ThemeResource AccentButtonStyle}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+
+                            <!-- Apply Button (Large screens) -->
                             <Button 
                                 Grid.Column="2"
                                 Content="Apply" 

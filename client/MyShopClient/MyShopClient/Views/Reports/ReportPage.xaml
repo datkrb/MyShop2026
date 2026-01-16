@@ -25,7 +25,65 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="24,12,2,12">
+    <Grid x:Name="RootGrid" Padding="24,12,2,12">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <!-- Large: 2 columns for charts, inline filters -->
+                <VisualState x:Name="LargeState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1200"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RevenueChartCol.Width" Value="2*"/>
+                        <Setter Target="RevenueSummaryCol.Width" Value="*"/>
+                        <Setter Target="ProductChartCol.Width" Value="2*"/>
+                        <Setter Target="ProductSummaryCol.Width" Value="*"/>
+                        <Setter Target="ProfitChartCol.Width" Value="2*"/>
+                        <Setter Target="ProfitSummaryCol.Width" Value="*"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
+                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Medium: 2 columns for charts, flyout filters -->
+                <VisualState x:Name="MediumState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RevenueChartCol.Width" Value="2*"/>
+                        <Setter Target="RevenueSummaryCol.Width" Value="*"/>
+                        <Setter Target="ProductChartCol.Width" Value="2*"/>
+                        <Setter Target="ProductSummaryCol.Width" Value="*"/>
+                        <Setter Target="ProfitChartCol.Width" Value="2*"/>
+                        <Setter Target="ProfitSummaryCol.Width" Value="*"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Small: stacked charts, flyout filters -->
+                <VisualState x:Name="SmallState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RevenueChartCol.Width" Value="*"/>
+                        <Setter Target="RevenueSummaryCol.Width" Value="0"/>
+                        <Setter Target="RevenueSummaryCard.Visibility" Value="Collapsed"/>
+                        <Setter Target="ProductChartCol.Width" Value="*"/>
+                        <Setter Target="ProductSummaryCol.Width" Value="0"/>
+                        <Setter Target="ProductSummaryCard.Visibility" Value="Collapsed"/>
+                        <Setter Target="ProfitChartCol.Width" Value="*"/>
+                        <Setter Target="ProfitSummaryCol.Width" Value="0"/>
+                        <Setter Target="ProfitSummaryCard.Visibility" Value="Collapsed"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,22,0">
             <StackPanel Spacing="24">
                 
@@ -49,12 +107,57 @@
                             Foreground="{ThemeResource TextSecondaryBrush}"/>
                     </StackPanel>
 
-                    <!-- Filters -->
+                    <!-- Action Buttons -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" PlaceholderText="Start Date"/>
-                        <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" PlaceholderText="End Date"/>
-                        <ComboBox SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}" MinWidth="120" PlaceholderText="View By"/>
-                        <ComboBox ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}" MinWidth="150" PlaceholderText="Category"/>
+                        <!-- Inline Filters (Large screens) -->
+                        <StackPanel x:Name="InlineFiltersPanel" Orientation="Horizontal" Spacing="12" Visibility="Visible">
+                            <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" PlaceholderText="Start Date"/>
+                            <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" PlaceholderText="End Date"/>
+                            <ComboBox SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}" MinWidth="100" PlaceholderText="View By"/>
+                            <ComboBox ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}" MinWidth="130" PlaceholderText="Category"/>
+                        </StackPanel>
+                        
+                        <!-- Filter Button with Flyout (Medium/Small screens) -->
+                        <Button 
+                            x:Name="FilterButton"
+                            Visibility="Collapsed"
+                            Style="{ThemeResource SecondaryButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE71C;" FontSize="16"/>
+                                <TextBlock Text="Filters"/>
+                            </StackPanel>
+                            <Button.Flyout>
+                                <Flyout Placement="BottomEdgeAlignedRight">
+                                    <StackPanel Spacing="16" MinWidth="300" Padding="8">
+                                        <TextBlock Text="Report Filters" FontWeight="SemiBold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                        
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Start Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="End Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="View By" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <ComboBox HorizontalAlignment="Stretch" SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Category" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"/>
+                                        </StackPanel>
+
+                                        <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" 
+                                                Style="{ThemeResource AccentButtonStyle}" HorizontalAlignment="Stretch"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        
                         <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" Style="{ThemeResource AccentButtonStyle}"/>
                         <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="24" Height="24"/>
                     </StackPanel>
@@ -63,8 +166,8 @@
                 <!-- Revenue Section -->
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="RevenueChartCol" Width="2*"/>
+                        <ColumnDefinition x:Name="RevenueSummaryCol" Width="*"/>
                     </Grid.ColumnDefinitions>
                     
                     <!-- Revenue Chart -->
@@ -80,7 +183,7 @@
                     </Border>
                     
                     <!-- Revenue Summary Table -->
-                    <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
+                    <Border x:Name="RevenueSummaryCard" Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
                         <Grid Padding="20">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -128,8 +231,8 @@
                 <!-- Top 5 Products Section -->
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="ProductChartCol" Width="2*"/>
+                        <ColumnDefinition x:Name="ProductSummaryCol" Width="*"/>
                     </Grid.ColumnDefinitions>
                     
                     <!-- Products Chart -->
@@ -145,7 +248,7 @@
                     </Border>
                     
                     <!-- Products Summary Table -->
-                    <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
+                    <Border x:Name="ProductSummaryCard" Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
                         <Grid Padding="20">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -173,8 +276,8 @@
                 <!-- Profit Section -->
                 <Grid ColumnSpacing="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="ProfitChartCol" Width="2*"/>
+                        <ColumnDefinition x:Name="ProfitSummaryCol" Width="*"/>
                     </Grid.ColumnDefinitions>
                     
                     <!-- Profit Chart -->
@@ -190,7 +293,7 @@
                     </Border>
                     
                     <!-- Profit Summary Table -->
-                    <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
+                    <Border x:Name="ProfitSummaryCard" Grid.Column="1" Style="{StaticResource CardBorderStyle}" Height="350">
                         <Grid Padding="20">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
