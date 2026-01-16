@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using MyShopClient.Models;
 using MyShopClient.Services.Api;
 using LiveChartsCore.Kernel.Sketches;
 using SkiaSharp;
@@ -83,6 +84,33 @@ public partial class ReportViewModel : ObservableObject
     [ObservableProperty]
     private string _profitMargin = "0%";
 
+    // KPI Section Properties
+    [ObservableProperty]
+    private ObservableCollection<KpiSalesItem> _kpiItems = new();
+
+    [ObservableProperty]
+    private KpiSalesItem? _myKpi;
+
+    [ObservableProperty]
+    private int _selectedKpiYear;
+
+    [ObservableProperty]
+    private int? _selectedKpiMonth;
+
+    [ObservableProperty]
+    private ObservableCollection<int> _kpiYears = new();
+
+    [ObservableProperty]
+    private ObservableCollection<int?> _kpiMonths = new();
+
+    public bool IsAdmin => App.Current.IsAdmin;
+
+    // Computed properties for My KPI display (avoids null binding issues in XAML)
+    public string MyKpiOrders => MyKpi?.Orders.ToString() ?? "0";
+    public string MyKpiRevenue => MyKpi != null ? $"{MyKpi.Revenue:N0} đ" : "0 đ";
+    public string MyKpiRate => MyKpi != null ? $"{MyKpi.CommissionRate}%" : "0%";
+    public string MyKpiCommission => MyKpi != null ? $"{MyKpi.Commission:N0} đ" : "0 đ";
+
     public ReportViewModel(IReportApiService reportApiService, ProductApiService productApiService)
     {
         _reportApiService = reportApiService;
@@ -91,8 +119,29 @@ public partial class ReportViewModel : ObservableObject
         StartDate = new DateTimeOffset(new DateTime(now.Year, now.Month, 1));
         EndDate = new DateTimeOffset(new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month)));
         
+        // Initialize KPI year/month filters
+        InitializeKpiFilters();
+        
         _ = LoadCategoriesAsync();
         LoadDataCommand.Execute(null);
+    }
+
+    private void InitializeKpiFilters()
+    {
+        var currentYear = DateTime.Now.Year;
+        for (int y = currentYear; y >= currentYear - 5; y--)
+        {
+            KpiYears.Add(y);
+        }
+        SelectedKpiYear = currentYear;
+
+        // Month options: null = All, 1-12
+        KpiMonths.Add(null); // "All Months"
+        for (int m = 1; m <= 12; m++)
+        {
+            KpiMonths.Add(m);
+        }
+        SelectedKpiMonth = null;
     }
 
     private async Task LoadCategoriesAsync()
@@ -124,7 +173,8 @@ public partial class ReportViewModel : ObservableObject
             await Task.WhenAll(
                 LoadRevenueAsync(start, end),
                 LoadProfitAsync(start, end),
-                LoadProductSalesAsync(start, end)
+                LoadProductSalesAsync(start, end),
+                LoadKpiAsync()
             );
         }
         catch (Exception ex)
@@ -281,6 +331,41 @@ public partial class ReportViewModel : ObservableObject
             var seriesData = data.Series.FirstOrDefault(s => s.ProductId == product.Id);
             var totalQty = seriesData?.Data.Sum() ?? 0;
             TopProductsList.Add(new TopProductItem { Name = product.Name, Quantity = totalQty });
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadKpiAsync()
+    {
+        try
+        {
+            if (IsAdmin)
+            {
+                // Admin can see all employees' KPI
+                var data = await _reportApiService.GetKpiSalesReportAsync(SelectedKpiYear, SelectedKpiMonth);
+                KpiItems.Clear();
+                foreach (var item in data)
+                {
+                    KpiItems.Add(item);
+                }
+                MyKpi = null;
+            }
+            else
+            {
+                // Sale user can only see their own KPI
+                MyKpi = await _reportApiService.GetMyKpiAsync(SelectedKpiYear, SelectedKpiMonth);
+                KpiItems.Clear();
+                
+                // Notify computed properties changed
+                OnPropertyChanged(nameof(MyKpiOrders));
+                OnPropertyChanged(nameof(MyKpiRevenue));
+                OnPropertyChanged(nameof(MyKpiRate));
+                OnPropertyChanged(nameof(MyKpiCommission));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadKpiAsync Error: {ex.Message}");
         }
     }
 }

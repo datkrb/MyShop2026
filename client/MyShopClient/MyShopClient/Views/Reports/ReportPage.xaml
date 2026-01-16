@@ -7,7 +7,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
+    xmlns:models="using:MyShopClient.Models"
+    xmlns:helpers="using:MyShopClient.Helpers"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <helpers:InverseBoolToVisibilityConverter x:Key="BoolToVisibilityInverseConverter"/>
+    </Page.Resources>
 
     <Grid Padding="24" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -194,6 +201,106 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Profit Margin" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProfitMargin, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+                
+                <!-- KPI & Commission Section -->
+                <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Header with filters -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="KPI &amp; Commission" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                            <ComboBox Header="Year" ItemsSource="{x:Bind ViewModel.KpiYears, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedKpiYear, Mode=TwoWay}" MinWidth="100"/>
+                            <ComboBox Header="Month" ItemsSource="{x:Bind ViewModel.KpiMonths, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedKpiMonth, Mode=TwoWay}" MinWidth="100" PlaceholderText="All"/>
+                            <Button Content="Load KPI" Command="{x:Bind ViewModel.LoadKpiCommand}" VerticalAlignment="Bottom" Style="{StaticResource AccentButtonStyle}"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Admin View: DataGrid with all employees' KPI -->
+                    <Grid Grid.Row="1" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ListView ItemsSource="{x:Bind ViewModel.KpiItems, Mode=OneWay}" SelectionMode="None" MaxHeight="300">
+                            <ListView.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="8" Background="{ThemeResource SystemControlBackgroundListLowBrush}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="0.8*"/>
+                                            <ColumnDefinition Width="1.5*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Username" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="1" Text="Role" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Column="2" Text="Orders" FontWeight="SemiBold" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="3" Text="Revenue" FontWeight="SemiBold" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="4" Text="Rate" FontWeight="SemiBold" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="5" Text="Commission" FontWeight="SemiBold" TextAlignment="Right"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.HeaderTemplate>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:KpiSalesItem">
+                                    <Grid Padding="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="0.8*"/>
+                                            <ColumnDefinition Width="1.5*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind User.Username}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind User.Role}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Orders}" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind RevenueDisplay}" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind CommissionRateDisplay}" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind CommissionDisplay}" TextAlignment="Right" Foreground="Green" FontWeight="SemiBold"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    
+                    <!-- Sale User View: Own KPI Card -->
+                    <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityInverseConverter}}" Margin="0,8,0,0">
+                        <StackPanel Spacing="16" x:Name="MyKpiPanel">
+                            <TextBlock Text="My Performance" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock Text="Orders" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.MyKpiOrders, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="Revenue" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.MyKpiRevenue, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Text="Rate" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.MyKpiRate, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Spacing="4">
+                                    <TextBlock Text="Commission" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind ViewModel.MyKpiCommission, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="Green"/>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Grid>
