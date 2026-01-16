@@ -434,7 +434,7 @@
                                             <TextBlock Text="{x:Bind Status}" Foreground="#15803D" FontSize="12" FontWeight="SemiBold"/>
                                         </Border>
 
-                                        <TextBlock Grid.Column="5" Text="{x:Bind Price, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:C0}'}" HorizontalAlignment="Right" FontWeight="Medium" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind Price, Converter={StaticResource CurrencyConverter}}" HorizontalAlignment="Right" FontWeight="Medium" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>

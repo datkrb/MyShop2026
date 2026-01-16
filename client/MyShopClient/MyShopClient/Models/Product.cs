@@ -49,7 +49,7 @@ public partial class ApiProduct : ObservableObject
     // Computed property: total sold from orderItems
     public int TotalSold => OrderItems?.Sum(oi => oi.Quantity) ?? 0;
 
-    public string FormattedPrice => $"${SalePrice:N2}";
+    public string FormattedPrice => Helpers.CurrencyHelper.FormatVND(SalePrice);
 }
 
 public class ProductImage

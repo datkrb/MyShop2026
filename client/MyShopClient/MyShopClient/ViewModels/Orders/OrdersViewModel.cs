@@ -356,7 +356,7 @@ public partial class OrderViewModel : ObservableObject
     };
 
     public string FormattedDate => OrderDate.ToString("dd/MM/yyyy");
-    public string FormattedAmount => $"{Amount:N0}đ";
+    public string FormattedAmount => Helpers.CurrencyHelper.FormatVND(Amount);
     
     public string DisplayStatus => OrderStatus switch
     {
