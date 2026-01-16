@@ -512,11 +512,28 @@ public partial class OrderDetailViewModel : ObservableObject
             {
                 // Assign real ID
                 Id = result.Id;
-                OrderId = $"#ORD-{result.Id:D4}";
-                OrderStatus = result.Status;
-                SelectedStatus = result.Status;
+                OrderId = $"#{result.Id:D4}";
                 
-                System.Diagnostics.Debug.WriteLine($"Order created with status {OrderStatus}");
+                // Update status separately using dedicated API
+                if (!string.IsNullOrEmpty(SelectedStatus) && SelectedStatus != "DRAFT")
+                {
+                    var statusResult = await _orderApiService.UpdateStatusAsync(result.Id, SelectedStatus);
+                    if (statusResult != null)
+                    {
+                        OrderStatus = statusResult.Status;
+                        System.Diagnostics.Debug.WriteLine($"Order status updated to {statusResult.Status}");
+                    }
+                    else
+                    {
+                        OrderStatus = result.Status;
+                    }
+                }
+                else
+                {
+                    OrderStatus = result.Status;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Order created with final status {OrderStatus}");
                 IsEditing = false;
                 IsNewOrder = false;
                 
