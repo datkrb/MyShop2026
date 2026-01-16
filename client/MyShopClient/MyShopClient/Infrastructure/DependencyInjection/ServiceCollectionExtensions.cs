@@ -44,7 +44,6 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
-        services.AddSingleton<ServerConfigService>();
         services.AddSingleton<CredentialService>();
         services.AddSingleton<AppSettingsService>();
         services.AddSingleton<Services.Local.ILocalDraftService, Services.Local.LocalDraftService>();
