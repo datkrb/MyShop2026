@@ -22,7 +22,8 @@ public class ProductApiService : BaseApiService
         string sort = "id,desc",
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        int? id = null)
+        int? id = null,
+        bool? inStock = null)
     {
         var query = new StringBuilder($"products?page={page}&size={size}");
         
@@ -54,6 +55,11 @@ public class ProductApiService : BaseApiService
         if (id.HasValue)
         {
             query.Append($"&id={id.Value}");
+        }
+
+        if (inStock.HasValue)
+        {
+            query.Append($"&inStock={inStock.Value.ToString().ToLower()}");
         }
 
         return await GetAsync<PagedResult<ApiProduct>>(query.ToString());

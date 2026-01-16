@@ -93,7 +93,7 @@ public partial class ProductSelectionViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, null, SearchKeyword);
+            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, null, SearchKeyword, inStock: true);
             
             if (result != null)
             {

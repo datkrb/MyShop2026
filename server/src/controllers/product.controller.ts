@@ -21,6 +21,7 @@ export class ProductController {
           ? parseInt(req.query.categoryId as string)
           : undefined,
         id: req.query.id ? parseInt(req.query.id as string) : undefined,
+        inStock: req.query.inStock === 'true',
       };
 
       const result = await productService.getAll(filters);

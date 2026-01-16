@@ -1,3 +1,4 @@
+import prisma from '../config/prisma';
 import orderRepo from '../repositories/order.repo';
 import productRepo from '../repositories/product.repo';
 import { OrderStatus } from '../constants/order-status';
@@ -96,56 +97,76 @@ export class OrderService {
       throw new Error(Messages.ORDER_ALREADY_PAID);
     }
 
-    let finalPrice = existingOrder.finalPrice;
-    let newOrderItems: Array<{
-      productId: number;
-      quantity: number;
-      unitSalePrice: number;
-      totalPrice: number;
-    }> | undefined;
+    return prisma.$transaction(async (tx) => {
+      let finalPrice = existingOrder.finalPrice;
+      let newOrderItems: Array<{
+        productId: number;
+        quantity: number;
+        unitSalePrice: number;
+        totalPrice: number;
+      }> | undefined;
 
-    if (data.items) {
-      // Restore stock from old items
-      for (const oldItem of existingOrder.orderItems) {
-        await productRepo.updateStock(oldItem.productId, -oldItem.quantity);
-      }
+      if (data.items) {
+        newOrderItems = [];
+        finalPrice = 0;
 
-      // Create new items
-      newOrderItems = [];
-      finalPrice = 0;
-
-      for (const item of data.items) {
-        const product = await productRepo.findById(item.productId);
-
-        if (!product) {
-          throw new Error(Messages.PRODUCT_NOT_FOUND);
-        }
-
-        if (product.stock < item.quantity) {
-          throw new Error(`${Messages.PRODUCT_OUT_OF_STOCK}: ${product.name}`);
-        }
-
-        const unitSalePrice = product.salePrice;
-        const totalPrice = item.quantity * unitSalePrice;
-
-        newOrderItems.push({
-          productId: product.id,
-          quantity: item.quantity,
-          unitSalePrice,
-          totalPrice,
+        // Map old items for diff calculation
+        const oldItemsMap = new Map<number, number>();
+        existingOrder.orderItems.forEach((item: any) => {
+          oldItemsMap.set(item.productId, item.quantity);
         });
 
-        finalPrice += totalPrice;
+        for (const item of data.items) {
+          // Use findById with transaction
+          const product = await productRepo.findById(item.productId, tx);
 
-        // Update stock
-        await productRepo.updateStock(item.productId, item.quantity);
+          if (!product) {
+            throw new Error(Messages.PRODUCT_NOT_FOUND);
+          }
+
+          const oldQty = oldItemsMap.get(item.productId) || 0;
+          const diff = item.quantity - oldQty;
+
+          if (diff > 0) {
+              // Increasing quantity, check if we have enough stock
+              if (product.stock < diff) {
+                  throw new Error(`${Messages.PRODUCT_OUT_OF_STOCK}: ${product.name}`);
+              }
+              // Deduct stock
+              await productRepo.updateStock(item.productId, diff, tx);
+          } else if (diff < 0) {
+              // Decreasing quantity, return stock
+              // diff is negative, updateStock decrements => increments
+              await productRepo.updateStock(item.productId, diff, tx);
+          }
+          
+          // Mark as processed
+          oldItemsMap.delete(item.productId);
+
+          const unitSalePrice = product.salePrice;
+          const totalPrice = item.quantity * unitSalePrice;
+
+          newOrderItems.push({
+            productId: product.id,
+            quantity: item.quantity,
+            unitSalePrice,
+            totalPrice,
+          });
+
+          finalPrice += totalPrice;
+        }
+        
+        // Restore stock for removed items
+        for (const [productId, oldQty] of oldItemsMap) {
+            await productRepo.updateStock(productId, -oldQty, tx);
+        }
       }
-    }
 
-    return orderRepo.update(id, {
-      customerId: data.customerId,
-      items: newOrderItems,
-      finalPrice,
+      return orderRepo.update(id, {
+        customerId: data.customerId,
+        items: newOrderItems,
+        finalPrice: data.items ? finalPrice : undefined,
+      }, tx);
     });
   }
 

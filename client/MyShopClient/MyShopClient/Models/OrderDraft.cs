@@ -23,4 +23,6 @@ public class OrderDraftItem
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
+    public int Stock { get; set; }
+    public int OriginalQuantity { get; set; }
 }
