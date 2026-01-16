@@ -192,8 +192,12 @@ public partial class OrderDetailViewModel : ObservableObject
                             ProductSku = item.Product?.Sku ?? "",
                             ProductImage = "", // Would need images from product
                             Quantity = item.Quantity,
+                            // For existing item converted from order, assume stock has been deducted,
+                            // so we track original quantity to add back to max allowed
+                            OriginalQuantity = item.Quantity, 
                             UnitPrice = item.UnitSalePrice,
-                            TotalPrice = item.TotalPrice
+                            TotalPrice = item.TotalPrice,
+                            Stock = item.Product?.Stock ?? 0
                         });
                     }
                 }
@@ -306,8 +310,10 @@ public partial class OrderDetailViewModel : ObservableObject
                 ProductSku = item.ProductSku,
                 ProductImage = item.ProductImage,
                 Quantity = item.Quantity,
+                OriginalQuantity = item.OriginalQuantity,
                 UnitPrice = item.UnitPrice,
-                TotalPrice = item.TotalPrice
+                TotalPrice = item.TotalPrice,
+                Stock = item.Stock
             });
         }
         RecalculateTotals();
@@ -381,8 +387,10 @@ public partial class OrderDetailViewModel : ObservableObject
                     ProductSku = i.ProductSku,
                     ProductImage = i.ProductImage,
                     Quantity = i.Quantity,
+                    OriginalQuantity = i.OriginalQuantity,
                     UnitPrice = i.UnitPrice,
-                    TotalPrice = i.TotalPrice
+                    TotalPrice = i.TotalPrice,
+                    Stock = i.Stock
                 }).ToList()
             };
             
@@ -459,7 +467,8 @@ public partial class OrderDetailViewModel : ObservableObject
                     ProductImage = (product.Images != null && product.Images.Count > 0) ? product.Images[0].Url : "",
                     Quantity = 1,
                     UnitPrice = product.SalePrice,
-                    TotalPrice = product.SalePrice
+                    TotalPrice = product.SalePrice,
+                    Stock = product.Stock
                 });
             }
             RecalculateTotals();
@@ -476,6 +485,8 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
+        string successMessage = IsNewOrder ? "Đơn hàng đã được tạo thành công!" : "Đơn hàng đã được cập nhật thành công!";
+
         // Global Validation
         if (!CustomerId.HasValue)
         {
@@ -494,19 +505,39 @@ public partial class OrderDetailViewModel : ObservableObject
         {
             _autoSaveTimer.Stop();
 
-            // Create new order
-            var request = new CreateOrderRequest
-            {
-                CustomerId = CustomerId,
-                Items = OrderItems.Select(i => new CreateOrderItemRequest
-                {
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity
-                }).ToList(),
-                Status = "PENDING"
-            };
+            ApiOrder? result = null;
 
-            var result = await _orderApiService.CreateOrderAsync(request);
+            if (IsNewOrder)
+            {
+                // Create new order
+                var request = new CreateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList(),
+                    Status = "PENDING"
+                };
+
+                result = await _orderApiService.CreateOrderAsync(request);
+            }
+            else
+            {
+                // Update existing order
+                var request = new UpdateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                result = await _orderApiService.UpdateOrderAsync(Id, request);
+            }
             
             if (result != null)
             {
@@ -540,7 +571,7 @@ public partial class OrderDetailViewModel : ObservableObject
                 // Clear local draft
                 await _localDraftService.ClearDraftAsync();
                 
-                ShowNotification("Đơn hàng đã được tạo thành công!", "Success");
+                ShowNotification(successMessage, "Success");
             }
             else
             {
@@ -676,13 +707,34 @@ public partial class OrderItemViewModel : ObservableObject
     [ObservableProperty]
     private decimal _totalPrice;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaxQuantity))]
+    [NotifyPropertyChangedFor(nameof(RemainingStock))]
+    private int _stock;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaxQuantity))]
+    [NotifyPropertyChangedFor(nameof(RemainingStock))]
+    private int _originalQuantity;
+
+    public int MaxQuantity => Stock + OriginalQuantity;
+    public int RemainingStock => MaxQuantity - Quantity;
+
     public string FormattedUnitPrice => $"{UnitPrice:N0}đ";
     public string FormattedTotalPrice => $"{TotalPrice:N0}đ";
     
     partial void OnQuantityChanged(int value)
     {
-        TotalPrice = UnitPrice * value;
+        // Enforce max quantity limit
+        if (MaxQuantity > 0 && value > MaxQuantity)
+        {
+            Quantity = MaxQuantity;
+            return;
+        }
+
+        TotalPrice = UnitPrice * Quantity;
         OnPropertyChanged(nameof(FormattedTotalPrice));
+        OnPropertyChanged(nameof(RemainingStock));
         QuantityChanged?.Invoke();
     }
 }
