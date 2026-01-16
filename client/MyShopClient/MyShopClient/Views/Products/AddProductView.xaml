@@ -118,14 +118,6 @@
                 <!-- Form Section -->
                 <StackPanel x:Name="FormSection" Grid.Column="1" Grid.Row="0" Spacing="24">
                     
-                    <!-- Error Message Banner -->
-                    <InfoBar
-                        IsOpen="{x:Bind ViewModel.HasErrors, Mode=OneWay}"
-                        Severity="Error"
-                        Title="Validation Error"
-                        Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-                        IsClosable="False"/>
-                    
                     <!-- Basic Information Card -->
                     <Border 
                         Background="{ThemeResource CardBackgroundBrush}" 
