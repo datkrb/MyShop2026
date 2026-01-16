@@ -22,7 +22,10 @@ public sealed partial class AddProductView : Page
         this.InitializeComponent();
         _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetService<AddProductViewModel>() 
-            ?? new AddProductViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>());
+            ?? new AddProductViewModel(
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>(),
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Local.ILocalDraftService>()
+            );
         this.DataContext = this;
         
         // Subscribe to dialog close event for navigation
@@ -37,6 +40,11 @@ public sealed partial class AddProductView : Page
         if (e.Parameter is int productId && productId > 0)
         {
             await ViewModel.LoadProductAsync(productId);
+        }
+        else
+        {
+            // Create mode - check for draft
+            await ViewModel.CheckForDraftAsync();
         }
     }
 

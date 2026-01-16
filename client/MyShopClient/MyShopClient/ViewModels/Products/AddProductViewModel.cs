@@ -15,6 +15,10 @@ using Windows.Storage.Pickers;
 using MyShopClient.Services.Api;
 using System.Collections.Generic;
 
+using MyShopClient.Services.Local;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+
 namespace MyShopClient.ViewModels;
 
 public partial class AddProductViewModel : ObservableValidator
@@ -99,13 +103,45 @@ public partial class AddProductViewModel : ObservableValidator
 
     public event EventHandler<bool>? DialogCloseRequested;
 
-    private readonly ProductApiService _productApiService;
 
-    public AddProductViewModel(ProductApiService productApiService)
+
+    private readonly ProductApiService _productApiService;
+    private readonly ILocalDraftService _localDraftService;
+    private readonly DispatcherTimer _autoSaveTimer;
+
+    public AddProductViewModel(ProductApiService productApiService, ILocalDraftService localDraftService)
     {
         _productApiService = productApiService ?? throw new ArgumentNullException(nameof(productApiService));
-        ProductImages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasImages));
+        _localDraftService = localDraftService ?? throw new ArgumentNullException(nameof(localDraftService));
+        
+        ProductImages.CollectionChanged += (s, e) => 
+        {
+            OnPropertyChanged(nameof(HasImages));
+            TriggerAutoSave();
+        };
         _ = LoadCategoriesAsync();
+        
+        _autoSaveTimer = new DispatcherTimer();
+        _autoSaveTimer.Interval = TimeSpan.FromMilliseconds(500);
+        _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+        
+        this.PropertyChanged += AddProductViewModel_PropertyChanged;
+    }
+
+    private void AddProductViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Ignored properties that shouldn't trigger auto-save
+        if (e.PropertyName == nameof(IsSaving) || 
+            e.PropertyName == nameof(HasImages) || 
+            e.PropertyName == nameof(ErrorMessage) ||
+            e.PropertyName == nameof(HasErrors) ||
+            e.PropertyName == nameof(PageTitle) ||
+            e.PropertyName == nameof(SaveButtonText))
+        {
+            return;
+        }
+
+        TriggerAutoSave();
     }
     
 
@@ -168,16 +204,32 @@ public partial class AddProductViewModel : ObservableValidator
     {
         try
         {
+            // If we are in Create mode (Draft mode), copy to Drafts folder
+            StorageFile targetFile = file;
+            
+            if (!IsEditMode)
+            {
+                var localFolder = ApplicationData.Current.LocalFolder;
+                var draftsFolder = await localFolder.CreateFolderAsync("Drafts", CreationCollisionOption.OpenIfExists);
+                
+                // Only copy if the file is not already in the Drafts folder
+                // We check if the file path contains the Drafts folder path
+                if (!file.Path.StartsWith(draftsFolder.Path, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetFile = await file.CopyAsync(draftsFolder, Guid.NewGuid() + Path.GetExtension(file.Name), NameCollisionOption.GenerateUniqueName);
+                }
+            }
+
             var bitmapImage = new BitmapImage();
-            using (var stream = await file.OpenReadAsync())
+            using (var stream = await targetFile.OpenReadAsync())
             {
                 await bitmapImage.SetSourceAsync(stream);
             }
 
             var productImage = new LocalProductImage
             {
-                FilePath = file.Path,
-                FileName = file.Name,
+                FilePath = targetFile.Path,
+                FileName = targetFile.Name,
                 ImageSource = bitmapImage
             };
 
@@ -342,6 +394,9 @@ public partial class AddProductViewModel : ObservableValidator
                 }
 
                 DialogCloseRequested?.Invoke(this, true);
+                
+                // Clear draft on success
+                await _localDraftService.ClearProductDraftAsync();
             }
             else
             {
@@ -374,6 +429,9 @@ public partial class AddProductViewModel : ObservableValidator
                 }
 
                 DialogCloseRequested?.Invoke(this, true);
+                
+                // Clear draft on success
+                await _localDraftService.ClearProductDraftAsync();
             }
         }
         catch (Exception ex)
@@ -437,5 +495,136 @@ public partial class AddProductViewModel : ObservableValidator
             }
         }
         return null;
+    }
+
+    public async Task CheckForDraftAsync()
+    {
+        if (IsEditMode) return;
+        
+        try
+        {
+            var draft = await _localDraftService.GetProductDraftAsync();
+            if (draft != null && !string.IsNullOrEmpty(draft.Name))
+            {
+                 var dialog = new ContentDialog
+                 {
+                     XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                     Title = "Sản phẩm đang soạn dở",
+                     Content = "Bạn có một sản phẩm đang soạn dở. Bạn có muốn tiếp tục không?",
+                     PrimaryButtonText = "Tiếp tục",
+                     SecondaryButtonText = "Tạo mới (Xóa cũ)",
+                     DefaultButton = ContentDialogButton.Primary
+                 };
+
+                 var result = await dialog.ShowAsync();
+
+                 if (result == ContentDialogResult.Primary)
+                 {
+                     Name = draft.Name;
+                     Sku = draft.Sku;
+                     Description = draft.Description;
+                     ImportPrice = (double)draft.ImportPrice;
+                     SalePrice = (double)draft.SalePrice;
+                     // Category logic might need waiting for categories to load
+                     if (draft.CategoryId > 0)
+                     {
+                         // Wait a bit or check if categories are loaded
+                         if (Categories.Any())
+                             SelectedCategory = Categories.FirstOrDefault(c => c.Id == draft.CategoryId);
+                         else
+                         {
+                             // Categories loading is async, might race. 
+                             // We'll set a temporary handler or just rely on re-binding if possible.
+                             // For now, simpler:
+                             _productApiService.GetCategoriesAsync().ContinueWith(task => 
+                             {
+                                 if (task.Result != null)
+                                 {
+                                     App.Current.MainWindow.DispatcherQueue.TryEnqueue(() => 
+                                     {
+                                         var cats = task.Result;
+                                         var match = cats.FirstOrDefault(c => c.Id == draft.CategoryId);
+                                         if (match != null)
+                                         {
+                                             // Find in ObservableCollection
+                                             SelectedCategory = Categories.FirstOrDefault(c => c.Id == match.Id);
+                                         }
+                                     });
+                                 }
+                             });
+                         }
+                     }
+                     
+                     // Restore images if present
+                     System.Diagnostics.Debug.WriteLine($"Found {draft.Images?.Count ?? 0} images in draft");
+                     if (draft.Images != null && draft.Images.Count > 0)
+                     {
+                          ProductImages.Clear();
+                          foreach (var path in draft.Images)
+                          {
+                              try 
+                              {
+                                  System.Diagnostics.Debug.WriteLine($"Restoring image from: {path}");
+                                  var file = await StorageFile.GetFileFromPathAsync(path);
+                                  await AddImageFromFileAsync(file);
+                                  System.Diagnostics.Debug.WriteLine($"Restored image successfully");
+                              }
+                              catch (Exception ex)
+                              { 
+                                  System.Diagnostics.Debug.WriteLine($"Failed to restore image {path}: {ex.Message}");
+                              }
+                          }
+                     }
+                 }
+                 else
+                 {
+                     await _localDraftService.ClearProductDraftAsync();
+                 }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error checking draft: {ex.Message}");
+        }
+    }
+
+    private void TriggerAutoSave()
+    {
+        if (IsEditMode) return; 
+        
+        _autoSaveTimer.Stop();
+        _autoSaveTimer.Start();
+    }
+    
+    private async void AutoSaveTimer_Tick(object sender, object e)
+    {
+        _autoSaveTimer.Stop();
+        await PerformAutoSaveAsync();
+    }
+    
+    private async Task PerformAutoSaveAsync()
+    {
+        if (IsEditMode) return;
+        
+        try
+        {
+            var draft = new ProductDraft
+            {
+                Name = Name,
+                Sku = Sku,
+                Description = Description,
+                ImportPrice = (decimal)ImportPrice,
+                SalePrice = (decimal)SalePrice,
+                CategoryId = SelectedCategory?.Id ?? 0,
+                Images = ProductImages.Select(i => i.FilePath ?? "").ToList()
+            };
+            
+            await _localDraftService.SaveProductDraftAsync(draft);
+            System.Diagnostics.Debug.WriteLine($"Saved product draft: {draft.Name}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Auto-save product failed: {ex.Message}");
+        }
     }
 }
