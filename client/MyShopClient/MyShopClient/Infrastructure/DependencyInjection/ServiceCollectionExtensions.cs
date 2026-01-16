@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<ServerConfigViewModel>();
         services.AddTransient<ReportViewModel>();
+        services.AddTransient<PromotionViewModel>();
         return services;
     }
 
@@ -41,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IReportApiService, ReportApiService>();
         services.AddSingleton<OrderApiService>();
         services.AddSingleton<CustomerApiService>();
+        services.AddSingleton<PromotionApiService>();
 
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();

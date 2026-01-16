@@ -24,7 +24,8 @@ export class ProductController {
         inStock: req.query.inStock === 'true',
       };
 
-      const result = await productService.getAll(filters);
+      const userRole = req.user?.role;
+      const result = await productService.getAll(filters, userRole);
       sendSuccess(res, result);
     } catch (error: any) {
       sendError(res, "INTERNAL_ERROR", error.message, 500);

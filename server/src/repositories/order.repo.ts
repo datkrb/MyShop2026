@@ -131,13 +131,17 @@ export class OrderRepository {
       totalPrice: number;
     }>;
     finalPrice: number;
-  }, tx: any = prisma) {
-    return tx.order.create({
+    discountAmount?: number;
+    promotionId?: number;
+  }) {
+    return prisma.order.create({
       data: {
         customerId: data.customerId,
         createdById: data.createdById,
         status: data.status || OrderStatus.PENDING,
         finalPrice: data.finalPrice,
+        discountAmount: data.discountAmount || 0,
+        promotionId: data.promotionId,
         orderItems: {
           create: data.items,
         },
@@ -151,6 +155,7 @@ export class OrderRepository {
             role: true,
           },
         },
+        promotion: true,
         orderItems: {
           include: {
             product: {
@@ -174,7 +179,9 @@ export class OrderRepository {
       totalPrice: number;
     }>;
     finalPrice?: number;
-  }, tx: any = prisma) {
+    discountAmount?: number;
+    promotionId?: number | null;
+  }) {
     if (data.items) {
       // Delete existing items and create new ones
       await tx.orderItem.deleteMany({
@@ -188,6 +195,8 @@ export class OrderRepository {
         ...(data.customerId !== undefined && { customerId: data.customerId }),
         ...(data.status && { status: data.status }),
         ...(data.finalPrice !== undefined && { finalPrice: data.finalPrice }),
+        ...(data.discountAmount !== undefined && { discountAmount: data.discountAmount }),
+        ...(data.promotionId !== undefined && { promotionId: data.promotionId }),
         ...(data.items && {
           orderItems: {
             create: data.items,

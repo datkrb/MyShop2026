@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MyShopClient.ViewModels;
 
@@ -11,6 +12,8 @@ namespace MyShopClient.ViewModels;
 /// </summary>
 public partial class CreateOrderDialogViewModel : ObservableObject
 {
+    // ... existing properties ...
+
     // Edit mode
     [ObservableProperty]
     private bool _isEditMode;
@@ -34,6 +37,8 @@ public partial class CreateOrderDialogViewModel : ObservableObject
     // Order items
     public ObservableCollection<CreateOrderItemViewModel> OrderItems { get; } = new();
 
+    public bool HasNoItems => OrderItems.Count == 0;
+
     // Available products for selection
     public ObservableCollection<ProductSelectionItem> AvailableProducts { get; } = new();
 
@@ -49,19 +54,7 @@ public partial class CreateOrderDialogViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedStatus = "New";
 
-    // Computed totals
-    public decimal Subtotal => OrderItems.Sum(x => x.TotalPrice);
-    public decimal Tax => Subtotal * 0.1m;
-    public decimal Total => Subtotal + Tax;
-
-    public string FormattedSubtotal => $"${Subtotal:N2}";
-    public string FormattedTax => $"${Tax:N2}";
-    public string FormattedTotal => $"${Total:N2}";
-
-    // Empty state visibility
-    public bool HasNoItems => OrderItems.Count == 0;
-
-    // Validation
+    // UI States
     [ObservableProperty]
     private bool _hasErrors;
 
@@ -71,9 +64,39 @@ public partial class CreateOrderDialogViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSaving;
 
+    // Computed totals
+
+    public decimal Subtotal => OrderItems.Sum(x => x.TotalPrice);
+    public decimal Tax => Subtotal * 0.1m;
+    public decimal Total => Math.Max(0, Subtotal + Tax - DiscountAmount);
+
+    public string FormattedSubtotal => $"${Subtotal:N2}";
+    public string FormattedTax => $"${Tax:N2}";
+    public string FormattedTotal => $"${Total:N2}";
+
+    // Services
+    private readonly Services.Api.PromotionApiService? _promotionService;
+
+    // Promotion
+    [ObservableProperty]
+    private string _promotionCode = string.Empty;
+
+    [ObservableProperty]
+    private decimal _discountAmount;
+
+    [ObservableProperty]
+    private string _promotionMessage = string.Empty;
+    
+    [ObservableProperty]
+    private bool _isPromotionValid;
+
+    [ObservableProperty]
+    private int? _appliedPromotionId;
+
     // Events
     public event EventHandler<bool>? DialogCloseRequested;
 
+    // Design-time constructor
     public CreateOrderDialogViewModel()
     {
         // Load mock available products
@@ -82,6 +105,13 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         AvailableProducts.Add(new ProductSelectionItem { Id = 3, Name = "AirPods Pro", Price = 249.00m, ImageUrl = "https://ui-avatars.com/api/?name=AP&background=3B82F6&color=fff" });
         AvailableProducts.Add(new ProductSelectionItem { Id = 4, Name = "iPad Pro 12.9\"", Price = 1099.00m, ImageUrl = "https://ui-avatars.com/api/?name=PD&background=F59E0B&color=fff" });
         AvailableProducts.Add(new ProductSelectionItem { Id = 5, Name = "Apple Watch Ultra", Price = 799.00m, ImageUrl = "https://ui-avatars.com/api/?name=AW&background=EF4444&color=fff" });
+    }
+
+    // DI Constructor
+    [Microsoft.Extensions.DependencyInjection.ActivatorUtilitiesConstructor]
+    public CreateOrderDialogViewModel(Services.Api.PromotionApiService promotionService) : this()
+    {
+        _promotionService = promotionService;
     }
 
     /// <summary>
@@ -158,6 +188,58 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         OnPropertyChanged(nameof(FormattedSubtotal));
         OnPropertyChanged(nameof(FormattedTax));
         OnPropertyChanged(nameof(FormattedTotal));
+        OnPropertyChanged(nameof(FormattedDiscount));
+
+        // Re-validate promotion if applied
+        if (IsPromotionValid && !string.IsNullOrEmpty(PromotionCode))
+        {
+            ApplyPromotionCommand.Execute(null);
+        }
+    }
+
+    public string FormattedDiscount => $"-${DiscountAmount:N2}";
+
+    [RelayCommand]
+    private async Task ApplyPromotion()
+    {
+        if (string.IsNullOrWhiteSpace(PromotionCode))
+        {
+            DiscountAmount = 0;
+            IsPromotionValid = false;
+            PromotionMessage = string.Empty;
+            AppliedPromotionId = null;
+            NotifyTotalsChanged(); // Avoid infinite loop by only calling if discount changed
+            return;
+        }
+
+        if (_promotionService == null)
+        {
+            PromotionMessage = "Service not available";
+            return;
+        }
+
+        var result = await _promotionService.ValidatePromotionAsync(PromotionCode, Subtotal);
+        if (result != null && result.Valid)
+        {
+            DiscountAmount = result.DiscountAmount ?? 0;
+            IsPromotionValid = true;
+            AppliedPromotionId = result.Promotion?.Id;
+            PromotionMessage = $"Applied: {result.Promotion?.Code} (-${DiscountAmount:N0})";
+            // Manually notify total changed without triggering recursive check
+            OnPropertyChanged(nameof(Total)); 
+            OnPropertyChanged(nameof(FormattedTotal));
+            OnPropertyChanged(nameof(FormattedDiscount));
+        }
+        else
+        {
+            DiscountAmount = 0;
+            IsPromotionValid = false;
+            AppliedPromotionId = null;
+            PromotionMessage = result?.Message ?? "Invalid code";
+            OnPropertyChanged(nameof(Total));
+            OnPropertyChanged(nameof(FormattedTotal));
+            OnPropertyChanged(nameof(FormattedDiscount));
+        }
     }
 
     [RelayCommand]
@@ -190,12 +272,7 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         Quantity = 1;
 
         // Notify totals and empty state changed
-        OnPropertyChanged(nameof(Subtotal));
-        OnPropertyChanged(nameof(Tax));
-        OnPropertyChanged(nameof(Total));
-        OnPropertyChanged(nameof(FormattedSubtotal));
-        OnPropertyChanged(nameof(FormattedTax));
-        OnPropertyChanged(nameof(FormattedTotal));
+        NotifyTotalsChanged();
         OnPropertyChanged(nameof(HasNoItems));
     }
 
@@ -207,17 +284,12 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         OrderItems.Remove(item);
 
         // Notify totals and empty state changed
-        OnPropertyChanged(nameof(Subtotal));
-        OnPropertyChanged(nameof(Tax));
-        OnPropertyChanged(nameof(Total));
-        OnPropertyChanged(nameof(FormattedSubtotal));
-        OnPropertyChanged(nameof(FormattedTax));
-        OnPropertyChanged(nameof(FormattedTotal));
+        NotifyTotalsChanged();
         OnPropertyChanged(nameof(HasNoItems));
     }
 
     [RelayCommand]
-    private void Save()
+    private async Task Save()
     {
         // Validate
         if (string.IsNullOrWhiteSpace(CustomerName))
@@ -239,6 +311,8 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         IsSaving = true;
 
         // TODO: Save order to API
+        // NOTE: In real implementation, include AppliedPromotionId and PromotionCode in the API DTO
+        await Task.Delay(500); // Simulate API call
 
         IsSaving = false;
         DialogCloseRequested?.Invoke(this, true);
