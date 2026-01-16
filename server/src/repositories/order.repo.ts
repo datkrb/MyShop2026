@@ -11,34 +11,7 @@ interface OrderFilters {
 }
 
 export class OrderRepository {
-  async findDraft(userId: number) {
-    return prisma.order.findFirst({
-      where: {
-        createdById: userId,
-        status: OrderStatus.DRAFT,
-      },
-      include: {
-        customer: true,
-        createdBy: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
-        orderItems: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                images: true,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
+
 
   async findAll(filters: OrderFilters = {}) {
     const {
@@ -163,7 +136,7 @@ export class OrderRepository {
       data: {
         customerId: data.customerId,
         createdById: data.createdById,
-        status: data.status || OrderStatus.DRAFT,
+        status: data.status || OrderStatus.PENDING,
         finalPrice: data.finalPrice,
         orderItems: {
           create: data.items,

@@ -13,24 +13,7 @@ export class OrderService {
     return orderRepo.findAll(filters);
   }
 
-  async getDraft(userId: number) {
-    // 1. Check if user already has a draft
-    const existingDraft = await orderRepo.findDraft(userId);
-    
-    if (existingDraft) {
-      return existingDraft;
-    }
 
-    // 2. If no draft exists, create a new one
-    // Create an empty draft
-    return orderRepo.create({
-      createdById: userId,
-      status: OrderStatus.DRAFT,
-      items: [],
-      finalPrice: 0,
-      customerId: undefined
-    });
-  }
 
   async getById(id: number, userRole: string, userId?: number) {
     const order = await orderRepo.findById(id);
@@ -81,7 +64,7 @@ export class OrderService {
     const order = await orderRepo.create({
       customerId: data.customerId,
       createdById: userId,
-      status: OrderStatus.DRAFT,
+      status: OrderStatus.PENDING,
       items: orderItems,
       finalPrice,
     });
@@ -205,12 +188,7 @@ export class OrderService {
     return orderRepo.delete(id);
   }
 
-  async autosave(id: number, data: {
-    customerId?: number;
-    items?: Array<{ productId: number; quantity: number }>;
-  }, userId: number) {
-    return this.update(id, data, 'SALE', userId);
-  }
+
 }
 
 export default new OrderService();
