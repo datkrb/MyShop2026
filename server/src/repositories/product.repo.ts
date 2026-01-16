@@ -9,6 +9,7 @@ interface ProductFilters {
   keyword?: string;
   categoryId?: number;
   id?: number;
+  inStock?: boolean;
 }
 
 export class ProductRepository {
@@ -22,6 +23,7 @@ export class ProductRepository {
       keyword,
       categoryId,
       id,
+      inStock
     } = filters;
 
     const skip = (page - 1) * size;
@@ -51,6 +53,12 @@ export class ProductRepository {
       where.id = id;
     }
 
+    if (inStock) {
+      where.stock = {
+        gt: 0,
+      };
+    }
+
     const [data, total] = await Promise.all([
       prisma.product.findMany({
         where,
@@ -76,8 +84,8 @@ export class ProductRepository {
     };
   }
 
-  async findById(id: number) {
-    return prisma.product.findUnique({
+  async findById(id: number, tx: any = prisma) {
+    return tx.product.findUnique({
       where: { id },
       include: {
         category: true,
@@ -184,8 +192,8 @@ export class ProductRepository {
     });
   }
 
-  async updateStock(id: number, quantity: number) {
-    return prisma.product.update({
+  async updateStock(id: number, quantity: number, tx: any = prisma) {
+    return tx.product.update({
       where: { id },
       data: {
         stock: {

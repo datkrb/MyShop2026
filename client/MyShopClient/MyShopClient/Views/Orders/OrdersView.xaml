@@ -25,22 +25,19 @@
     <Grid Padding="24,12,2,12">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
-                <!-- Large: 4 columns, inline filters visible -->
+                <!-- Large: 3 columns, inline filters visible -->
                 <VisualState x:Name="LargeState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1200"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="StatCard2.(Grid.Column)" Value="1"/>
+                        <Setter Target="StatCard2.(Grid.Column)" Value="0"/>
                         <Setter Target="StatCard2.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="StatCard3.(Grid.Column)" Value="2"/>
+                        <Setter Target="StatCard3.(Grid.Column)" Value="1"/>
                         <Setter Target="StatCard3.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="1"/>
-                        <Setter Target="StatCard4.(Grid.Column)" Value="3"/>
+                        <Setter Target="StatCard4.(Grid.Column)" Value="2"/>
                         <Setter Target="StatCard4.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="1"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="0"/>
@@ -49,48 +46,42 @@
                     </VisualState.Setters>
                 </VisualState>
                 
-                <!-- Medium: 2 columns, inline filters visible -->
+                <!-- Medium: 3 columns, inline filters visible -->
                 <VisualState x:Name="MediumState">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="900"/>
+                        <AdaptiveTrigger MinWindowWidth="800"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="StatCard2.(Grid.Column)" Value="2"/>
+                        <Setter Target="StatCard2.(Grid.Column)" Value="0"/>
                         <Setter Target="StatCard2.(Grid.Row)" Value="0"/>
-                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="StatCard3.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard3.(Grid.Row)" Value="1"/>
-                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="2"/>
+                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.Column)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="1"/>
                         <Setter Target="StatCard4.(Grid.Column)" Value="2"/>
-                        <Setter Target="StatCard4.(Grid.Row)" Value="1"/>
-                        <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="StatsGrid.RowSpacing" Value="16"/>
+                        <Setter Target="StatCard4.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="1"/>
+                        <Setter Target="StatsGrid.RowSpacing" Value="0"/>
                         <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
                         <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
                     </VisualState.Setters>
                 </VisualState>
                 
-                <!-- Small: hide inline filters, show filter button -->
+                <!-- Small: 1 column cards, hide inline filters, show filter button -->
                 <VisualState x:Name="SmallState">
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="StatCard1.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.Row)" Value="0"/>
-                        <Setter Target="StatCard1.(Grid.ColumnSpan)" Value="4"/>
                         <Setter Target="StatCard2.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard2.(Grid.Row)" Value="1"/>
-                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="4"/>
+                        <Setter Target="StatCard2.(Grid.Row)" Value="0"/>
+                        <Setter Target="StatCard2.(Grid.ColumnSpan)" Value="3"/>
                         <Setter Target="StatCard3.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard3.(Grid.Row)" Value="2"/>
-                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="4"/>
+                        <Setter Target="StatCard3.(Grid.Row)" Value="1"/>
+                        <Setter Target="StatCard3.(Grid.ColumnSpan)" Value="3"/>
                         <Setter Target="StatCard4.(Grid.Column)" Value="0"/>
-                        <Setter Target="StatCard4.(Grid.Row)" Value="3"/>
-                        <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="4"/>
+                        <Setter Target="StatCard4.(Grid.Row)" Value="2"/>
+                        <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="3"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="16"/>
                         <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
                         <Setter Target="FilterButton.Visibility" Value="Visible"/>
@@ -145,47 +136,17 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- New Orders Card -->
-                    <Border x:Name="StatCard1" Grid.Column="0" Style="{StaticResource CardBorderStyle}">
-                        <Grid Padding="20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Spacing="4">
-                                <TextBlock 
-                                    Text="DRAFT" 
-                                    FontSize="11" 
-                                    FontWeight="SemiBold" 
-                                    Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                <TextBlock 
-                                    Text="{x:Bind ViewModel.DraftCount, Mode=OneWay}" 
-                                    FontSize="28" 
-                                    FontWeight="Bold" 
-                                    Foreground="{ThemeResource TextPrimaryBrush}"/>
-                            </StackPanel>
-                            <Border 
-                                Grid.Column="1" 
-                                Width="48" 
-                                Height="48" 
-                                Background="#EFF6FF" 
-                                CornerRadius="8">
-                                <FontIcon Glyph="&#xE719;" FontSize="24" Foreground="#3B82F6"/>
-                            </Border>
-                        </Grid>
-                    </Border>
+
 
                     <!-- Paid Card -->
-                    <Border x:Name="StatCard2" Grid.Column="1" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard2" Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -215,7 +176,7 @@
                     </Border>
 
                     <!-- Canceled Card -->
-                    <Border x:Name="StatCard3" Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard3" Grid.Column="1" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -245,7 +206,7 @@
                     </Border>
 
                     <!-- Total Orders Card -->
-                    <Border x:Name="StatCard4" Grid.Column="3" Style="{StaticResource CardBorderStyle}">
+                    <Border x:Name="StatCard4" Grid.Column="2" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

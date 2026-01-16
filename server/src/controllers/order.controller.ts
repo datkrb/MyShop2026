@@ -23,20 +23,7 @@ export class OrderController {
     }
   }
 
-  async getDraft(req: AuthRequest, res: Response) {
-    console.log('OrderController.getDraft hit'); // DEBUG
-    try {
-      if (!req.user) {
-        return sendError(res, 'UNAUTHORIZED', 'Unauthorized', 401);
-      }
-      const userId = req.user.userId;
-      const order = await orderService.getDraft(userId);
-      sendSuccess(res, order);
-    } catch (error: any) {
-      console.error('OrderController.getDraft Error:', error); // DEBUG
-      sendError(res, 'INTERNAL_ERROR', error.message, 500);
-    }
-  }
+
 
   async getById(req: AuthRequest, res: Response) {
     console.log('OrderController.getById hit', req.params.id); // DEBUG
@@ -117,19 +104,7 @@ export class OrderController {
     }
   }
 
-  async autosave(req: AuthRequest, res: Response) {
-    try {
-      if (!req.user) {
-        return sendError(res, 'UNAUTHORIZED', 'Unauthorized', 401);
-      }
 
-      const id = parseInt(req.params.id);
-      const order = await orderService.autosave(id, req.body, req.user.userId);
-      sendSuccess(res, order, 'Order autosaved successfully');
-    } catch (error: any) {
-      sendError(res, 'BAD_REQUEST', error.message, 400);
-    }
-  }
 
   async export(_req: AuthRequest, res: Response) {
     // TODO: Implement PDF/XPS export
