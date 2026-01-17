@@ -140,13 +140,14 @@ public partial class DashboardViewModel : ViewModelBase
                 TopSelling.Clear();
                 foreach (var product in topSelling)
                 {
+                    var imageUrl = product.Images?.FirstOrDefault()?.Url ?? "https://via.placeholder.com/150";
                     TopSelling.Add(new Product
                     {
                         Id = product.Id,
                         Name = product.Name,
                         Category = product.Category?.Name ?? "Uncategorized",
-                        Sold = product.TotalSold, // Calculated from OrderItems
-                        ImageUrl = "https://via.placeholder.com/150",
+                        Sold = product.TotalSold,
+                        ImageUrl = imageUrl,
                         Stock = product.Stock,
                         Price = product.SalePrice
                     });
@@ -179,11 +180,14 @@ public partial class DashboardViewModel : ViewModelBase
                 LowStock.Clear();
                 foreach (var product in lowStock)
                 {
+                    var imageUrl = product.Images?.FirstOrDefault()?.Url ?? "https://via.placeholder.com/150";
                     LowStock.Add(new Product
                     {
+                        Id = product.Id,
                         Name = product.Name,
                         Stock = product.Stock,
-                        Category = product.Category?.Name ?? ""
+                        Category = product.Category?.Name ?? "",
+                        ImageUrl = imageUrl
                     });
                 }
             }

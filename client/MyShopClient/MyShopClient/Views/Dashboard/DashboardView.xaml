@@ -306,16 +306,13 @@
                     <Grid x:Name="SalesChart" Grid.Column="0" Grid.Row="0" Background="{ThemeResource CardBackgroundBrush}" CornerRadius="12" Padding="24" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="300"/>
+                            <RowDefinition Height="400"/>
                         </Grid.RowDefinitions>
                         <Grid Margin="0,0,0,0">
                             <StackPanel>
                                 <TextBlock Text="Sales Analytics" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource TextPrimaryBrush}"/>
                                 <TextBlock Text="Revenue per day for current month" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
                             </StackPanel>
-                            <Button HorizontalAlignment="Right" Background="Transparent" Padding="4">
-                                <FontIcon Glyph="&#xE712;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#9CA3AF"/>
-                            </Button>
                         </Grid>
                         
                         <lvc:CartesianChart Grid.Row="1" Series="{x:Bind ViewModel.RevenueSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.XAxes, Mode=OneWay}" YAxes="{x:Bind ViewModel.YAxes, Mode=OneWay}" TooltipPosition="Top" Background="{ThemeResource CardBackgroundBrush}"/>
@@ -329,9 +326,6 @@
                         </Grid.RowDefinitions>
                         <Grid Margin="0,0,0,24">
                             <TextBlock Text="Top 5 Best Selling" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                            <Button HorizontalAlignment="Right" Background="Transparent" Padding="4">
-                                <FontIcon Glyph="&#xE712;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#9CA3AF"/>
-                            </Button>
                         </Grid>
 
                         <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.TopSelling, Mode=OneWay}" SelectionMode="None">
@@ -358,7 +352,7 @@
                                             <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="14" Foreground="{ThemeResource TextPrimaryBrush}"/>
                                             <TextBlock Text="{x:Bind Category}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{x:Bind Sold, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} Sold'}" Foreground="{ThemeResource PrimaryBrush}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Margin="12,0,0,0" Text="{x:Bind Sold, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} Sold'}" Foreground="{ThemeResource PrimaryBrush}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -373,12 +367,6 @@
                         </Grid.RowDefinitions>
                         <Grid Margin="0,0,0,24">
                              <TextBlock Text="Recent Orders" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                 <Button Content="Filter" FontSize="12" Padding="8,4" Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                 <Button Background="Transparent" Padding="4">
-                                    <FontIcon Glyph="&#xE712;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#9CA3AF"/>
-                                </Button>
-                             </StackPanel>
                         </Grid>
                         
                         <!-- Recent Orders Table -->
@@ -441,49 +429,49 @@
                         </ListView>
                     </Grid>
 
-                    <!-- Low Stock & Donut Chart -->
+                    <!-- Low Stock Products -->
                     <Grid x:Name="LowStockCard" Grid.Column="1" Grid.Row="1" Background="{ThemeResource CardBackgroundBrush}" CornerRadius="12" Padding="24" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         
                         <Grid Margin="0,0,0,24">
-                            <TextBlock Text="Categories" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Top 5 Low Stock" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource TextPrimaryBrush}"/>
                             <Border Background="#FEE2E2" CornerRadius="12" Padding="8,4" HorizontalAlignment="Right">
                                 <TextBlock Text="Action Needed" Foreground="{ThemeResource DangerBrush}" FontSize="10" FontWeight="Bold"/>
                             </Border>
                         </Grid>
 
-                        <lvc:PieChart Grid.Row="1" Series="{x:Bind ViewModel.PieSeries, Mode=OneWay}" Height="200"  InitialRotation="-90" Background="{ThemeResource CardBackgroundBrush}"/>
-
-                        <StackPanel Grid.Row="2" Spacing="16" Margin="0,24,0,0">
-                             <ListView ItemsSource="{x:Bind ViewModel.LowStock, Mode=OneWay}" SelectionMode="None">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="models:Product">
-                                        <Grid Padding="0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Width="48" Height="48" CornerRadius="8" Background="#FEF2F2" Margin="0,0,16,0">
-                                                 <FontIcon Glyph="&#xE7BA;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource DangerBrush}"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <Grid Margin="0,0,0,4">
-                                                    <TextBlock Text="{x:Bind Name}" Foreground="{ThemeResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="14"/>
-                                                    <TextBlock Text="{x:Bind Stock, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} left'}" HorizontalAlignment="Right" Foreground="{ThemeResource DangerBrush}" FontWeight="Bold" FontSize="12"/>
-                                                </Grid>
-                                                <ProgressBar Value="{x:Bind Stock}" Maximum="20" Foreground="{ThemeResource DangerBrush}" Height="6"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                            
-                            <Button HorizontalAlignment="Stretch" Content="View Inventory Report" Background="Transparent" BorderBrush="{ThemeResource PrimaryBrush}" BorderThickness="1" Foreground="{ThemeResource PrimaryBrush}"/>
-                        </StackPanel>
+                        <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.LowStock, Mode=OneWay}" SelectionMode="None">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="Background" Value="{ThemeResource CardBackgroundBrush}"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,16"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:Product">
+                                    <Grid Padding="12" Background="{ThemeResource AppBackgroundBrush}" CornerRadius="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border CornerRadius="4" Width="40" Height="40" Margin="0,0,12,0" Background="#E2E8F0">
+                                            <Image Source="{x:Bind ImageUrl}" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="14" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{x:Bind Category}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Margin="12,0,0,0" Text="{x:Bind Stock, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} left'}" Foreground="{ThemeResource DangerBrush}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </Grid>
                 </Grid>
             </StackPanel>

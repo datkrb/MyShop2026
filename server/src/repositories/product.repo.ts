@@ -113,6 +113,7 @@ export class ProductRepository {
       take: limit,
       include: {
         category: true,
+        images: true,
       },
     });
   }
@@ -121,6 +122,7 @@ export class ProductRepository {
     const products = await prisma.product.findMany({
       include: {
         category: true,
+        images: true,
         orderItems: {
           where: {
             order: {
