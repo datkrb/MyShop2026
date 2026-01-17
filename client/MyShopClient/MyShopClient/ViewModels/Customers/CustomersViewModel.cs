@@ -5,6 +5,7 @@ using MyShopClient.Services.Api;
 using MyShopClient.Services.Config;
 using MyShopClient.ViewModels.Base;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,6 +44,34 @@ public partial class CustomersViewModel : ViewModelBase
     [ObservableProperty]
     private CustomerViewModel? _selectedCustomer;
 
+    // Advanced Search Filters
+    [ObservableProperty]
+    private bool? _hasOrders = null;
+
+    [ObservableProperty]
+    private DateTimeOffset? _createdFrom;
+
+    [ObservableProperty]
+    private DateTimeOffset? _createdTo;
+
+    [ObservableProperty]
+    private string _selectedSort = "name,asc";
+
+    public List<string> SortOptions { get; } = new List<string>
+    {
+        "name,asc",
+        "name,desc",
+        "createdAt,desc",
+        "createdAt,asc"
+    };
+
+    public List<string> HasOrdersOptions { get; } = new List<string>
+    {
+        "All",
+        "With Orders",
+        "Without Orders"
+    };
+
     // Pagination
     [ObservableProperty]
     private int _currentPage = 1;
@@ -80,10 +109,18 @@ public partial class CustomersViewModel : ViewModelBase
 
         try
         {
+            // Convert HasOrders to bool
+            bool? hasOrdersValue = null;
+            // Using HasOrders directly if it's set
+
             var result = await _customerApiService.GetCustomersAsync(
                 page: CurrentPage,
                 size: PageSize,
-                keyword: string.IsNullOrWhiteSpace(SearchQuery) ? null : SearchQuery
+                keyword: string.IsNullOrWhiteSpace(SearchQuery) ? null : SearchQuery,
+                hasOrders: HasOrders,
+                createdFrom: CreatedFrom?.ToString("yyyy-MM-dd"),
+                createdTo: CreatedTo?.ToString("yyyy-MM-dd"),
+                sort: SelectedSort
             );
 
             if (result != null)
@@ -243,6 +280,18 @@ public partial class CustomersViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"Error deleting customer: {ex.Message}");
         }
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SearchQuery = string.Empty;
+        HasOrders = null;
+        CreatedFrom = null;
+        CreatedTo = null;
+        SelectedSort = "name,asc";
+        CurrentPage = 1;
+        _ = LoadCustomersAsync();
     }
 }
 

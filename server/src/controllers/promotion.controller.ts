@@ -9,12 +9,18 @@ interface AuthRequest extends Request {
 export class PromotionController {
   async getAll(req: AuthRequest, res: Response) {
     try {
-      const { page, size, isActive, search } = req.query;
+      const { page, size, isActive, search, discountType, validFrom, validTo, minDiscount, maxDiscount } = req.query;
       const result = await promotionService.getAll({
         page: page ? parseInt(page as string) : undefined,
         size: size ? parseInt(size as string) : undefined,
         isActive: isActive !== undefined ? isActive === 'true' : undefined,
         search: search as string,
+        // Advanced search filters
+        discountType: discountType as 'PERCENTAGE' | 'FIXED' | undefined,
+        validFrom: validFrom as string,
+        validTo: validTo as string,
+        minDiscount: minDiscount ? parseFloat(minDiscount as string) : undefined,
+        maxDiscount: maxDiscount ? parseFloat(maxDiscount as string) : undefined,
       });
       sendSuccess(res, result);
     } catch (error: any) {

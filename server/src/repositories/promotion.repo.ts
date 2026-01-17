@@ -5,11 +5,17 @@ interface PromotionFilters {
   size?: number;
   isActive?: boolean;
   search?: string;
+  // Advanced search filters
+  discountType?: 'PERCENTAGE' | 'FIXED';
+  validFrom?: string;
+  validTo?: string;
+  minDiscount?: number;
+  maxDiscount?: number;
 }
 
 export class PromotionRepository {
   async findAll(filters: PromotionFilters = {}) {
-    const { page = 1, size = 10, isActive, search } = filters;
+    const { page = 1, size = 10, isActive, search, discountType, validFrom, validTo, minDiscount, maxDiscount } = filters;
     const skip = (page - 1) * size;
 
     const where: any = {};
@@ -23,6 +29,28 @@ export class PromotionRepository {
         { code: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
       ];
+    }
+
+    // Advanced: Discount type filter
+    if (discountType) {
+      where.discountType = discountType;
+    }
+
+    // Advanced: Validity date range (promotions valid during this period)
+    if (validFrom || validTo) {
+      if (validFrom) {
+        where.endDate = { gte: new Date(validFrom) };
+      }
+      if (validTo) {
+        where.startDate = { lte: new Date(validTo) };
+      }
+    }
+
+    // Advanced: Discount value range
+    if (minDiscount || maxDiscount) {
+      where.discountValue = {};
+      if (minDiscount) where.discountValue.gte = minDiscount;
+      if (maxDiscount) where.discountValue.lte = maxDiscount;
     }
 
     const [data, total] = await Promise.all([

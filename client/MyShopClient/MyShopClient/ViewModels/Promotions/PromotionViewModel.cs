@@ -282,4 +282,14 @@ public partial class PromotionViewModel : ObservableObject
     {
         IsDialogOpen = false;
     }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SearchKeyword = string.Empty;
+        SelectedStatusFilter = "All";
+        SelectedTypeFilter = "All";
+        SelectedSortOption = "Newest";
+        ApplyFilters();
+    }
 }
