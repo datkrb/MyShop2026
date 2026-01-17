@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:MyShopClient.ViewModels"
     xmlns:local="using:MyShopClient.Views.Settings"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     mc:Ignorable="d"
     Background="{ThemeResource AppBackgroundBrush}">
 
@@ -23,20 +24,10 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid Height="80" Margin="-32,-32,-32,32" Padding="32,0" 
-              Background="{ThemeResource CardBackgroundBrush}" 
-              BorderBrush="{ThemeResource BorderBrush}" 
-              BorderThickness="0,0,0,1">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="Settings" 
-                           FontWeight="Bold" 
-                           FontSize="24" 
-                           Foreground="{ThemeResource TextPrimaryBrush}"/>
-                <TextBlock Text="Configure your application preferences" 
-                           FontSize="14" 
-                           Foreground="{ThemeResource TextSecondaryBrush}"/>
-            </StackPanel>
-        </Grid>
+        <shared:PageHeader 
+            Margin="-32,-32,-32,32"
+            Title="Settings" 
+            Description="Configure your application preferences"/>
 
         <!-- Settings Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
