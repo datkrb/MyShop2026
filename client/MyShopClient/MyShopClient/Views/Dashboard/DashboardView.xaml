@@ -12,7 +12,7 @@
     mc:Ignorable="d"
     Background="{ThemeResource AppBackgroundBrush}">
 
-    <Grid Padding="32">
+    <Grid Padding="24,0,2,12">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <!-- Large: 4 columns (1 row) -->
@@ -133,12 +133,12 @@
 
         <!-- Header -->
         <shared:PageHeader 
-            Margin="-32,-32,-32,32"
+            Margin="-24,0,-24,2"
             Title="Dashboard" 
             Description="Here's what's happening with your store today."/>
 
         <!-- Dashboard Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,22,0">
             <StackPanel Spacing="0">
                 <!-- Stats Cards Grid -->
                 <Grid ColumnSpacing="24" RowSpacing="24" x:Name="StatsGrid">

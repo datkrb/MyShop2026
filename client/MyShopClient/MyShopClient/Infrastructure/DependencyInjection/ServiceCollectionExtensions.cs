@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ServerConfigViewModel>();
         services.AddTransient<ReportViewModel>();
         services.AddTransient<PromotionViewModel>();
+        services.AddTransient<ViewModels.Shared.PageHeaderViewModel>();
         return services;
     }
 
