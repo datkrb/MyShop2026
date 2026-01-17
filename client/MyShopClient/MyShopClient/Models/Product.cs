@@ -4,22 +4,39 @@ using System.Linq;
 
 namespace MyShopClient.Models;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 /// <summary>
 /// Full Product model matching API responses for dashboard/top-selling, dashboard/low-stock
 /// This model matches the API response structure exactly
 /// </summary>
-public class ApiProduct
+public partial class ApiProduct : ObservableObject
 {
     public int Id { get; set; }
-    public string Sku { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public decimal ImportPrice { get; set; }
-    public decimal SalePrice { get; set; }
-    public int Stock { get; set; }
-    public string? Description { get; set; }
+    
+    [ObservableProperty]
+    private string _sku = string.Empty;
+    
+    [ObservableProperty]
+    private string _name = string.Empty;
+    
+    [ObservableProperty]
+    private decimal _importPrice;
+    
+    [ObservableProperty]
+    private decimal _salePrice;
+    
+    [ObservableProperty]
+    private int _stock;
+    
+    [ObservableProperty]
+    private string? _description;
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public int? CategoryId { get; set; }
+    
+    [ObservableProperty]
+    private int? _categoryId;
     
     // Navigation property
     public Category? Category { get; set; }
@@ -32,7 +49,7 @@ public class ApiProduct
     // Computed property: total sold from orderItems
     public int TotalSold => OrderItems?.Sum(oi => oi.Quantity) ?? 0;
 
-    public string FormattedPrice => $"${SalePrice:N2}";
+    public string FormattedPrice => Helpers.CurrencyHelper.FormatVND(SalePrice);
 }
 
 public class ProductImage

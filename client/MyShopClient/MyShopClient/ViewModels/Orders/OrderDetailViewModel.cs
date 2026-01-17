@@ -20,6 +20,7 @@ public partial class OrderDetailViewModel : ObservableObject
 {
     private readonly OrderApiService _orderApiService;
     private readonly INavigationService _navigationService;
+    private readonly Services.Local.ILocalDraftService _localDraftService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -65,18 +66,18 @@ public partial class OrderDetailViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(DisplayStatus))]
     [NotifyPropertyChangedFor(nameof(StatusBackground))]
     [NotifyPropertyChangedFor(nameof(StatusForeground))]
-    private string _orderStatus = "DRAFT";
+    private string _orderStatus = "PENDING";
 
     [ObservableProperty]
     private string _createdByUsername = string.Empty;
     
     public ObservableCollection<string> Statuses { get; } = new() 
     { 
-        "DRAFT", "PENDING", "PAID", "CANCELLED" 
+        "PENDING", "PAID", "CANCELLED" 
     };
 
     [ObservableProperty]
-    private string _selectedStatus = "DRAFT";
+    private string _selectedStatus = "PENDING";
 
     // Notification properties
     [ObservableProperty]
@@ -96,13 +97,13 @@ public partial class OrderDetailViewModel : ObservableObject
 
     // Computed properties
     public string FormattedDate => OrderDate.ToString("dd/MM/yyyy HH:mm");
-    public string FormattedAmount => $"{Amount:N0}đ";
+    public string FormattedAmount => Helpers.CurrencyHelper.FormatVND(Amount);
     
     public decimal Subtotal => OrderItems.Sum(x => x.TotalPrice);
     public decimal Total => Subtotal; // No tax calculation for simplicity
     
-    public string FormattedSubtotal => $"{Subtotal:N0}đ";
-    public string FormattedTotal => $"{Total:N0}đ";
+    public string FormattedSubtotal => Helpers.CurrencyHelper.FormatVND(Subtotal);
+    public string FormattedTotal => Helpers.CurrencyHelper.FormatVND(Total);
 
     public string DisplayStatus => OrderStatus switch
     {
@@ -133,10 +134,11 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService)
+    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService, Services.Local.ILocalDraftService localDraftService)
     {
         _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _localDraftService = localDraftService ?? throw new ArgumentNullException(nameof(localDraftService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();
@@ -190,8 +192,12 @@ public partial class OrderDetailViewModel : ObservableObject
                             ProductSku = item.Product?.Sku ?? "",
                             ProductImage = "", // Would need images from product
                             Quantity = item.Quantity,
+                            // For existing item converted from order, assume stock has been deducted,
+                            // so we track original quantity to add back to max allowed
+                            OriginalQuantity = item.Quantity, 
                             UnitPrice = item.UnitSalePrice,
-                            TotalPrice = item.TotalPrice
+                            TotalPrice = item.TotalPrice,
+                            Stock = item.Product?.Stock ?? 0
                         });
                     }
                 }
@@ -236,56 +242,44 @@ public partial class OrderDetailViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            // Get user's single draft order (Get or Create)
-            var draftOrder = await _orderApiService.GetDraftOrderAsync();
+            var draft = await _localDraftService.GetDraftAsync();
             
-            if (draftOrder != null)
+            if (draft != null && (draft.Items.Count > 0 || !string.IsNullOrEmpty(draft.CustomerName)))
             {
-                Id = draftOrder.Id;
-                OrderId = $"#ORD-{draftOrder.Id:D4}";
-                OrderStatus = "DRAFT";
-                SelectedStatus = "DRAFT";
-                OrderDate = draftOrder.CreatedTime;
-                
-                // If draft has content (items or customer), prompt user
-                if (draftOrder.CustomerId.HasValue || (draftOrder.OrderItems != null && draftOrder.OrderItems.Count > 0))
-                {
-                    var dialog = new ContentDialog
-                    {
-                        XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-                        Title = "Đơn hàng chưa hoàn thành",
-                        Content = "Bạn có một đơn hàng đang soạn dở. Bạn có muốn tiếp tục không?",
-                        PrimaryButtonText = "Tiếp tục đơn cũ",
-                        SecondaryButtonText = "Tạo mới (Xóa cũ)",
-                        DefaultButton = ContentDialogButton.Primary
-                    };
+                 var dialog = new ContentDialog
+                 {
+                     XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                     Title = "Đơn hàng chưa hoàn thành",
+                     Content = "Bạn có một đơn hàng đang soạn dở. Bạn có muốn tiếp tục không?",
+                     PrimaryButtonText = "Tiếp tục đơn cũ",
+                     SecondaryButtonText = "Tạo mới (Xóa cũ)",
+                     DefaultButton = ContentDialogButton.Primary
+                 };
 
-                    var result = await dialog.ShowAsync();
+                 var result = await dialog.ShowAsync();
 
-                    if (result == ContentDialogResult.Primary)
-                    {
-                        // Load existing draft content
-                        LoadDraftContent(draftOrder);
-                    }
-                    else
-                    {
-                        // Clear draft content (reset to empty) via AutoSave with empty data? 
-                        // Or just clear UI and let next AutoSave overwrite it.
-                        // Better to clear UI and set IsEditing = true immediately.
-                        ClearForm();
-                        // Trigger immediate autosave to clear backend
-                        await PerformAutoSaveAsync();
-                    }
-                }
-                else
-                {
-                    // Empty draft, just use it
-                    ClearForm();
-                }
-
-                IsNewOrder = false; // Effectively it's an existing draft order in DB
-                IsEditing = true;   // But we are editing it
+                 if (result == ContentDialogResult.Primary)
+                 {
+                     LoadDraftContent(draft);
+                 }
+                 else
+                 {
+                     await _localDraftService.ClearDraftAsync();
+                     ClearForm();
+                 }
             }
+            else
+            {
+                ClearForm();
+            }
+
+            IsNewOrder = true;
+            IsEditing = true;
+            Id = 0; // New order has no ID
+            OrderId = "NEW";
+            OrderStatus = "DRAFT"; // UI status only
+            SelectedStatus = "DRAFT";
+            OrderDate = DateTime.Now;
         }
         catch (Exception ex)
         {
@@ -297,31 +291,30 @@ public partial class OrderDetailViewModel : ObservableObject
         }
     }
 
-    private void LoadDraftContent(ApiOrder order)
+    private void LoadDraftContent(OrderDraft draft)
     {
-        CustomerId = order.CustomerId;
-        CustomerName = order.Customer?.Name ?? "";
-        CustomerEmail = order.Customer?.Email ?? "";
-        CustomerPhone = order.Customer?.Phone ?? "";
-        CustomerAddress = order.Customer?.Address ?? "";
-        CustomerAvatar = order.Customer?.AvatarUrl ?? "";
+        CustomerId = draft.CustomerId;
+        CustomerName = draft.CustomerName;
+        CustomerEmail = draft.CustomerEmail;
+        CustomerPhone = draft.CustomerPhone;
+        CustomerAddress = draft.CustomerAddress;
+        CustomerAvatar = draft.CustomerAvatar;
 
         OrderItems.Clear();
-        if (order.OrderItems != null)
+        foreach (var item in draft.Items)
         {
-            foreach (var item in order.OrderItems)
+            AddOrderItem(new OrderItemViewModel
             {
-                AddOrderItem(new OrderItemViewModel
-                {
-                    ProductId = item.ProductId,
-                    ProductName = item.Product?.Name ?? "Unknown",
-                    ProductSku = item.Product?.Sku ?? "",
-                    ProductImage = (item.Product?.Images?.Count > 0) ? item.Product?.Images[0].Url : "",
-                    Quantity = item.Quantity,
-                    UnitPrice = item.UnitSalePrice,
-                    TotalPrice = item.TotalPrice
-                });
-            }
+                ProductId = item.ProductId,
+                ProductName = item.ProductName,
+                ProductSku = item.ProductSku,
+                ProductImage = item.ProductImage,
+                Quantity = item.Quantity,
+                OriginalQuantity = item.OriginalQuantity,
+                UnitPrice = item.UnitPrice,
+                TotalPrice = item.TotalPrice,
+                Stock = item.Stock
+            });
         }
         RecalculateTotals();
     }
@@ -376,24 +369,32 @@ public partial class OrderDetailViewModel : ObservableObject
     
     private async Task PerformAutoSaveAsync()
     {
-        // Must have an ID (which we should, from InitializeNewOrder)
-        if (Id == 0) return;
-        
+        // Save to local logic
         try
         {
-            var request = new CreateOrderRequest
+            var draft = new OrderDraft
             {
                 CustomerId = CustomerId,
-                Status = "DRAFT",
-                Items = OrderItems.Select(i => new CreateOrderItemRequest
+                CustomerName = CustomerName,
+                CustomerEmail = CustomerEmail,
+                CustomerPhone = CustomerPhone,
+                CustomerAddress = CustomerAddress,
+                CustomerAvatar = CustomerAvatar,
+                Items = OrderItems.Select(i => new OrderDraftItem
                 {
                     ProductId = i.ProductId,
-                    Quantity = i.Quantity
+                    ProductName = i.ProductName,
+                    ProductSku = i.ProductSku,
+                    ProductImage = i.ProductImage,
+                    Quantity = i.Quantity,
+                    OriginalQuantity = i.OriginalQuantity,
+                    UnitPrice = i.UnitPrice,
+                    TotalPrice = i.TotalPrice,
+                    Stock = i.Stock
                 }).ToList()
             };
             
-            // Allow autosave even with empty items/customer to support clearing draft
-            await _orderApiService.AutosaveOrderAsync(Id, request);
+            await _localDraftService.SaveDraftAsync(draft);
         }
         catch (Exception ex)
         {
@@ -466,7 +467,8 @@ public partial class OrderDetailViewModel : ObservableObject
                     ProductImage = (product.Images != null && product.Images.Count > 0) ? product.Images[0].Url : "",
                     Quantity = 1,
                     UnitPrice = product.SalePrice,
-                    TotalPrice = product.SalePrice
+                    TotalPrice = product.SalePrice,
+                    Stock = product.Stock
                 });
             }
             RecalculateTotals();
@@ -483,6 +485,8 @@ public partial class OrderDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
+        string successMessage = IsNewOrder ? "Đơn hàng đã được tạo thành công!" : "Đơn hàng đã được cập nhật thành công!";
+
         // Global Validation
         if (!CustomerId.HasValue)
         {
@@ -499,30 +503,75 @@ public partial class OrderDetailViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            // Flush any pending auto-save
-            if (_autoSaveTimer.IsEnabled)
-            {
-                _autoSaveTimer.Stop();
-                await PerformAutoSaveAsync();
-            }
+            _autoSaveTimer.Stop();
 
-            // Finalize the order: Update status to PENDING
-            // Since we always have an ID (draft), we just update status
-            var result = await _orderApiService.UpdateStatusAsync(Id, "PENDING");
+            ApiOrder? result = null;
+
+            if (IsNewOrder)
+            {
+                // Create new order
+                var request = new CreateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList(),
+                    Status = "PENDING"
+                };
+
+                result = await _orderApiService.CreateOrderAsync(request);
+            }
+            else
+            {
+                // Update existing order
+                var request = new UpdateOrderRequest
+                {
+                    CustomerId = CustomerId,
+                    Items = OrderItems.Select(i => new CreateOrderItemRequest
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                result = await _orderApiService.UpdateOrderAsync(Id, request);
+            }
             
             if (result != null)
             {
-                OrderStatus = result.Status;
-                SelectedStatus = result.Status;
+                // Assign real ID
+                Id = result.Id;
+                OrderId = $"#{result.Id:D4}";
                 
-                System.Diagnostics.Debug.WriteLine($"Order finalized with status {OrderStatus}");
+                // Update status separately using dedicated API
+                if (!string.IsNullOrEmpty(SelectedStatus) && SelectedStatus != "DRAFT")
+                {
+                    var statusResult = await _orderApiService.UpdateStatusAsync(result.Id, SelectedStatus);
+                    if (statusResult != null)
+                    {
+                        OrderStatus = statusResult.Status;
+                        System.Diagnostics.Debug.WriteLine($"Order status updated to {statusResult.Status}");
+                    }
+                    else
+                    {
+                        OrderStatus = result.Status;
+                    }
+                }
+                else
+                {
+                    OrderStatus = result.Status;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Order created with final status {OrderStatus}");
                 IsEditing = false;
-                IsNewOrder = false; // It's no longer a 'new' creation flow
+                IsNewOrder = false;
                 
-                ShowNotification("Đơn hàng đã được tạo thành công!", "Success");
+                // Clear local draft
+                await _localDraftService.ClearDraftAsync();
                 
-                // Perhaps navigate back or clear form for next order?
-                // For now, stay on detail view as finalized order
+                ShowNotification(successMessage, "Success");
             }
             else
             {
@@ -658,13 +707,34 @@ public partial class OrderItemViewModel : ObservableObject
     [ObservableProperty]
     private decimal _totalPrice;
 
-    public string FormattedUnitPrice => $"{UnitPrice:N0}đ";
-    public string FormattedTotalPrice => $"{TotalPrice:N0}đ";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaxQuantity))]
+    [NotifyPropertyChangedFor(nameof(RemainingStock))]
+    private int _stock;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaxQuantity))]
+    [NotifyPropertyChangedFor(nameof(RemainingStock))]
+    private int _originalQuantity;
+
+    public int MaxQuantity => Stock + OriginalQuantity;
+    public int RemainingStock => MaxQuantity - Quantity;
+
+    public string FormattedUnitPrice => Helpers.CurrencyHelper.FormatVND(UnitPrice);
+    public string FormattedTotalPrice => Helpers.CurrencyHelper.FormatVND(TotalPrice);
     
     partial void OnQuantityChanged(int value)
     {
-        TotalPrice = UnitPrice * value;
+        // Enforce max quantity limit
+        if (MaxQuantity > 0 && value > MaxQuantity)
+        {
+            Quantity = MaxQuantity;
+            return;
+        }
+
+        TotalPrice = UnitPrice * Quantity;
         OnPropertyChanged(nameof(FormattedTotalPrice));
+        OnPropertyChanged(nameof(RemainingStock));
         QuantityChanged?.Invoke();
     }
 }

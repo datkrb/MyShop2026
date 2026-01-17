@@ -16,34 +16,7 @@ interface OrderFilters {
 }
 
 export class OrderRepository {
-  async findDraft(userId: number) {
-    return prisma.order.findFirst({
-      where: {
-        createdById: userId,
-        status: OrderStatus.DRAFT,
-      },
-      include: {
-        customer: true,
-        createdBy: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
-        orderItems: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                images: true,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
+
 
   async findAll(filters: OrderFilters = {}) {
     const {
@@ -141,8 +114,8 @@ export class OrderRepository {
     };
   }
 
-  async findById(id: number) {
-    return prisma.order.findUnique({
+  async findById(id: number, tx: any = prisma) {
+    return tx.order.findUnique({
       where: { id },
       include: {
         customer: true,
@@ -195,12 +168,12 @@ export class OrderRepository {
     finalPrice: number;
     discountAmount?: number;
     promotionId?: number;
-  }) {
-    return prisma.order.create({
+  }, tx: any = prisma) {
+    return tx.order.create({
       data: {
         customerId: data.customerId,
         createdById: data.createdById,
-        status: data.status || OrderStatus.DRAFT,
+        status: data.status || OrderStatus.PENDING,
         finalPrice: data.finalPrice,
         discountAmount: data.discountAmount || 0,
         promotionId: data.promotionId,
@@ -243,15 +216,15 @@ export class OrderRepository {
     finalPrice?: number;
     discountAmount?: number;
     promotionId?: number | null;
-  }) {
+  }, tx: any = prisma) {
     if (data.items) {
       // Delete existing items and create new ones
-      await prisma.orderItem.deleteMany({
+      await tx.orderItem.deleteMany({
         where: { orderId: id },
       });
     }
 
-    return prisma.order.update({
+    return tx.order.update({
       where: { id },
       data: {
         ...(data.customerId !== undefined && { customerId: data.customerId }),
@@ -287,8 +260,8 @@ export class OrderRepository {
     });
   }
 
-  async updateStatus(id: number, status: OrderStatus) {
-    return prisma.order.update({
+  async updateStatus(id: number, status: OrderStatus, tx: any = prisma) {
+    return tx.order.update({
       where: { id },
       data: { status },
       include: {
@@ -302,8 +275,8 @@ export class OrderRepository {
     });
   }
 
-  async delete(id: number) {
-    return prisma.order.delete({
+  async delete(id: number, tx: any = prisma) {
+    return tx.order.delete({
       where: { id },
     });
   }

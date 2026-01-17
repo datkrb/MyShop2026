@@ -29,7 +29,8 @@ public class ProductApiService : BaseApiService
         string? createdTo = null,
         int[]? categoryIds = null,
         string? skuSearch = null,
-        string? skuMode = null)
+        string? skuMode = null,
+        bool? inStock = null)
     {
         var query = new StringBuilder($"products?page={page}&size={size}");
         
@@ -92,6 +93,11 @@ public class ProductApiService : BaseApiService
         if (!string.IsNullOrEmpty(skuMode))
         {
             query.Append($"&skuMode={skuMode}");
+        }
+
+        if (inStock.HasValue)
+        {
+            query.Append($"&inStock={inStock.Value.ToString().ToLower()}");
         }
 
         return await GetAsync<PagedResult<ApiProduct>>(query.ToString());
@@ -159,32 +165,67 @@ public class ProductApiService : BaseApiService
 
     public async Task<bool> UploadProductImagesAsync(int productId, List<string> imagePaths)
     {
-        using var content = new System.Net.Http.MultipartFormDataContent();
-        
-        foreach (var path in imagePaths)
+        try
         {
-            var fileName = System.IO.Path.GetFileName(path);
+            using var content = new System.Net.Http.MultipartFormDataContent();
             
-            // Read file into memory to avoid file locking
-            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(path);
-            var byteContent = new System.Net.Http.ByteArrayContent(fileBytes);
-            
-            // Set content type based on file extension
-            var extension = System.IO.Path.GetExtension(path).ToLower();
-            var contentType = extension switch
+            foreach (var path in imagePaths)
             {
-                ".png" => "image/png",
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".gif" => "image/gif",
-                _ => "image/jpeg"
-            };
-            
-            byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-            content.Add(byteContent, "images", fileName);
-        }
+                try
+                {
+                    if (!System.IO.File.Exists(path))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: File not found: {path}");
+                        continue;
+                    }
+                    
+                    var fileName = System.IO.Path.GetFileName(path);
+                    
+                    // Read file into memory to avoid file locking
+                    byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(path);
+                    System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Read {fileBytes.Length} bytes from {fileName}");
+                    
+                    var byteContent = new System.Net.Http.ByteArrayContent(fileBytes);
+                    
+                    // Set content type based on file extension
+                    var extension = System.IO.Path.GetExtension(path).ToLower();
+                    var contentType = extension switch
+                    {
+                        ".png" => "image/png",
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".gif" => "image/gif",
+                        ".webp" => "image/webp",
+                        _ => "image/jpeg"
+                    };
+                    
+                    byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                    content.Add(byteContent, "images", fileName);
+                    System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Added file {fileName} to multipart content");
+                }
+                catch (Exception fileEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Error reading file {path}: {fileEx.Message}");
+                }
+            }
 
-        var response = await _httpClient.PostAsync($"products/{productId}/images", content);
-        return response.IsSuccessStatusCode;
+            // Apply current token before request
+            ApplyCurrentToken();
+            
+            // Build full URL (same pattern as base class methods)
+            var fullUrl = BaseApiService._currentBaseUrl + $"products/{productId}/images";
+            System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Uploading to {fullUrl}");
+            
+            var response = await _httpClient.PostAsync(fullUrl, content);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Response {response.StatusCode}: {responseContent}");
+            
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UploadProductImagesAsync: Error: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> DeleteProductImageAsync(int imageId)

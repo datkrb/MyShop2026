@@ -20,6 +20,7 @@
             <helpers:DateTimeToDateTimeOffsetConverter x:Key="DateTimeToDateTimeOffsetConverter" />
             <helpers:IntToDoubleConverter x:Key="IntToDoubleConverter" />
             <helpers:NullableIntToDoubleConverter x:Key="NullableIntToDoubleConverter" />
+            <helpers:CurrencyConverter x:Key="CurrencyConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
