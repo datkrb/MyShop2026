@@ -151,3 +151,18 @@ model Promotion {
 
   @@map("promotions")
 }
+
+// ============ LICENSE ============
+
+model ShopLicense {
+  id              Int       @id @default(autoincrement())
+  licenseKey      String?   @unique
+  trialStartDate  DateTime  @default(now())
+  trialDays       Int       @default(15)
+  isActivated     Boolean   @default(false)
+  activatedAt     DateTime?
+  activatedBy     Int?
+  createdAt       DateTime  @default(now())
+
+  @@map("shop_license")
+}

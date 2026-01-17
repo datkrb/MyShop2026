@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<OrderApiService>();
         services.AddSingleton<CustomerApiService>();
         services.AddSingleton<PromotionApiService>();
+        services.AddSingleton<LicenseApiService>();
 
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();

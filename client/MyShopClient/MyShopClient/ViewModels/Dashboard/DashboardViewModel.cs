@@ -19,6 +19,7 @@ namespace MyShopClient.ViewModels;
 public partial class DashboardViewModel : ViewModelBase
 {
     private readonly DashboardApiService _dashboardApiService;
+    private readonly LicenseApiService _licenseApiService;
 
     [ObservableProperty]
     private string _totalProducts = "0";
@@ -54,6 +55,19 @@ public partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private bool isLoading = true;
 
+    // Trial/License properties
+    [ObservableProperty]
+    private bool _showTrialBanner;
+
+    [ObservableProperty]
+    private int _trialDaysRemaining;
+
+    [ObservableProperty]
+    private bool _isAdmin;
+
+    [ObservableProperty]
+    private bool _isActivated;
+
     // Line Chart (Revenue)
     [ObservableProperty]
     private ISeries[] revenueSeries = Array.Empty<ISeries>();
@@ -71,12 +85,17 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<Order> RecentOrders { get; } = new();
     public ObservableCollection<Product> LowStock { get; } = new();
 
-    public DashboardViewModel(DashboardApiService dashboardApiService)
+    public DashboardViewModel(DashboardApiService dashboardApiService, LicenseApiService licenseApiService)
     {
         _dashboardApiService = dashboardApiService;
+        _licenseApiService = licenseApiService;
+        
+        // Check if current user is admin
+        IsAdmin = App.Current.IsAdmin;
         
         InitializeChartAxes();
         _ = LoadDashboardDataAsync();
+        _ = LoadLicenseStatusAsync();
     }
 
     private void InitializeChartAxes()
@@ -280,5 +299,39 @@ public partial class DashboardViewModel : ViewModelBase
         }
 
         PieSeries = series.ToArray();
+    }
+
+    /// <summary>
+    /// Load license status và cập nhật trial banner
+    /// </summary>
+    private async Task LoadLicenseStatusAsync()
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("LoadLicenseStatusAsync: Starting...");
+            var status = await _licenseApiService.GetStatusAsync();
+            
+            if (status != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync: IsActivated={status.IsActivated}, IsTrialValid={status.IsTrialValid}, DaysRemaining={status.TrialDaysRemaining}");
+                
+                IsActivated = status.IsActivated;
+                TrialDaysRemaining = status.TrialDaysRemaining;
+                
+                // Hiện trial banner nếu chưa kích hoạt và còn trong thời gian trial
+                ShowTrialBanner = !status.IsActivated && status.IsTrialValid;
+                
+                System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync: ShowTrialBanner={ShowTrialBanner}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("LoadLicenseStatusAsync: status is NULL");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync StackTrace: {ex.StackTrace}");
+        }
     }
 }
