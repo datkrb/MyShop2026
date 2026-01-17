@@ -495,6 +495,8 @@
         
         <!-- Loading Overlay -->
         <Grid 
+            Grid.Row="0" Grid.RowSpan="2"
+            Margin="-24,0,-2,-12"
             Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
             Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
             <StackPanel 
@@ -511,7 +513,9 @@
 
         <!-- Edit Dialog Overlay (Modal) -->
         <Grid 
-            Background="#80000000" 
+            Grid.Row="0" Grid.RowSpan="2"
+            Margin="-24,0,-2,-12"
+            Background="#10000000" 
             Visibility="{x:Bind ViewModel.IsDialogOpen, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
             <Border 
                 Style="{StaticResource CardBorderStyle}"

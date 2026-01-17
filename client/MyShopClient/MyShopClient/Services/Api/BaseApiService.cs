@@ -50,13 +50,10 @@ public abstract class BaseApiService
     public static void InitializeBaseUrl()
     {
         var settingsService = new AppSettingsService();
-        var url = settingsService.GetServerUrl();
-        var port = settingsService.GetServerPort();
+        var url = settingsService.GetBaseUrl();
         
-        // Remove trailing slash if present
-        if (url.EndsWith("/")) url = url.Substring(0, url.Length - 1);
-        
-        SetBaseUrl($"{url}:{port}/api/");
+        // Ensure trailing slash
+        SetBaseUrl(url.EndsWith("/") ? url : url + "/");
 
         System.Diagnostics.Debug.WriteLine($"[BaseApiService] Initialized Base URL: {_currentBaseUrl}");
     }

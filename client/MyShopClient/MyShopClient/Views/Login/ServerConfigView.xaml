@@ -190,35 +190,14 @@
                         <StackPanel Spacing="20">
                             <!-- Server URL -->
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Server URL" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <TextBox PlaceholderText="http://localhost" 
+                                <TextBlock Text="Base API URL" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                                <TextBox PlaceholderText="http://localhost:3000" 
                                          Text="{x:Bind ViewModel.ServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                          Padding="12" 
                                          CornerRadius="12"/>
                             </StackPanel>
 
-                            <!-- Server Port -->
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Server Port" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <NumberBox PlaceholderText="8888" 
-                                           Value="{x:Bind ViewModel.ServerPort, Mode=TwoWay}" 
-                                           Minimum="1"
-                                           Maximum="65535"
-                                           SpinButtonPlacementMode="Compact"
-                                           Padding="12"
-                                           CornerRadius="12"/>
-                            </StackPanel>
-
-                            <!-- Full URL Preview -->
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Full API URL" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <Border Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8" Padding="12">
-                                    <TextBlock Text="{x:Bind ViewModel.FullServerUrl, Mode=OneWay}" 
-                                               FontFamily="Consolas" 
-                                               Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                               TextWrapping="Wrap"/>
-                                </Border>
-                            </StackPanel>
+                            <!-- Full URL Preview (Removed) -->
 
                             <!-- Status Message -->
                             <TextBlock 
