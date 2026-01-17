@@ -14,10 +14,7 @@ public partial class ServerConfigViewModel : ViewModelBase
     private readonly AppSettingsService _appSettings;
 
     [ObservableProperty]
-    private string _serverUrl = "http://localhost";
-
-    [ObservableProperty]
-    private int _serverPort = 8888;
+    private string _serverUrl = "http://localhost:3000";
 
     [ObservableProperty]
     private bool _isTestingConnection;
@@ -32,9 +29,9 @@ public partial class ServerConfigViewModel : ViewModelBase
     private bool _isStatusSuccess;
 
     /// <summary>
-    /// Full URL for display (e.g., http://localhost:8888/api/)
+    /// Full URL for display
     /// </summary>
-    public string FullServerUrl => $"{ServerUrl.TrimEnd('/')}:{ServerPort}/api/";
+    public string FullServerUrl => ServerUrl.EndsWith("/") ? ServerUrl : ServerUrl + "/";
 
     public ServerConfigViewModel(AppSettingsService appSettings)
     {
@@ -44,16 +41,10 @@ public partial class ServerConfigViewModel : ViewModelBase
 
     private void LoadConfig()
     {
-        ServerUrl = _appSettings.GetServerUrl();
-        ServerPort = _appSettings.GetServerPort();
+        ServerUrl = _appSettings.GetBaseUrl();
     }
 
     partial void OnServerUrlChanged(string value)
-    {
-        OnPropertyChanged(nameof(FullServerUrl));
-    }
-
-    partial void OnServerPortChanged(int value)
     {
         OnPropertyChanged(nameof(FullServerUrl));
     }
@@ -106,7 +97,7 @@ public partial class ServerConfigViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
-            return (false, "Kết nối timeout. Vui lòng kiểm tra lại URL và Port.");
+            return (false, "Kết nối timeout. Vui lòng kiểm tra lại URL.");
         }
         catch (HttpRequestException ex)
         {
@@ -135,15 +126,7 @@ public partial class ServerConfigViewModel : ViewModelBase
                 return;
             }
 
-            if (ServerPort <= 0 || ServerPort > 65535)
-            {
-                StatusMessage = "Port phải từ 1 đến 65535.";
-                IsStatusSuccess = false;
-                return;
-            }
-
-            _appSettings.SaveServerUrl(ServerUrl);
-            _appSettings.SaveServerPort(ServerPort);
+            _appSettings.SaveBaseUrl(ServerUrl);
 
             // Update BaseApiService with new full URL
             BaseApiService.UpdateBaseUrl(FullServerUrl);
@@ -165,8 +148,7 @@ public partial class ServerConfigViewModel : ViewModelBase
     [RelayCommand]
     private void ClearUrl()
     {
-        ServerUrl = "http://localhost";
-        ServerPort = 8888;
+        ServerUrl = "http://localhost:3000";
         StatusMessage = string.Empty;
     }
 }

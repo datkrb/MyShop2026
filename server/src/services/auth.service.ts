@@ -1,6 +1,6 @@
 import userRepo from '../repositories/user.repo';
 import { comparePassword } from '../utils/hash';
-import { generateToken } from '../utils/jwt';
+import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { Messages } from '../constants/messages';
 
 export class AuthService {
@@ -17,17 +17,48 @@ export class AuthService {
       throw new Error(Messages.INVALID_CREDENTIALS);
     }
 
-    const token = generateToken({
+    const payload = {
       userId: user.id,
       username: user.username,
       role: user.role,
-    });
+    };
+
+    const accessToken = generateToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
     return {
-      token,
+      accessToken,
+      refreshToken,
       role: user.role,
-      expiresIn: 3600, // 1 hour in seconds
+      expiresIn: 3600, // 1 hour
     };
+  }
+
+  async refreshToken(token: string) {
+    try {
+      const decoded = verifyRefreshToken(token);
+      
+      // Optional: Check if user exists (in case user was deleted)
+      const user = await userRepo.findById(decoded.userId);
+      if (!user) {
+        throw new Error(Messages.USER_NOT_FOUND);
+      }
+
+      const payload = {
+        userId: user.id,
+        username: user.username,
+        role: user.role,
+      };
+
+      const accessToken = generateToken(payload);
+
+      return {
+        accessToken,
+        expiresIn: 3600,
+      };
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
   }
 
   async getCurrentUser(userId: number) {

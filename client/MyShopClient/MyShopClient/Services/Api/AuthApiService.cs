@@ -20,9 +20,24 @@ public class AuthApiService : BaseApiService
 
         var response = await PostAsync<LoginResponse>("auth/login", request);
         
-        if (response != null && !string.IsNullOrEmpty(response.Token))
+        if (response != null && !string.IsNullOrEmpty(response.AccessToken))
         {
-            SetAuthToken(response.Token);
+            SetAuthToken(response.AccessToken);
+        }
+
+        return response;
+    }
+
+    public async Task<LoginResponse?> RefreshTokenAsync(string refreshToken)
+    {
+        var response = await PostAsync<LoginResponse>("auth/refresh-token", new { refreshToken });
+        
+        if (response != null && !string.IsNullOrEmpty(response.AccessToken))
+        {
+             // Note: Refresh API returns new AccessToken. 
+             // If backend returned new RefreshToken, we would update it here too.
+             // Based on our implementation plan, backend returns { accessToken, expiresIn } but using LoginResponse structure.
+             SetAuthToken(response.AccessToken);
         }
 
         return response;
@@ -40,7 +55,7 @@ public class AuthApiService : BaseApiService
             await PostAsync<object>("auth/logout", new { });
             
             // Clear token
-            _httpClient.DefaultRequestHeaders.Authorization = null;
+            ClearToken();
             
             return true;
         }

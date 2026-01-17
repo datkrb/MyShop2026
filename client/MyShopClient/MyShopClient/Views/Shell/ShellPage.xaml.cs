@@ -53,21 +53,6 @@ public sealed partial class ShellPage : Page
         }
     }
 
-    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-    {
-        if (args.InvokedItemContainer != null)
-        {
-            var tag = args.InvokedItemContainer.Tag?.ToString();
-            
-            // Handle Logout separately
-            if (tag == "Logout")
-            {
-                ViewModel.LogoutCommand.Execute(null);
-                return;
-            }
-        }
-    }
-
     private void NavigateToPage(string? tag)
     {
         if (string.IsNullOrEmpty(tag)) return;
@@ -78,11 +63,9 @@ public sealed partial class ShellPage : Page
             "Products" => typeof(Views.Products.ProductsView),
             "Orders" => typeof(Views.Orders.OrdersView),
             "Customers" => typeof(Views.Customers.CustomersView),
-            "Statistics" => typeof(Views.Reports.ReportPage),
-            // "Invoices" => typeof(Views.Invoices.InvoicesView),
+            "Reports" => typeof(Views.Reports.ReportPage),
             "Settings" => typeof(Views.Settings.SettingsView),
             "Promotions" => typeof(Views.Promotions.PromotionPage),
-            // "Help" => typeof(Views.Help.HelpView),
             _ => (Type?)null
         };
 
@@ -114,13 +97,5 @@ public sealed partial class ShellPage : Page
         {
             NavView.SelectedItem = NavView.MenuItems[0];
         }
-    }
-
-    /// <summary>
-    /// Handler for Logout button tap - calls ViewModel LogoutCommand
-    /// </summary>
-    private void LogoutButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
-    {
-        ViewModel.LogoutCommand.Execute(null);
     }
 }
