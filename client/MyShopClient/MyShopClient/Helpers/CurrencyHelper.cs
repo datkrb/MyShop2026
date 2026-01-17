@@ -19,7 +19,7 @@ public static class CurrencyHelper
     {
         // Use Vietnamese culture for proper thousand separator (dot)
         // N0 = Number format with 0 decimal places
-        return $"{amount.ToString("N0", VietnameseCulture)} v";
+        return $"{amount.ToString("N0", VietnameseCulture)} đ";
     }
 
     /// <summary>
