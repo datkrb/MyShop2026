@@ -33,6 +33,19 @@ export class AuthController {
     // Server-side can implement token blacklist if needed
     sendSuccess(res, { message: 'Logged out successfully' });
   }
+  async refreshToken(req: AuthRequest, res: Response) {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) {
+        return sendError(res, 'BAD_REQUEST', 'Refresh token is required', 400);
+      }
+
+      const result = await authService.refreshToken(refreshToken);
+      sendSuccess(res, result);
+    } catch (error: any) {
+      sendError(res, 'UNAUTHORIZED', error.message, 401);
+    }
+  }
 }
 
 export default new AuthController();

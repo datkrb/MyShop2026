@@ -8,97 +8,82 @@ namespace MyShopClient.Services.Auth;
 /// </summary>
 public class CredentialService
 {
-    private const string ResourceName = "MyShopClient";
+    private const string ResourceName = "MyShopClient_Tokens";
+    private const string AccessTokenKey = "AccessToken";
+    private const string RefreshTokenKey = "RefreshToken";
 
     /// <summary>
-    /// Lưu credentials vào PasswordVault (mã hóa tự động)
+    /// Lưu tokens bảo mật vào PasswordVault
     /// </summary>
-    public void SaveCredentials(string username, string password)
+    public void SaveTokens(string accessToken, string refreshToken)
     {
         try
         {
-            // Xóa credentials cũ trước
-            ClearCredentials();
-
             var vault = new PasswordVault();
-            var credential = new PasswordCredential(ResourceName, username, password);
-            vault.Add(credential);
             
-            System.Diagnostics.Debug.WriteLine($"Credentials saved for user: {username}");
+            // Xóa cũ trước khi lưu mới
+            ClearTokens();
+
+            // Lưu Access Token
+            vault.Add(new PasswordCredential(ResourceName, AccessTokenKey, accessToken));
+            // Lưu Refresh Token
+            vault.Add(new PasswordCredential(ResourceName, RefreshTokenKey, refreshToken));
+            
+            System.Diagnostics.Debug.WriteLine("Tokens saved successfully");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error saving credentials: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error saving tokens: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Lấy credentials đã lưu từ PasswordVault
+    /// Lấy Access và Refresh Token đã lưu
     /// </summary>
-    /// <returns>Tuple (username, password) hoặc null nếu không có</returns>
-    public (string Username, string Password)? GetCredentials()
+    public (string AccessToken, string RefreshToken)? GetTokens()
     {
         try
         {
             var vault = new PasswordVault();
             var credentials = vault.FindAllByResource(ResourceName);
 
-            if (credentials.Count > 0)
+            string? accessToken = null;
+            string? refreshToken = null;
+
+            foreach (var cred in credentials)
             {
-                var credential = credentials[0];
-                credential.RetrievePassword(); // Cần gọi để lấy password
-                
-                System.Diagnostics.Debug.WriteLine($"Credentials found for user: {credential.UserName}");
-                return (credential.UserName, credential.Password);
+                cred.RetrievePassword();
+                if (cred.UserName == AccessTokenKey) accessToken = cred.Password;
+                if (cred.UserName == RefreshTokenKey) refreshToken = cred.Password;
+            }
+
+            if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+            {
+                return (accessToken, refreshToken);
             }
         }
-        catch (Exception ex)
-        {
-            // FindAllByResource throws exception if no credentials found
-            System.Diagnostics.Debug.WriteLine($"No credentials found: {ex.Message}");
-        }
+        catch { }
 
         return null;
     }
 
     /// <summary>
-    /// Xóa tất cả credentials đã lưu
+    /// Xóa toàn bộ token
     /// </summary>
-    public void ClearCredentials()
+    public void ClearTokens()
     {
         try
         {
             var vault = new PasswordVault();
             var credentials = vault.FindAllByResource(ResourceName);
-
-            foreach (var credential in credentials)
-            {
-                vault.Remove(credential);
-            }
-            
-            System.Diagnostics.Debug.WriteLine("Credentials cleared");
+            foreach (var c in credentials) vault.Remove(c);
         }
-        catch (Exception ex)
-        {
-            // Ignore if no credentials to clear
-            System.Diagnostics.Debug.WriteLine($"No credentials to clear: {ex.Message}");
-        }
+        catch { }
     }
 
-    /// <summary>
-    /// Kiểm tra xem có credentials đã lưu không
-    /// </summary>
-    public bool HasSavedCredentials()
+    public bool HasSavedTokens()
     {
-        try
-        {
-            var vault = new PasswordVault();
-            var credentials = vault.FindAllByResource(ResourceName);
-            return credentials.Count > 0;
-        }
-        catch
-        {
-            return false;
-        }
+        var tokens = GetTokens();
+        return tokens != null;
     }
 }

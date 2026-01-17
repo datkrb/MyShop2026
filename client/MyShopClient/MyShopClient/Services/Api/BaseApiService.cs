@@ -152,22 +152,111 @@ public abstract class BaseApiService
         throw ex;
     }
 
+    private async Task<bool> TryRefreshTokenAndRetryAsync()
+    {
+        try
+        {
+            // Resolve CredentialService via Service Locator to avoid breaking constructor signatures
+            var credentialService = Microsoft.UI.Xaml.Application.Current is MyShopClient.App app 
+                ? Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<Services.Auth.CredentialService>(app.Services) 
+                : null;
+
+            if (credentialService == null) return false;
+
+            var tokens = credentialService.GetTokens();
+            if (tokens == null) return false;
+
+            // Call Refresh Endpoint manually to avoid circular dependency with AuthApiService
+            var refreshRequest = new { refreshToken = tokens.Value.RefreshToken };
+            var json = JsonSerializer.Serialize(refreshRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            var fullUrl = _currentBaseUrl + "auth/refresh-token";
+            var response = await _httpClient.PostAsync(fullUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var loginResponse = JsonSerializer.Deserialize<ApiResponse<Models.LoginResponse>>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                if (loginResponse != null && loginResponse.Success && loginResponse.Data != null)
+                {
+                    var newAccessToken = loginResponse.Data.AccessToken;
+                    // Note: If backend rotates RefreshToken, update it here too. Currently it just returns AccessToken.
+                    
+                    credentialService.SaveTokens(newAccessToken, tokens.Value.RefreshToken);
+                    SetAuthToken(newAccessToken);
+                    ApplyCurrentToken();
+                    
+                    System.Diagnostics.Debug.WriteLine("Token refreshed successfully.");
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Token refresh failed: {ex.Message}");
+        }
+
+        return false;
+    }
+
+    private void HandleSessionExpired()
+    {
+        // Force Logout
+        ClearAuthToken();
+        
+        // Clear saved tokens via CredentialService
+        if (Microsoft.UI.Xaml.Application.Current is MyShopClient.App app)
+        {
+             var credentialService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<Services.Auth.CredentialService>(app.Services);
+             credentialService?.ClearTokens();
+
+             // Navigate to Login using DispatcherQueue to ensure UI thread access
+             if (app.MainWindow != null)
+             {
+                 app.MainWindow.DispatcherQueue.TryEnqueue(() =>
+                 {
+                     app.RootFrame?.Navigate(typeof(Views.Login.LoginView));
+                 });
+             }
+        }
+        
+        System.Diagnostics.Debug.WriteLine("Session expired. Redirecting to Login.");
+    }
+
     protected async Task<T?> GetAsync<T>(string endpoint)
     {
         try
         {
-            // Always apply current token before request
             ApplyCurrentToken();
-            
-            // Use full URL with current base URL (allows dynamic URL changes)
             var fullUrl = _currentBaseUrl + endpoint;
             System.Diagnostics.Debug.WriteLine($"GET {fullUrl}");
             
             var response = await _httpClient.GetAsync(fullUrl);
+            
+            // Handle 401
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                System.Diagnostics.Debug.WriteLine("401 Unauthorized - Attempting Refresh...");
+                if (await TryRefreshTokenAndRetryAsync())
+                {
+                    // Retry
+                    response = await _httpClient.GetAsync(fullUrl);
+                }
+                else
+                {
+                    HandleSessionExpired();
+                    return default;
+                }
+            }
+
             var content = await response.Content.ReadAsStringAsync();
-            
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {content}");
-            
             return ParseResponse<T>(content);
         }
         catch (Exception ex)
@@ -181,25 +270,36 @@ public abstract class BaseApiService
     {
         try
         {
-            // Always apply current token before request
             ApplyCurrentToken();
-            
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
-            // Use full URL with current base URL (allows dynamic URL changes)
             var fullUrl = _currentBaseUrl + endpoint;
             System.Diagnostics.Debug.WriteLine($"POST {fullUrl}");
-            System.Diagnostics.Debug.WriteLine($"Request Body: {json}");
             
             var response = await _httpClient.PostAsync(fullUrl, content);
+
+             // Handle 401
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                System.Diagnostics.Debug.WriteLine("401 Unauthorized - Attempting Refresh...");
+                if (await TryRefreshTokenAndRetryAsync())
+                {
+                    // Re-create content and Retry
+                    content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync(fullUrl, content);
+                }
+                 else
+                {
+                    HandleSessionExpired();
+                    return default;
+                }
+            }
+
             var responseContent = await response.Content.ReadAsStringAsync();
-            
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {responseContent}");
-            
             return ParseResponse<T>(responseContent);
         }
         catch (Exception ex)
@@ -213,25 +313,36 @@ public abstract class BaseApiService
     {
         try
         {
-            // Always apply current token before request
             ApplyCurrentToken();
-            
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
-            // Use full URL with current base URL (allows dynamic URL changes)
             var fullUrl = _currentBaseUrl + endpoint;
             System.Diagnostics.Debug.WriteLine($"PUT {fullUrl}");
-            System.Diagnostics.Debug.WriteLine($"Request Body: {json}");
             
             var response = await _httpClient.PutAsync(fullUrl, content);
+
+             // Handle 401
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                System.Diagnostics.Debug.WriteLine("401 Unauthorized - Attempting Refresh...");
+                if (await TryRefreshTokenAndRetryAsync())
+                {
+                    // Re-create content and Retry
+                    content = new StringContent(json, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PutAsync(fullUrl, content);
+                }
+                 else
+                {
+                    HandleSessionExpired();
+                    return default;
+                }
+            }
+
             var responseContent = await response.Content.ReadAsStringAsync();
-            
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {responseContent}");
-            
             return ParseResponse<T>(responseContent);
         }
         catch (Exception ex)
@@ -245,16 +356,29 @@ public abstract class BaseApiService
     {
         try
         {
-            // Always apply current token before request
             ApplyCurrentToken();
-            
-            // Use full URL with current base URL (allows dynamic URL changes)
             var fullUrl = _currentBaseUrl + endpoint;
             System.Diagnostics.Debug.WriteLine($"DELETE {fullUrl}");
             
             var response = await _httpClient.DeleteAsync(fullUrl);
+
+             // Handle 401
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                System.Diagnostics.Debug.WriteLine("401 Unauthorized - Attempting Refresh...");
+                if (await TryRefreshTokenAndRetryAsync())
+                {
+                    // Retry
+                    response = await _httpClient.DeleteAsync(fullUrl);
+                }
+                 else
+                {
+                    HandleSessionExpired();
+                    return false;
+                }
+            }
+
             var content = await response.Content.ReadAsStringAsync();
-            
             System.Diagnostics.Debug.WriteLine($"Response [{response.StatusCode}]: {content}");
             
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<object>>(content, new JsonSerializerOptions
