@@ -27,7 +27,7 @@ public class Promotion
     // Helper properties for display
     public string DiscountDisplay => DiscountType == "PERCENTAGE" 
         ? $"{DiscountValue}%" 
-        : $"{DiscountValue:N0} đ";
+        : Helpers.CurrencyHelper.FormatVND((decimal)DiscountValue);
 
     public string StatusDisplay 
     {

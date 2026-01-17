@@ -22,11 +22,27 @@ public sealed partial class AddProductView : Page
         this.InitializeComponent();
         _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
         ViewModel = App.Current.Services.GetService<AddProductViewModel>() 
-            ?? new AddProductViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>());
+            ?? new AddProductViewModel(
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Api.ProductApiService>(),
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Local.ILocalDraftService>()
+            );
         this.DataContext = this;
         
-        // Subscribe to dialog close event for navigation
+        // Subscribe to events for MVVM notifications
         ViewModel.DialogCloseRequested += ViewModel_DialogCloseRequested;
+        ViewModel.NotificationRequested += ViewModel_NotificationRequested;
+    }
+
+    private void ViewModel_NotificationRequested(string message, bool isError)
+    {
+        if (isError)
+        {
+            Notification.ShowError(message);
+        }
+        else
+        {
+            Notification.ShowSuccess(message);
+        }
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -37,6 +53,11 @@ public sealed partial class AddProductView : Page
         if (e.Parameter is int productId && productId > 0)
         {
             await ViewModel.LoadProductAsync(productId);
+        }
+        else
+        {
+            // Create mode - check for draft
+            await ViewModel.CheckForDraftAsync();
         }
     }
 
@@ -57,18 +78,17 @@ public sealed partial class AddProductView : Page
         _navigationService.GoBack();
     }
 
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    {
+        _navigationService.GoBack();
+    }
+
     private async void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        // Trigger save command
         if (ViewModel.SaveCommand.CanExecute(null))
         {
             await ViewModel.SaveCommand.ExecuteAsync(null);
         }
-    }
-
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
-    {
-        _navigationService.GoBack();
     }
 
     private void DropZone_DragOver(object sender, DragEventArgs e)

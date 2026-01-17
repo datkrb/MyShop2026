@@ -45,8 +45,7 @@ public partial class OrdersViewModel : ViewModelBase
     private string _selectedOrderStatus = "All";
 
     // Stats
-    [ObservableProperty]
-    private int _draftCount;
+
 
     [ObservableProperty]
     private int _pendingCount;
@@ -77,7 +76,7 @@ public partial class OrdersViewModel : ViewModelBase
 
     public ObservableCollection<string> OrderStatuses { get; } = new()
     {
-        "All", "DRAFT", "PENDING", "PAID", "CANCELLED"
+        "All", "PENDING", "PAID", "CANCELLED"
     };
 
     public ObservableCollection<OrderViewModel> FilteredOrders { get; } = new();
@@ -139,7 +138,6 @@ public partial class OrdersViewModel : ViewModelBase
                 }
 
                 // Update stats (simplified - would need separate API for accurate counts)
-                DraftCount = FilteredOrders.Count(o => o.OrderStatus == "DRAFT");
                 PendingCount = FilteredOrders.Count(o => o.OrderStatus == "PENDING");
                 PaidCount = FilteredOrders.Count(o => o.OrderStatus == "PAID");
                 CancelledCount = FilteredOrders.Count(o => o.OrderStatus == "CANCELLED");
@@ -370,7 +368,6 @@ public partial class OrderViewModel : ObservableObject
     // Computed properties for status styling
     public string OrderStatusBackground => OrderStatus switch
     {
-        "DRAFT" => "#F3F4F6",
         "PENDING" => "#FEF3C7",
         "PAID" => "#DCFCE7",
         "CANCELLED" => "#FEE2E2",
@@ -387,11 +384,10 @@ public partial class OrderViewModel : ObservableObject
     };
 
     public string FormattedDate => OrderDate.ToString("dd/MM/yyyy");
-    public string FormattedAmount => $"{Amount:N0}đ";
+    public string FormattedAmount => Helpers.CurrencyHelper.FormatVND(Amount);
     
     public string DisplayStatus => OrderStatus switch
     {
-        "DRAFT" => "Draft",
         "PENDING" => "Pending",
         "PAID" => "Paid",
         "CANCELLED" => "Cancelled",

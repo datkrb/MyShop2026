@@ -16,6 +16,7 @@ interface ProductFilters {
   categoryIds?: number[];
   skuSearch?: string;
   skuMode?: 'exact' | 'prefix' | 'contains';
+  inStock?: boolean;
 }
 
 export class ProductRepository {
@@ -36,6 +37,7 @@ export class ProductRepository {
       categoryIds,
       skuSearch,
       skuMode = 'contains',
+      inStock
     } = filters;
 
     const skip = (page - 1) * size;
@@ -71,7 +73,7 @@ export class ProductRepository {
       where.id = id;
     }
 
-    // Stock status filter
+    // Stock status filter (advanced)
     if (stockStatus && stockStatus !== 'all') {
       switch (stockStatus) {
         case 'inStock':
@@ -84,6 +86,11 @@ export class ProductRepository {
           where.stock = { lte: 0 };
           break;
       }
+    }
+
+    // Simple inStock filter (legacy)
+    if (inStock && !stockStatus) {
+      where.stock = { gt: 0 };
     }
 
     // Date range filter
@@ -136,8 +143,8 @@ export class ProductRepository {
     };
   }
 
-  async findById(id: number) {
-    return prisma.product.findUnique({
+  async findById(id: number, tx: any = prisma) {
+    return tx.product.findUnique({
       where: { id },
       include: {
         category: true,
@@ -165,6 +172,7 @@ export class ProductRepository {
       take: limit,
       include: {
         category: true,
+        images: true,
       },
     });
   }
@@ -173,6 +181,7 @@ export class ProductRepository {
     const products = await prisma.product.findMany({
       include: {
         category: true,
+        images: true,
         orderItems: {
           where: {
             order: {
@@ -244,8 +253,8 @@ export class ProductRepository {
     });
   }
 
-  async updateStock(id: number, quantity: number) {
-    return prisma.product.update({
+  async updateStock(id: number, quantity: number, tx: any = prisma) {
+    return tx.product.update({
       where: { id },
       data: {
         stock: {

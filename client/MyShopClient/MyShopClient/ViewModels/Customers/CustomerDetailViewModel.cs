@@ -156,7 +156,7 @@ public class CustomerOrderViewModel
     public string Status { get; set; } = string.Empty;
 
     public string FormattedDate => Date.ToString("MMM dd, yyyy");
-    public string FormattedAmount => $"{Amount:N0}đ";
+    public string FormattedAmount => Helpers.CurrencyHelper.FormatVND(Amount);
 
     public SolidColorBrush StatusBackground => Status switch
     {

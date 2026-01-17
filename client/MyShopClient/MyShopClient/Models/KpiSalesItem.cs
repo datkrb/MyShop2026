@@ -14,8 +14,8 @@ public class KpiSalesItem
     public int CommissionRate { get; set; } // 3, 5, or 7 percent
 
     // Formatted display properties with units
-    public string RevenueDisplay => $"{Math.Round(Revenue):N0} đ";
-    public string CommissionDisplay => $"{Math.Round(Commission):N0} đ";
+    public string RevenueDisplay => Helpers.CurrencyHelper.FormatVND(Revenue);
+    public string CommissionDisplay => Helpers.CurrencyHelper.FormatVND(Commission);
     public string CommissionRateDisplay => $"{CommissionRate}%";
 }
 

@@ -56,7 +56,7 @@ public abstract class BaseApiService
         // Remove trailing slash if present
         if (url.EndsWith("/")) url = url.Substring(0, url.Length - 1);
         
-        SetBaseUrl($"{url}:{port}/api/v1/");
+        SetBaseUrl($"{url}:{port}/api/");
 
         System.Diagnostics.Debug.WriteLine($"[BaseApiService] Initialized Base URL: {_currentBaseUrl}");
     }

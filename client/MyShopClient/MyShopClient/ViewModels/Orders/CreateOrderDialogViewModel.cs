@@ -70,9 +70,9 @@ public partial class CreateOrderDialogViewModel : ObservableObject
     public decimal Tax => Subtotal * 0.1m;
     public decimal Total => Math.Max(0, Subtotal + Tax - DiscountAmount);
 
-    public string FormattedSubtotal => $"${Subtotal:N2}";
-    public string FormattedTax => $"${Tax:N2}";
-    public string FormattedTotal => $"${Total:N2}";
+    public string FormattedSubtotal => Helpers.CurrencyHelper.FormatVND(Subtotal);
+    public string FormattedTax => Helpers.CurrencyHelper.FormatVND(Tax);
+    public string FormattedTotal => Helpers.CurrencyHelper.FormatVND(Total);
 
     // Services
     private readonly Services.Api.PromotionApiService? _promotionService;
@@ -197,7 +197,7 @@ public partial class CreateOrderDialogViewModel : ObservableObject
         }
     }
 
-    public string FormattedDiscount => $"-${DiscountAmount:N2}";
+    public string FormattedDiscount => $"-{Helpers.CurrencyHelper.FormatVND(DiscountAmount)}";
 
     [RelayCommand]
     private async Task ApplyPromotion()
@@ -335,7 +335,7 @@ public class ProductSelectionItem
     public decimal Price { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
 
-    public override string ToString() => $"{Name} - ${Price:N2}";
+    public override string ToString() => $"{Name} - {Helpers.CurrencyHelper.FormatVND(Price)}";
 }
 
 /// <summary>
@@ -360,6 +360,6 @@ public partial class CreateOrderItemViewModel : ObservableObject
     [ObservableProperty]
     private decimal _totalPrice;
 
-    public string FormattedUnitPrice => $"${UnitPrice:N2}";
-    public string FormattedTotalPrice => $"${TotalPrice:N2}";
+    public string FormattedUnitPrice => Helpers.CurrencyHelper.FormatVND(UnitPrice);
+    public string FormattedTotalPrice => Helpers.CurrencyHelper.FormatVND(TotalPrice);
 }

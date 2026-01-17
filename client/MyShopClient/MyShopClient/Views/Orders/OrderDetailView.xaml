@@ -299,7 +299,12 @@
                                         <!-- Product Info -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind ProductName}" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{x:Bind FormattedUnitPrice, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{x:Bind FormattedUnitPrice, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                                <TextBlock Text="{x:Bind RemainingStock, Mode=OneWay, Converter={StaticResource StringFormatConverter}, ConverterParameter='(Kho: {0})'}" 
+                                                           FontSize="12" 
+                                                           Foreground="{ThemeResource SystemAccentColorLight2}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                         
                                         <!-- Quantity (Read Only) -->
@@ -317,6 +322,7 @@
                                         <NumberBox 
                                             Grid.Column="2"
                                             Value="{x:Bind Quantity, Mode=TwoWay}"
+                                            Maximum="{x:Bind MaxQuantity, Mode=OneWay}"
                                             Minimum="1"
                                             SpinButtonPlacementMode="Compact"
                                             Width="90"

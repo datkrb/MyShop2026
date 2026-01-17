@@ -5,6 +5,7 @@ using MyShopClient.Services.Api;
 using MyShopClient.Services.Navigation;
 using MyShopClient.ViewModels.Base;
 using System.Threading.Tasks;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.ObjectModel;
@@ -26,10 +27,10 @@ public partial class ProductDetailViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isLoading;
-    
+
     [ObservableProperty]
     private ObservableCollection<Category> _categories = new();
-    
+
     [ObservableProperty]
     private Category? _selectedCategory;
 
@@ -42,8 +43,8 @@ public partial class ProductDetailViewModel : ViewModelBase
     [ObservableProperty]
     private int _currentImageIndex = 0;
 
-    public string? CurrentImage => Product?.Images?.Count > 0 && CurrentImageIndex < Product.Images.Count 
-        ? Product.Images[CurrentImageIndex].Url 
+    public string? CurrentImage => Product?.Images?.Count > 0 && CurrentImageIndex < Product.Images.Count
+        ? Product.Images[CurrentImageIndex].Url
         : null;
 
     public bool HasMultipleImages => (Product?.Images?.Count ?? 0) > 1;
@@ -51,14 +52,16 @@ public partial class ProductDetailViewModel : ViewModelBase
     public string ImageCounterText => $"{CurrentImageIndex + 1} / {Product?.Images?.Count ?? 0}";
 
     // Formatted display properties
-    public string FormattedImportPrice => Product?.ImportPrice.ToString("N0") + " VND" ?? "0 VND";
-    public string FormattedSalePrice => Product?.SalePrice.ToString("N0") + " VND" ?? "0 VND";
+    public string FormattedImportPrice => Helpers.CurrencyHelper.FormatVND(Product?.ImportPrice ?? 0);
+    public string FormattedSalePrice => Helpers.CurrencyHelper.FormatVND(Product?.SalePrice ?? 0);
 
     public ProductDetailViewModel(ProductApiService productApiService, INavigationService navigationService)
     {
         _productApiService = productApiService;
         _navigationService = navigationService;
     }
+
+
 
     [RelayCommand]
     public void NextImage()
@@ -115,17 +118,20 @@ public partial class ProductDetailViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadCategories() 
+
+
+
+    private async Task LoadCategories()
     {
-         var cats = await _productApiService.GetCategoriesAsync();
-         if(cats != null)
-         {
-             Categories = new ObservableCollection<Category>(cats);
-             if (Product?.CategoryId != null)
-             {
-                 SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
-             }
-         }
+        var cats = await _productApiService.GetCategoriesAsync();
+        if (cats != null)
+        {
+            Categories = new ObservableCollection<Category>(cats);
+            if (Product?.CategoryId != null)
+            {
+                SelectedCategory = Categories.FirstOrDefault(c => c.Id == Product.CategoryId);
+            }
+        }
     }
 
     [RelayCommand]
@@ -148,16 +154,16 @@ public partial class ProductDetailViewModel : ViewModelBase
         var currentCount = (Product?.Images?.Count ?? 0) + SelectedImagePaths.Count;
         if (currentCount >= 10)
         {
-             ContentDialog limitDialog = new ContentDialog
-             {
-                 XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-                 Title = "Limit Reached",
-                 Content = "You can only add up to 10 images per product.",
-                 CloseButtonText = "OK",
-                 DefaultButton = ContentDialogButton.Close
-             };
-             await limitDialog.ShowAsync();
-             return;
+            ContentDialog limitDialog = new ContentDialog
+            {
+                XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                Title = "Limit Reached",
+                Content = "You can only add up to 10 images per product.",
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close
+            };
+            await limitDialog.ShowAsync();
+            return;
         }
 
         var picker = new Windows.Storage.Pickers.FileOpenPicker();
@@ -179,16 +185,16 @@ public partial class ProductDetailViewModel : ViewModelBase
             {
                 if (currentCount + addedCount >= 10)
                 {
-                     ContentDialog limitDialog = new ContentDialog
-                     {
-                         XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-                         Title = "Limit Reached",
-                         Content = "You have reached the maximum of 10 images. Some images were not added.",
-                         CloseButtonText = "OK",
-                         DefaultButton = ContentDialogButton.Close
-                     };
-                     await limitDialog.ShowAsync();
-                     break;
+                    ContentDialog limitDialog = new ContentDialog
+                    {
+                        XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                        Title = "Limit Reached",
+                        Content = "You have reached the maximum of 10 images. Some images were not added.",
+                        CloseButtonText = "OK",
+                        DefaultButton = ContentDialogButton.Close
+                    };
+                    await limitDialog.ShowAsync();
+                    break;
                 }
 
                 if (!SelectedImagePaths.Contains(file.Path))
@@ -228,7 +234,7 @@ public partial class ProductDetailViewModel : ViewModelBase
             var success = await _productApiService.DeleteProductImageAsync(imageId);
             if (success)
             {
-               await LoadProduct();
+                await LoadProduct();
             }
         }
     }
@@ -237,11 +243,11 @@ public partial class ProductDetailViewModel : ViewModelBase
     public async Task Save()
     {
         if (Product == null) return;
-        
+
         IsLoading = true;
         try
         {
-            if (SelectedCategory != null) 
+            if (SelectedCategory != null)
             {
                 Product.CategoryId = SelectedCategory.Id;
             }
@@ -272,17 +278,17 @@ public partial class ProductDetailViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-             System.Diagnostics.Debug.WriteLine($"Save Error: {ex.Message}");
-             
-             ContentDialog errorDialog = new ContentDialog
-             {
-                 XamlRoot = App.Current.MainWindow.Content.XamlRoot,
-                 Title = "Save Error",
-                 Content = $"An error occurred while saving: {ex.Message}",
-                 CloseButtonText = "OK",
-                 DefaultButton = ContentDialogButton.Close
-             };
-             await errorDialog.ShowAsync();
+            System.Diagnostics.Debug.WriteLine($"Save Error: {ex.Message}");
+
+            ContentDialog errorDialog = new ContentDialog
+            {
+                XamlRoot = App.Current.MainWindow.Content.XamlRoot,
+                Title = "Save Error",
+                Content = $"An error occurred while saving: {ex.Message}",
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close
+            };
+            await errorDialog.ShowAsync();
         }
         finally
         {
@@ -315,7 +321,7 @@ public partial class ProductDetailViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-             System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error: {ex.Message}");
         }
         finally
         {
@@ -348,10 +354,12 @@ public partial class ProductDetailViewModel : ViewModelBase
             }
         }
     }
-    
+
     [RelayCommand]
     public void GoBack()
     {
         _navigationService.GoBack();
     }
+
 }
+

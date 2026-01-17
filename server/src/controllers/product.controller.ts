@@ -30,6 +30,7 @@ export class ProductController {
           : undefined,
         skuSearch: req.query.skuSearch as string,
         skuMode: (req.query.skuMode as string) || 'contains',
+        inStock: req.query.inStock === 'true',
       };
 
       const userRole = req.user?.role;
