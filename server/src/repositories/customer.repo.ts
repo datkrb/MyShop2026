@@ -4,12 +4,18 @@ interface CustomerFilters {
   page?: number;
   size?: number;
   keyword?: string;
+  // Advanced search filters
+  hasOrders?: boolean;
+  createdFrom?: string;
+  createdTo?: string;
+  sort?: string;
 }
 
 export class CustomerRepository {
   async findAll(filters: CustomerFilters = {}) {
-    const { page = 1, size = 10, keyword } = filters;
+    const { page = 1, size = 10, keyword, hasOrders, createdFrom, createdTo, sort = 'name,asc' } = filters;
     const skip = (page - 1) * size;
+    const [sortField, sortOrder] = sort.split(',');
 
     const where: any = {};
 
@@ -21,12 +27,28 @@ export class CustomerRepository {
       ];
     }
 
+    // Has orders filter
+    if (hasOrders !== undefined) {
+      if (hasOrders) {
+        where.orders = { some: {} };
+      } else {
+        where.orders = { none: {} };
+      }
+    }
+
+    // Date range filter
+    if (createdFrom || createdTo) {
+      where.createdAt = {};
+      if (createdFrom) where.createdAt.gte = new Date(createdFrom);
+      if (createdTo) where.createdAt.lte = new Date(createdTo);
+    }
+
     const [data, total] = await Promise.all([
       prisma.customer.findMany({
         where,
         skip,
         take: size,
-        orderBy: { name: 'asc' },
+        orderBy: { [sortField]: sortOrder as 'asc' | 'desc' },
       }),
       prisma.customer.count({ where }),
     ]);

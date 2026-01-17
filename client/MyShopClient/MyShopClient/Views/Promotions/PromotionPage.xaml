@@ -342,13 +342,18 @@
                                 </Button.Flyout>
                             </Button>
 
-                            <!-- Apply Button (Large screens) -->
-                            <Button 
-                                Grid.Column="2"
-                                Content="Apply" 
-                                Command="{x:Bind ViewModel.ApplyFiltersCommand}" 
-                                Style="{ThemeResource AccentButtonStyle}" 
-                                Padding="16,8"/>
+                            <!-- Action Buttons (Large screens) -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                <Button 
+                                    Content="Apply" 
+                                    Command="{x:Bind ViewModel.ApplyFiltersCommand}" 
+                                    Style="{StaticResource AccentButtonStyle}" 
+                                    Padding="16,8"/>
+                                <Button 
+                                    Content="Clear" 
+                                    Command="{x:Bind ViewModel.ClearFiltersCommand}" 
+                                    Padding="16,8"/>
+                            </StackPanel>
                         </Grid>
 
                         <!-- Promotions List -->

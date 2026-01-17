@@ -21,6 +21,15 @@ export class ProductController {
           ? parseInt(req.query.categoryId as string)
           : undefined,
         id: req.query.id ? parseInt(req.query.id as string) : undefined,
+        // Advanced search filters
+        stockStatus: req.query.stockStatus as string,
+        createdFrom: req.query.createdFrom as string,
+        createdTo: req.query.createdTo as string,
+        categoryIds: req.query.categoryIds
+          ? (req.query.categoryIds as string).split(',').map(Number)
+          : undefined,
+        skuSearch: req.query.skuSearch as string,
+        skuMode: (req.query.skuMode as string) || 'contains',
       };
 
       const userRole = req.user?.role;

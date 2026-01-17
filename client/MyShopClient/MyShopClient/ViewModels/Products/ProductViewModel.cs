@@ -57,6 +57,37 @@ public partial class ProductViewModel : ViewModelBase
     [ObservableProperty]
     private int? _searchId;
 
+    // Advanced Search Properties
+    [ObservableProperty]
+    private string _stockStatus = "all";
+
+    [ObservableProperty]
+    private DateTimeOffset? _createdFrom;
+
+    [ObservableProperty]
+    private DateTimeOffset? _createdTo;
+
+    [ObservableProperty]
+    private string _skuSearch = string.Empty;
+
+    [ObservableProperty]
+    private string _skuMode = "contains";
+
+    public List<string> StockStatusOptions { get; } = new List<string>
+    {
+        "all",
+        "inStock",
+        "lowStock",
+        "outOfStock"
+    };
+
+    public List<string> SkuModeOptions { get; } = new List<string>
+    {
+        "contains",
+        "prefix",
+        "exact"
+    };
+
     // Sort Configuration
     public List<string> SortOptions { get; } = new List<string>
     {
@@ -242,8 +273,16 @@ public partial class ProductViewModel : ViewModelBase
             decimal? minVal = MinPrice.HasValue ? (decimal?)MinPrice.Value : null;
             decimal? maxVal = MaxPrice.HasValue ? (decimal?)MaxPrice.Value : null;
 
-            // Load Products
-            var result = await _productApiService.GetProductsAsync(CurrentPage, PageSize, catId, SearchKeyword, sort, minVal, maxVal, SearchId);
+            // Advanced search params
+            string? createdFromStr = CreatedFrom?.ToString("yyyy-MM-dd");
+            string? createdToStr = CreatedTo?.ToString("yyyy-MM-dd");
+
+            // Load Products with advanced filters
+            var result = await _productApiService.GetProductsAsync(
+                CurrentPage, PageSize, catId, SearchKeyword, sort, minVal, maxVal, SearchId,
+                StockStatus, createdFromStr, createdToStr, null, 
+                string.IsNullOrEmpty(SkuSearch) ? null : SkuSearch, 
+                string.IsNullOrEmpty(SkuSearch) ? null : SkuMode);
             
             if (result != null)
             {
@@ -373,6 +412,23 @@ public partial class ProductViewModel : ViewModelBase
     {
         CurrentPage = 1;
         await LoadProducts();
+    }
+
+    [RelayCommand]
+    public void ClearFilters()
+    {
+        SearchKeyword = string.Empty;
+        SelectedCategory = Categories.FirstOrDefault();
+        MinPrice = null;
+        MaxPrice = null;
+        StockStatus = "all";
+        CreatedFrom = null;
+        CreatedTo = null;
+        SkuSearch = string.Empty;
+        SkuMode = "contains";
+        SelectedSortOption = "Newest";
+        CurrentPage = 1;
+        _ = LoadProducts();
     }
 
     [RelayCommand]

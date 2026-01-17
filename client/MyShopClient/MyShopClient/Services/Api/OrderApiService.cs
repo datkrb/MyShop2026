@@ -17,7 +17,12 @@ public class OrderApiService : BaseApiService
         int size = 10, 
         string? status = null, 
         DateTime? fromDate = null, 
-        DateTime? toDate = null)
+        DateTime? toDate = null,
+        // Advanced search parameters
+        int? customerId = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        string? keyword = null)
     {
         var query = new StringBuilder($"orders?page={page}&size={size}");
 
@@ -34,6 +39,27 @@ public class OrderApiService : BaseApiService
         if (toDate.HasValue)
         {
             query.Append($"&toDate={toDate.Value:yyyy-MM-dd}");
+        }
+
+        // Advanced search parameters
+        if (customerId.HasValue)
+        {
+            query.Append($"&customerId={customerId.Value}");
+        }
+
+        if (minAmount.HasValue)
+        {
+            query.Append($"&minAmount={minAmount.Value}");
+        }
+
+        if (maxAmount.HasValue)
+        {
+            query.Append($"&maxAmount={maxAmount.Value}");
+        }
+
+        if (!string.IsNullOrEmpty(keyword))
+        {
+            query.Append($"&keyword={Uri.EscapeDataString(keyword)}");
         }
 
         return await GetAsync<PagedResult<ApiOrder>>(query.ToString());

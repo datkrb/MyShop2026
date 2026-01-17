@@ -277,14 +277,37 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
-                            <!-- Search Box -->
-                            <AutoSuggestBox 
-                                Grid.Column="0"
-                                PlaceholderText="Search customers by name, email or phone..."
-                                Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                QueryIcon="Find"
-                                MinWidth="330"
-                                HorizontalAlignment="Left"/>
+                            <!-- Inline Filters -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                <!-- Search Box -->
+                                <AutoSuggestBox 
+                                    PlaceholderText="Search customers..."
+                                    Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    QueryIcon="Find"
+                                    Width="180"/>
+
+                                <!-- Created From -->
+                                <CalendarDatePicker 
+                                    Date="{x:Bind ViewModel.CreatedFrom, Mode=TwoWay}" 
+                                    PlaceholderText="From"/>
+
+                                <!-- Created To -->
+                                <CalendarDatePicker 
+                                    Date="{x:Bind ViewModel.CreatedTo, Mode=TwoWay}" 
+                                    PlaceholderText="To"/>
+
+                                <!-- Sort -->
+                                <ComboBox 
+                                    Width="120"
+                                    ItemsSource="{x:Bind ViewModel.SortOptions}"
+                                    SelectedItem="{x:Bind ViewModel.SelectedSort, Mode=TwoWay}"/>
+
+                                <!-- Action Buttons -->
+                                <Button Content="Search" Command="{x:Bind ViewModel.RefreshCommand}" 
+                                        Style="{StaticResource AccentButtonStyle}" Padding="12,6"/>
+                                <Button Content="Clear" Command="{x:Bind ViewModel.ClearFiltersCommand}" 
+                                        Padding="12,6"/>
+                            </StackPanel>
                         </Grid>
 
                         <!-- Customers List -->

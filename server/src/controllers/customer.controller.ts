@@ -10,6 +10,11 @@ export class CustomerController {
         page: req.query.page ? parseInt(req.query.page as string) : undefined,
         size: req.query.size ? parseInt(req.query.size as string) : undefined,
         keyword: req.query.keyword as string,
+        // Advanced search filters
+        hasOrders: req.query.hasOrders !== undefined ? req.query.hasOrders === 'true' : undefined,
+        createdFrom: req.query.createdFrom as string,
+        createdTo: req.query.createdTo as string,
+        sort: req.query.sort as string,
       };
 
       const result = await customerService.getAll(filters);

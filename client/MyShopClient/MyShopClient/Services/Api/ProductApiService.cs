@@ -22,7 +22,14 @@ public class ProductApiService : BaseApiService
         string sort = "id,desc",
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        int? id = null)
+        int? id = null,
+        // Advanced search parameters
+        string? stockStatus = null,
+        string? createdFrom = null,
+        string? createdTo = null,
+        int[]? categoryIds = null,
+        string? skuSearch = null,
+        string? skuMode = null)
     {
         var query = new StringBuilder($"products?page={page}&size={size}");
         
@@ -54,6 +61,37 @@ public class ProductApiService : BaseApiService
         if (id.HasValue)
         {
             query.Append($"&id={id.Value}");
+        }
+
+        // Advanced search parameters
+        if (!string.IsNullOrEmpty(stockStatus) && stockStatus != "all")
+        {
+            query.Append($"&stockStatus={stockStatus}");
+        }
+
+        if (!string.IsNullOrEmpty(createdFrom))
+        {
+            query.Append($"&createdFrom={createdFrom}");
+        }
+
+        if (!string.IsNullOrEmpty(createdTo))
+        {
+            query.Append($"&createdTo={createdTo}");
+        }
+
+        if (categoryIds != null && categoryIds.Length > 0)
+        {
+            query.Append($"&categoryIds={string.Join(",", categoryIds)}");
+        }
+
+        if (!string.IsNullOrEmpty(skuSearch))
+        {
+            query.Append($"&skuSearch={System.Net.WebUtility.UrlEncode(skuSearch)}");
+        }
+
+        if (!string.IsNullOrEmpty(skuMode))
+        {
+            query.Append($"&skuMode={skuMode}");
         }
 
         return await GetAsync<PagedResult<ApiProduct>>(query.ToString());

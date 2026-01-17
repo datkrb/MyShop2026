@@ -31,6 +31,16 @@ public partial class OrdersViewModel : ViewModelBase
     [ObservableProperty]
     private DateTimeOffset? _toDate = null;
 
+    // Advanced Search Filters
+    [ObservableProperty]
+    private string _searchKeyword = string.Empty;
+
+    [ObservableProperty]
+    private double? _minAmount;
+
+    [ObservableProperty]
+    private double? _maxAmount;
+
     [ObservableProperty]
     private string _selectedOrderStatus = "All";
 
@@ -98,7 +108,12 @@ public partial class OrdersViewModel : ViewModelBase
                 size: PageSize,
                 status: SelectedOrderStatus == "All" ? null : SelectedOrderStatus,
                 fromDate: FromDate?.DateTime,
-                toDate: ToDate?.DateTime
+                toDate: ToDate?.DateTime,
+                // Advanced search parameters
+                customerId: null,
+                minAmount: MinAmount.HasValue ? (decimal)MinAmount.Value : null,
+                maxAmount: MaxAmount.HasValue ? (decimal)MaxAmount.Value : null,
+                keyword: string.IsNullOrEmpty(SearchKeyword) ? null : SearchKeyword
             );
 
             if (result != null)
@@ -301,6 +316,19 @@ public partial class OrdersViewModel : ViewModelBase
     private async Task RefreshAsync()
     {
         await LoadOrdersAsync();
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SearchKeyword = string.Empty;
+        FromDate = null;
+        ToDate = null;
+        SelectedOrderStatus = "All";
+        MinAmount = null;
+        MaxAmount = null;
+        CurrentPage = 1;
+        _ = LoadOrdersAsync();
     }
 }
 
