@@ -12,6 +12,7 @@
         <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <helpers:StringFormatConverter x:Key="StringFormatConverter"/>
         <helpers:BoolToPaginationBrushConverter x:Key="BoolToPaginationBrushConverter"/>
+        <helpers:DoubleToNullableDoubleConverter x:Key="DoubleToNullableDoubleConverter"/>
         
         <!-- Table Header Style -->
         <Style x:Key="TableHeaderTextStyle" TargetType="TextBlock">
@@ -242,32 +243,44 @@
                                 x:Name="InlineFiltersPanel"
                                 Grid.Column="0"
                                 Orientation="Horizontal" 
-                                Spacing="16">
+                                Spacing="12">
                                 
+                                <!-- Search Box -->
+                                <TextBox 
+                                    PlaceholderText="Search orders..."
+                                    Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Width="150"/>
+
                                 <!-- From Date -->
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="From:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                    <CalendarDatePicker 
-                                        Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
-                                        PlaceholderText="Select date"/>
-                                </StackPanel>
+                                <CalendarDatePicker 
+                                    Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
+                                    PlaceholderText="From"/>
 
                                 <!-- To Date -->
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="To:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                    <CalendarDatePicker 
-                                        Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
-                                        PlaceholderText="Select date"/>
-                                </StackPanel>
+                                <CalendarDatePicker 
+                                    Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
+                                    PlaceholderText="To"/>
 
                                 <!-- Status Filter -->
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="Status:" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                    <ComboBox 
-                                        Width="140"
-                                        SelectedItem="{x:Bind ViewModel.SelectedOrderStatus, Mode=TwoWay}"
-                                        ItemsSource="{x:Bind ViewModel.OrderStatuses, Mode=OneWay}"/>
+                                <ComboBox 
+                                    Width="110"
+                                    SelectedItem="{x:Bind ViewModel.SelectedOrderStatus, Mode=TwoWay}"
+                                    ItemsSource="{x:Bind ViewModel.OrderStatuses, Mode=OneWay}"/>
+
+                                <!-- Amount Range -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <NumberBox PlaceholderText="Min$" Width="70" 
+                                               Value="{x:Bind ViewModel.MinAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
+                                    <TextBlock Text="-" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <NumberBox PlaceholderText="Max$" Width="70" 
+                                               Value="{x:Bind ViewModel.MaxAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
                                 </StackPanel>
+
+                                <!-- Action Buttons -->
+                                <Button Content="Search" Command="{x:Bind ViewModel.RefreshCommand}" 
+                                        Style="{StaticResource AccentButtonStyle}" Padding="12,6"/>
+                                <Button Content="Clear" Command="{x:Bind ViewModel.ClearFiltersCommand}" 
+                                        Padding="12,6"/>
                             </StackPanel>
                             
                             <!-- Filter Button (visible on small screens) -->

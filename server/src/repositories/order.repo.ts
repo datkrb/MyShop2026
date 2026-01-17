@@ -8,6 +8,11 @@ interface OrderFilters {
   toDate?: string;
   status?: OrderStatus;
   createdById?: number;
+  // Advanced search filters
+  customerId?: number;
+  minAmount?: number;
+  maxAmount?: number;
+  keyword?: string;
 }
 
 export class OrderRepository {
@@ -21,6 +26,11 @@ export class OrderRepository {
       toDate,
       status,
       createdById,
+      // Advanced search
+      customerId,
+      minAmount,
+      maxAmount,
+      keyword,
     } = filters;
 
     const skip = (page - 1) * size;
@@ -39,6 +49,31 @@ export class OrderRepository {
 
     if (createdById) {
       where.createdById = createdById;
+    }
+
+    // Advanced search: Customer filter
+    if (customerId) {
+      where.customerId = customerId;
+    }
+
+    // Advanced search: Amount range
+    if (minAmount || maxAmount) {
+      where.finalPrice = {};
+      if (minAmount) where.finalPrice.gte = minAmount;
+      if (maxAmount) where.finalPrice.lte = maxAmount;
+    }
+
+    // Advanced search: Keyword (order ID or customer name)
+    if (keyword) {
+      const numericKeyword = parseInt(keyword);
+      if (!isNaN(numericKeyword)) {
+        where.OR = [
+          { id: numericKeyword },
+          { customer: { name: { contains: keyword, mode: 'insensitive' } } },
+        ];
+      } else {
+        where.customer = { name: { contains: keyword, mode: 'insensitive' } };
+      }
     }
 
     const [data, total] = await Promise.all([

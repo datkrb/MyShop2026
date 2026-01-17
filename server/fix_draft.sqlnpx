@@ -1,0 +1,1 @@
+UPDATE "Order" SET status = 'PENDING' WHERE status = 'DRAFT';  prisma db execute --file fix_draft.sql

@@ -9,6 +9,13 @@ interface ProductFilters {
   keyword?: string;
   categoryId?: number;
   id?: number;
+  // Advanced search filters
+  stockStatus?: 'all' | 'inStock' | 'lowStock' | 'outOfStock';
+  createdFrom?: string;
+  createdTo?: string;
+  categoryIds?: number[];
+  skuSearch?: string;
+  skuMode?: 'exact' | 'prefix' | 'contains';
   inStock?: boolean;
 }
 
@@ -23,6 +30,13 @@ export class ProductRepository {
       keyword,
       categoryId,
       id,
+      // Advanced search filters
+      stockStatus,
+      createdFrom,
+      createdTo,
+      categoryIds,
+      skuSearch,
+      skuMode = 'contains',
       inStock
     } = filters;
 
@@ -45,18 +59,63 @@ export class ProductRepository {
       ];
     }
 
+    // Single category (legacy support)
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    // Multiple categories filter (takes precedence over single categoryId)
+    if (categoryIds && categoryIds.length > 0) {
+      where.categoryId = { in: categoryIds };
     }
 
     if (id) {
       where.id = id;
     }
 
-    if (inStock) {
-      where.stock = {
-        gt: 0,
-      };
+    // Stock status filter (advanced)
+    if (stockStatus && stockStatus !== 'all') {
+      switch (stockStatus) {
+        case 'inStock':
+          where.stock = { gt: 10 };
+          break;
+        case 'lowStock':
+          where.stock = { gt: 0, lte: 10 };
+          break;
+        case 'outOfStock':
+          where.stock = { lte: 0 };
+          break;
+      }
+    }
+
+    // Simple inStock filter (legacy)
+    if (inStock && !stockStatus) {
+      where.stock = { gt: 0 };
+    }
+
+    // Date range filter
+    if (createdFrom || createdTo) {
+      where.createdAt = {};
+      if (createdFrom) where.createdAt.gte = new Date(createdFrom);
+      if (createdTo) where.createdAt.lte = new Date(createdTo);
+    }
+
+    // SKU search with mode
+    if (skuSearch) {
+      const skuCondition: any = { mode: 'insensitive' };
+      switch (skuMode) {
+        case 'exact':
+          skuCondition.equals = skuSearch;
+          break;
+        case 'prefix':
+          skuCondition.startsWith = skuSearch;
+          break;
+        case 'contains':
+        default:
+          skuCondition.contains = skuSearch;
+          break;
+      }
+      where.sku = skuCondition;
     }
 
     const [data, total] = await Promise.all([
