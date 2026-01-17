@@ -12,6 +12,11 @@ export class OrderController {
         fromDate: req.query.fromDate as string,
         toDate: req.query.toDate as string,
         status: req.query.status as string,
+        // Advanced search filters
+        customerId: req.query.customerId ? parseInt(req.query.customerId as string) : undefined,
+        minAmount: req.query.minAmount ? parseFloat(req.query.minAmount as string) : undefined,
+        maxAmount: req.query.maxAmount ? parseFloat(req.query.maxAmount as string) : undefined,
+        keyword: req.query.keyword as string,
       };
 
       const userRole = req.user?.role || '';

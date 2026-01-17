@@ -17,13 +17,39 @@ public class CustomerApiService : BaseApiService
     public async Task<PagedResult<Customer>?> GetCustomersAsync(
         int page = 1,
         int size = 10,
-        string? keyword = null)
+        string? keyword = null,
+        // Advanced search parameters
+        bool? hasOrders = null,
+        string? createdFrom = null,
+        string? createdTo = null,
+        string? sort = null)
     {
         var query = new StringBuilder($"customers?page={page}&size={size}");
 
         if (!string.IsNullOrEmpty(keyword))
         {
             query.Append($"&keyword={System.Net.WebUtility.UrlEncode(keyword)}");
+        }
+
+        // Advanced search parameters
+        if (hasOrders.HasValue)
+        {
+            query.Append($"&hasOrders={hasOrders.Value.ToString().ToLower()}");
+        }
+
+        if (!string.IsNullOrEmpty(createdFrom))
+        {
+            query.Append($"&createdFrom={createdFrom}");
+        }
+
+        if (!string.IsNullOrEmpty(createdTo))
+        {
+            query.Append($"&createdTo={createdTo}");
+        }
+
+        if (!string.IsNullOrEmpty(sort))
+        {
+            query.Append($"&sort={sort}");
         }
 
         return await GetAsync<PagedResult<Customer>>(query.ToString());

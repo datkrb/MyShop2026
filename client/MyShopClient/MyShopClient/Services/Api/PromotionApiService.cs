@@ -17,7 +17,13 @@ public class PromotionApiService : BaseApiService
         int page = 1,
         int size = 10,
         bool? isActive = null,
-        string? search = null)
+        string? search = null,
+        // Advanced search parameters
+        string? discountType = null,
+        string? validFrom = null,
+        string? validTo = null,
+        decimal? minDiscount = null,
+        decimal? maxDiscount = null)
     {
         var query = new StringBuilder($"promotions?page={page}&size={size}");
 
@@ -29,6 +35,32 @@ public class PromotionApiService : BaseApiService
         if (!string.IsNullOrEmpty(search))
         {
             query.Append($"&search={System.Net.WebUtility.UrlEncode(search)}");
+        }
+
+        // Advanced search parameters
+        if (!string.IsNullOrEmpty(discountType))
+        {
+            query.Append($"&discountType={discountType}");
+        }
+
+        if (!string.IsNullOrEmpty(validFrom))
+        {
+            query.Append($"&validFrom={validFrom}");
+        }
+
+        if (!string.IsNullOrEmpty(validTo))
+        {
+            query.Append($"&validTo={validTo}");
+        }
+
+        if (minDiscount.HasValue)
+        {
+            query.Append($"&minDiscount={minDiscount.Value}");
+        }
+
+        if (maxDiscount.HasValue)
+        {
+            query.Append($"&maxDiscount={maxDiscount.Value}");
         }
 
         return await GetAsync<PagedResult<Promotion>>(query.ToString());
