@@ -51,7 +51,7 @@ public partial class PageHeaderViewModel : ObservableObject
             }
 
             // Clear credentials
-            _credentialService?.ClearCredentials();
+            _credentialService?.ClearTokens();
             
             // Clear auth token
             Services.Api.BaseApiService.ClearAuthToken();
