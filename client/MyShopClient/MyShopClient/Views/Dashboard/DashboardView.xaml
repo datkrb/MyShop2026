@@ -8,6 +8,7 @@
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
     xmlns:viewmodels="using:MyShopClient.ViewModels"
     xmlns:models="using:MyShopClient.Models"
+    xmlns:shared="using:MyShopClient.Views.Shared"
     mc:Ignorable="d"
     Background="{ThemeResource AppBackgroundBrush}">
 
@@ -131,49 +132,10 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid Height="80" Margin="-32,-32,-32,32" Padding="32,0" Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/> <!-- Hamburger (Mobile Only) -->
-                <ColumnDefinition Width="*"/>    <!-- Welcome -->
-                <ColumnDefinition Width="Auto"/> 
-            </Grid.ColumnDefinitions>
-
-            <Button x:Name="MobileMenuButton" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Margin="0,0,16,0">
-                <FontIcon Glyph="&#xE700;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="20" Foreground="{ThemeResource TextSecondaryBrush}"/>
-            </Button>
-
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                <TextBlock Text="Dashboard" FontWeight="Bold" FontSize="20" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                <TextBlock Text="Here's what's happening with your store today." FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-            </StackPanel>
-
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="24" VerticalAlignment="Center">
-
-                <!-- Icons -->
-                <StackPanel Orientation="Horizontal" Spacing="16">
-                    <Button CornerRadius="20" Width="40" Height="40" Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1" Padding="0">
-                         <Grid>
-                            <FontIcon Glyph="&#xE7E7;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="16"/>
-                            <Ellipse Width="8" Height="8" Fill="{ThemeResource DangerBrush}" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,8,8,0" Stroke="{ThemeResource CardBackgroundBrush}" StrokeThickness="2"/>
-                         </Grid>
-                    </Button>
-                    <Button CornerRadius="20" Width="40" Height="40" Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1" Padding="0">
-                         <FontIcon Glyph="&#xE8BD;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource TextSecondaryBrush}" FontSize="16"/>
-                    </Button>
-                </StackPanel>
-
-                <!-- Profile -->
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Border Width="1" Background="{ThemeResource BorderBrush}" Height="40"/>
-                    <PersonPicture Width="40" Height="40" DisplayName="Admin" Margin="0"/>
-                    <StackPanel VerticalAlignment="Center" Visibility="Visible">
-                         <TextBlock Text="Ali Husni" FontWeight="SemiBold" FontSize="14" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                         <TextBlock Text="Admin" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                    </StackPanel>
-                    <FontIcon Glyph="&#xE70D;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}" Margin="0,4,0,0"/>
-                </StackPanel>
-            </StackPanel>
-        </Grid>
+        <shared:PageHeader 
+            Margin="-32,-32,-32,32"
+            Title="Dashboard" 
+            Description="Here's what's happening with your store today."/>
 
         <!-- Dashboard Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">

@@ -50,9 +50,10 @@ public partial class LoginViewModel : ViewModelBase
             
             if (response != null && !string.IsNullOrEmpty(response.Token))
             {
-                // Store user role
+                // Store user info
                 App.Current.CurrentUserRole = response.Role;
-                System.Diagnostics.Debug.WriteLine($"Auto-login successful, role: {response.Role}");
+                App.Current.CurrentUserName = credentials.Value.Username;
+                System.Diagnostics.Debug.WriteLine($"Auto-login successful, user: {credentials.Value.Username}, role: {response.Role}");
                 return true;
             }
         }
@@ -84,9 +85,10 @@ public partial class LoginViewModel : ViewModelBase
 
             if (response != null && !string.IsNullOrEmpty(response.Token))
             {
-                // Store user role
+                // Store user info
                 App.Current.CurrentUserRole = response.Role;
-                System.Diagnostics.Debug.WriteLine($"Login successful, role: {response.Role}");
+                App.Current.CurrentUserName = Username;
+                System.Diagnostics.Debug.WriteLine($"Login successful, user: {Username}, role: {response.Role}");
 
                 // Lưu credentials nếu RememberMe được chọn
                 if (RememberMe)
