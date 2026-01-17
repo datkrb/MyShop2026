@@ -46,20 +46,10 @@
         <NavigationView x:Name="NavView"
                         Style="{StaticResource CustomNavigationViewStyle}"
                         IsSettingsVisible="False"
+                        IsBackButtonVisible="Auto"
+                        IsBackEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}"
+                        BackRequested="NavView_BackRequested"
                         SelectionChanged="NavView_SelectionChanged">
-        
-        <!-- Pane Header (Brand) -->
-        <NavigationView.PaneHeader>
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="16,16,6,24">
-                <Border Background="{ThemeResource PrimaryBrush}" CornerRadius="8" Width="32" Height="32">
-                    <FontIcon Glyph="&#xE7BF;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="White" FontSize="14"/>
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="MyShop" Foreground="{ThemeResource PaneHeaderTitleBrush}" FontWeight="Bold" FontSize="18"/>
-                    <TextBlock Text="Shop Manager" Foreground="{ThemeResource PaneHeaderSubtitleBrush}" FontSize="12"/>
-                </StackPanel>
-            </StackPanel>
-        </NavigationView.PaneHeader>
 
         <!-- Menu Items -->
         <NavigationView.MenuItems>

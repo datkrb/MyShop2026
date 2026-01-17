@@ -94,6 +94,7 @@ public interface INavigationService
 {
     Frame? Frame { get; }
     bool CanGoBack { get; }
+    void Initialize(Frame frame);
     bool Navigate(Type pageType, object? parameter = null);
     bool Navigate<TPage>(object? parameter = null) where TPage : Page;
     void GoBack();
