@@ -164,28 +164,28 @@
 
             <!-- Right Panel (Login Form) with ScrollViewer -->
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-                <Grid Padding="64" VerticalAlignment="Center" MinHeight="600">
-                    <StackPanel Spacing="32" MaxWidth="448" VerticalAlignment="Center">
+                <Grid Padding="64,64,64,32" VerticalAlignment="Center">
+                    <StackPanel Spacing="32" VerticalAlignment="Center">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Login" FontSize="30" FontWeight="Bold"/>
                             <TextBlock Text="Welcome back! Please login to your account." Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
                         </StackPanel>
 
-                        <StackPanel Spacing="20">
+                        <StackPanel>
                             <!-- Username -->
-                            <StackPanel Spacing="4">
+                            <StackPanel Spacing="4" Margin="0,0,0,20">
                                 <TextBlock Text="User Name" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
                                 <TextBox PlaceholderText="Enter your username" Text="{x:Bind ViewModel.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Padding="12" CornerRadius="12" />
                             </StackPanel>
 
                             <!-- Password -->
-                            <StackPanel Spacing="4">
+                            <StackPanel Spacing="4" Margin="0,0,0,8">
                                 <TextBlock Text="Password" FontWeight="Medium" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
                                 <PasswordBox PlaceholderText="Enter your password" Password="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Padding="12" CornerRadius="12"/>
                             </StackPanel>
 
                             <!-- Remember Me & Forgot PW -->
-                            <Grid>
+                            <Grid Margin="4,0,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>

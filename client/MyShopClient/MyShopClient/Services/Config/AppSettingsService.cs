@@ -146,87 +146,48 @@ public class AppSettingsService
         }
     }
 
-    public string GetServerUrl()
+    public string GetBaseUrl()
     {
         try
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values["ServerUrl"];
+            var value = localSettings.Values["BaseUrl"];
             if (value is string url && !string.IsNullOrEmpty(url))
             {
                 return url;
             }
         }
         catch { }
-        return "http://localhost"; // Default
-    }
-
-    public int GetServerPort()
-    {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values["ServerPort"];
-            if (value is int port && port > 0)
-            {
-                return port;
-            }
-        }
-        catch { }
-        return 8888; // Default
+        return "http://localhost:3000"; // Default
     }
 
     /// <summary>
-    /// Lưu Server URL vào Settings
+    /// Lưu Base URL vào Settings
     /// </summary>
-    public void SaveServerUrl(string url)
+    public void SaveBaseUrl(string url)
     {
         try
         {
             var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["ServerUrl"] = url ?? "http://localhost";
+            localSettings.Values["BaseUrl"] = url ?? "http://localhost:3000";
             
-            System.Diagnostics.Debug.WriteLine($"ServerUrl saved: {url}");
+            System.Diagnostics.Debug.WriteLine($"BaseUrl saved: {url}");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error saving ServerUrl: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error saving BaseUrl: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Lưu Server Port vào Settings
-    /// </summary>
-    public void SaveServerPort(int port)
-    {
-        try
-        {
-            if (port <= 0) port = 8888;
-            
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["ServerPort"] = port;
-            
-            System.Diagnostics.Debug.WriteLine($"ServerPort saved: {port}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error saving ServerPort: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Get full server URL with port (e.g., http://localhost:8888/api/)
+    /// Get full server URL with ensure trailing slash
     /// </summary>
     public string GetFullServerUrl()
     {
-        var url = GetServerUrl();
-        var port = GetServerPort();
+        var url = GetBaseUrl();
         
-        // Remove trailing slash from URL if present
-        url = url.TrimEnd('/');
-        
-        // Build full URL
-        return $"{url}:{port}/api/";
+        // Ensure trailing slash
+        return url.EndsWith("/") ? url : url + "/";
     }
 
     #endregion
