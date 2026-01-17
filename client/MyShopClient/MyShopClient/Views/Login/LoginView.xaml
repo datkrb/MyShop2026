@@ -220,14 +220,22 @@
 
                         <!-- Server Config Button -->
                         <HyperlinkButton Content="⚙ Server Configuration" 
-                                         Click="ConfigButton_Click"
-                                         HorizontalAlignment="Center"
-                                         Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                         FontSize="13"/>
+                                            Click="ConfigButton_Click"
+                                            HorizontalAlignment="Center"
+                                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                            FontSize="13"/>
 
                     </StackPanel>
                 </Grid>
             </ScrollViewer>
+            <!-- Version Number (Bottom Right) -->
+            <TextBlock Grid.Column="1"
+                       Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Right"
+                       Margin="24,16"
+                       Foreground="{ThemeResource SystemControlForegroundBaseLowBrush}"
+                       FontSize="14"/>
         </Grid>
     </Grid>
 </Page>

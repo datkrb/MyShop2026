@@ -29,10 +29,23 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private string _appVersion = "version 1.0.0";
+
     public LoginViewModel(AuthApiService authApiService, CredentialService credentialService)
     {
         _authApiService = authApiService;
         _credentialService = credentialService;
+        
+        try
+        {
+            var version = Windows.ApplicationModel.Package.Current.Id.Version;
+            AppVersion = $"version {version.Major}.{version.Minor}.{version.Build}";
+        }
+        catch
+        {
+            AppVersion = "version 1.0.0";
+        }
     }
 
     /// <summary>
