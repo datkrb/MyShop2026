@@ -178,6 +178,40 @@
         <!-- Dashboard Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
             <StackPanel Spacing="0">
+                <!-- Trial Banner (hiện khi chưa kích hoạt) -->
+                <Grid Visibility="{x:Bind ViewModel.ShowTrialBanner, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                      Background="#FEF3C7" CornerRadius="12" Padding="16,12" Margin="0,0,0,24"
+                      BorderBrush="#FCD34D" BorderThickness="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Border Background="#FDE68A" Width="40" Height="40" CornerRadius="20" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE7BA;" FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                                  Foreground="#D97706" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                        <TextBlock Text="Phiên bản dùng thử" FontWeight="SemiBold" FontSize="14" Foreground="#92400E"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="Còn" FontSize="13" Foreground="#B45309"/>
+                            <TextBlock Text="{x:Bind ViewModel.TrialDaysRemaining, Mode=OneWay}" 
+                                       FontWeight="Bold" FontSize="13" Foreground="#D97706"/>
+                            <TextBlock Text="ngày dùng thử. Liên hệ Admin để kích hoạt license." 
+                                       FontSize="13" Foreground="#B45309"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Nút Kích hoạt (chỉ Admin thấy) -->
+                    <Button Grid.Column="2" Content="Kích hoạt ngay"
+                            Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Background="#D97706" Foreground="White" 
+                            CornerRadius="8" Padding="16,8"
+                            Click="ActivateButton_Click"/>
+                </Grid>
+                
                 <!-- Stats Cards Grid -->
                 <Grid ColumnSpacing="24" RowSpacing="24" x:Name="StatsGrid">
                     <Grid.ColumnDefinitions>
