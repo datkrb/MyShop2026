@@ -95,7 +95,28 @@ namespace MyShopClient
                     var autoLoginSuccess = await loginViewModel.TryAutoLoginAsync();
                     if (autoLoginSuccess)
                     {
-                        // Auto-login thành công, navigate thẳng tới ShellPage
+                        // Check license status sau khi login
+                        var licenseService = Services.GetService<LicenseApiService>();
+                        if (licenseService != null)
+                        {
+                            try
+                            {
+                                var licenseStatus = await licenseService.GetStatusAsync();
+                                if (licenseStatus != null && !licenseStatus.IsValid)
+                                {
+                                    // Trial hết và chưa kích hoạt -> redirect đến ActivationView
+                                    _rootFrame.Navigate(typeof(Views.License.ActivationView));
+                                    return;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"License check error: {ex.Message}");
+                                // Nếu không check được license, cho phép vào app
+                            }
+                        }
+                        
+                        // Auto-login thành công và license OK, navigate thẳng tới ShellPage
                         _rootFrame.Navigate(typeof(Views.ShellPage));
                         return;
                     }

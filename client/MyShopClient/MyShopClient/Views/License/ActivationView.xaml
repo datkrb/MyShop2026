@@ -1,0 +1,78 @@
+<Page
+    x:Class="MyShopClient.Views.License.ActivationView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyShopClient.Views.License"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" MaxWidth="500" Padding="32">
+            <!-- Logo/Icon -->
+            <Border Background="#FEE2E2" Width="80" Height="80" CornerRadius="40" 
+                    HorizontalAlignment="Center" Margin="0,0,0,24">
+                <FontIcon Glyph="&#xE7BA;" FontFamily="{ThemeResource SymbolThemeFontFamily}" 
+                          Foreground="#DC2626" FontSize="36" 
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Title -->
+            <TextBlock Text="Thời gian dùng thử đã hết" 
+                       FontSize="24" FontWeight="Bold" 
+                       Foreground="{ThemeResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+            <!-- Description -->
+            <TextBlock Text="Phiên bản dùng thử 15 ngày đã kết thúc. Vui lòng nhập license key để tiếp tục sử dụng phần mềm."
+                       FontSize="14" Foreground="{ThemeResource TextSecondaryBrush}"
+                       TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,32"/>
+
+            <!-- License Key Input (Admin only) -->
+            <StackPanel x:Name="AdminPanel" Visibility="{x:Bind IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBox x:Name="LicenseKeyTextBox"
+                         Header="License Key"
+                         PlaceholderText="MYSH-XXXX-XXXX-XXXX"
+                         CharacterCasing="Upper"
+                         Margin="0,0,0,16"/>
+
+                <Button x:Name="ActivateButton"
+                        Content="Kích hoạt License"
+                        HorizontalAlignment="Stretch"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="ActivateButton_Click"
+                        Margin="0,0,0,16"/>
+
+                <TextBlock x:Name="ErrorText" 
+                           Foreground="{ThemeResource DangerBrush}"
+                           TextAlignment="Center" Visibility="Collapsed"/>
+            </StackPanel>
+
+            <!-- Sale message -->
+            <StackPanel x:Name="SalePanel" Visibility="{x:Bind IsSale, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Background="#FEF3C7" CornerRadius="8" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Liên hệ Admin" FontWeight="SemiBold" 
+                                   Foreground="#92400E" Margin="0,0,0,4"/>
+                        <TextBlock Text="Vui lòng liên hệ quản trị viên để kích hoạt license cho cửa hàng."
+                                   Foreground="#B45309" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Logout Button -->
+            <Button Content="Đăng xuất" 
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource DefaultButtonStyle}"
+                    Click="LogoutButton_Click"
+                    Margin="0,24,0,0"/>
+        </StackPanel>
+    </Grid>
+</Page>
