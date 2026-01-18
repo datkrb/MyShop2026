@@ -3,6 +3,7 @@ using MyShopClient.ViewModels;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Config;
 using MyShopClient.Services.Auth;
+using MyShopClient.ViewModels.Shared;
 
 namespace MyShopClient.Infrastructure.DependencyInjection;
 
@@ -29,6 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PromotionViewModel>();
         services.AddTransient<EmployeesViewModel>();
         services.AddTransient<AddEmployeeDialogViewModel>();
+        services.AddTransient<PageHeaderViewModel>();
         return services;
     }
 
