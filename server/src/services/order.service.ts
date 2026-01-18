@@ -251,6 +251,9 @@ export class OrderService {
     return orderRepo.delete(id);
   }
 
+  async getStats(userRole: string, userId?: number) {
+    return orderRepo.getStats(userRole, userId);
+  }
 
 }
 

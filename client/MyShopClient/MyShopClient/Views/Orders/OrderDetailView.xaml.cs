@@ -24,7 +24,7 @@ public sealed partial class OrderDetailView : Page
                 App.Current.Services.GetRequiredService<MyShopClient.Services.Api.OrderApiService>(),
                 _navigationService,
                 App.Current.Services.GetRequiredService<MyShopClient.Services.Local.ILocalDraftService>(),
-                App.Current.Services.GetRequiredService<MyShopClient.Services.InvoiceService>(),
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Invoice.InvoiceService>(),
                 App.Current.Services.GetRequiredService<MyShopClient.Services.Api.PromotionApiService>());
         
         // Subscribe to notification property changes

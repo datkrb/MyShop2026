@@ -93,6 +93,18 @@ public class OrderApiService : BaseApiService
     {
         return await DeleteAsync($"orders/{id}");
     }
+
+    public async Task<OrderStats?> GetStatsAsync()
+    {
+        return await GetAsync<OrderStats>("orders/stats");
+    }
+}
+
+public class OrderStats
+{
+    public int Total { get; set; }
+    public int Pending { get; set; }
+    public int Paid { get; set; }
 }
 
 /// <summary>
