@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
+using MyShopClient.Services;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Navigation;
 using MyShopClient.Views.Orders;
@@ -21,6 +22,7 @@ public partial class OrderDetailViewModel : ObservableObject
     private readonly OrderApiService _orderApiService;
     private readonly INavigationService _navigationService;
     private readonly Services.Local.ILocalDraftService _localDraftService;
+    private readonly InvoiceService _invoiceService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -134,11 +136,12 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService, Services.Local.ILocalDraftService localDraftService)
+    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService, Services.Local.ILocalDraftService localDraftService, InvoiceService invoiceService)
     {
         _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _localDraftService = localDraftService ?? throw new ArgumentNullException(nameof(localDraftService));
+        _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();
@@ -615,9 +618,55 @@ public partial class OrderDetailViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Print()
+    private async Task PrintAsync()
     {
-        // TODO: Implement print order
+        if (IsNewOrder)
+        {
+            ShowNotification("Vui lòng lưu đơn hàng trước khi in.", "Warning");
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            
+            var invoiceData = new InvoiceData
+            {
+                InvoiceNumber = $"ORD-{Id:D4}",
+                Date = OrderDate,
+                CustomerName = CustomerName,
+                CustomerEmail = CustomerEmail,
+                CustomerPhone = CustomerPhone,
+                CustomerAddress = CustomerAddress,
+                Subtotal = Subtotal,
+                Total = Total,
+                Status = OrderStatus,
+                Items = OrderItems.Select(item => new InvoiceItem
+                {
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    TotalPrice = item.TotalPrice
+                }).ToList()
+            };
+
+            var window = App.Current.MainWindow;
+            var success = await _invoiceService.GenerateAndSaveInvoiceAsync(invoiceData, window);
+            
+            if (success)
+            {
+                ShowNotification("Hóa đơn đã được tạo và lưu thành công!", "Success");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error printing invoice: {ex.Message}");
+            ShowNotification($"Lỗi tạo hóa đơn: {ex.Message}", "Error");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
