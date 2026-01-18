@@ -49,6 +49,11 @@ namespace MyShopClient
         public string CurrentUserRole { get; set; } = string.Empty;
 
         /// <summary>
+        /// Current logged-in user's name
+        /// </summary>
+        public string CurrentUserName { get; set; } = string.Empty;
+
+        /// <summary>
         /// Helper property to check if current user is ADMIN
         /// </summary>
         public bool IsAdmin => CurrentUserRole == "ADMIN";
