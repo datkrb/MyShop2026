@@ -9,6 +9,7 @@ const router = Router();
 router.post('/login', validate(loginDto), authController.login.bind(authController));
 router.get('/me', authMiddleware, authController.getCurrentUser.bind(authController));
 router.post('/logout', authMiddleware, authController.logout.bind(authController));
+router.post('/refresh-token', authController.refreshToken.bind(authController));
 
 export default router;
 

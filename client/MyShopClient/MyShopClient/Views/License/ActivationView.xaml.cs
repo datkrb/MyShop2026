@@ -61,7 +61,7 @@ public sealed partial class ActivationView : Page
     {
         // Clear credentials and navigate to login
         var credentialService = App.Current.Services.GetService<CredentialService>();
-        credentialService?.ClearCredentials();
+        credentialService?.ClearTokens();
         
         App.Current.CurrentUserRole = string.Empty;
         App.Current.RootFrame?.Navigate(typeof(Views.Login.LoginView));

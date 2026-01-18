@@ -23,7 +23,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="24,12,2,12">
+    <Grid Padding="24,0,2,12">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <!-- Large: 3 columns, inline filters visible -->
@@ -90,46 +90,32 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,22,0">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <shared:PageHeader 
+            Margin="-24,0,-24,2"
+            Title="Orders Management" 
+            Description="Manage your orders, track status and payments."/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,22,0">
             <StackPanel Spacing="24">
                 
-                <!-- Page Header -->
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Title Section -->
-                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                        <TextBlock 
-                            Text="Orders Management" 
-                            FontFamily="{ThemeResource ContentControlThemeFontFamily}" 
-                            FontSize="28" 
-                            FontWeight="Bold" 
-                            Foreground="{ThemeResource TextPrimaryBrush}"/>
-                        <TextBlock 
-                            Text="Manage your orders, track status and payments." 
-                            FontSize="14" 
-                            Foreground="{ThemeResource TextSecondaryBrush}"/>
-                    </StackPanel>
-
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <Button 
-                            Click="CreateOrderButton_Click"
-                            Style="{ThemeResource AccentButtonStyle}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE710;" FontSize="18"/>
-                                <TextBlock Text="Create Order"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,5,0,0">
+                    <Button 
+                        Click="CreateOrderButton_Click"
+                        Style="{ThemeResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="18"/>
+                            <TextBlock Text="Create Order"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- Stats Cards -->
                 <Grid x:Name="StatsGrid" ColumnSpacing="16" RowSpacing="16">
