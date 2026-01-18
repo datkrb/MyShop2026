@@ -23,6 +23,15 @@ public sealed partial class ShellPage : Page
         _appSettingsService = App.Current.Services.GetRequiredService<AppSettingsService>();
         App.Current.ContentFrame = ContentFrame;
         
+        // Initialize the navigation service with ContentFrame
+        _navigationService.Initialize(ContentFrame);
+        
+        // Update CanGoBack after each navigation
+        ContentFrame.Navigated += (s, e) =>
+        {
+            ViewModel.UpdateCanGoBack();
+        };
+        
         // Navigate to appropriate page based on settings
         this.Loaded += (s, e) =>
         {
@@ -50,6 +59,15 @@ public sealed partial class ShellPage : Page
         {
             var tag = args.SelectedItemContainer.Tag?.ToString();
             NavigateToPage(tag);
+        }
+    }
+
+    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    {
+        if (_navigationService.CanGoBack)
+        {
+            _navigationService.GoBack();
+            ViewModel.UpdateCanGoBack();
         }
     }
 
