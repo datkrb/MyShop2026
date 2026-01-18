@@ -55,7 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CredentialService>();
         services.AddSingleton<AppSettingsService>();
         services.AddSingleton<Services.Local.ILocalDraftService, Services.Local.LocalDraftService>();
-        services.AddSingleton<Services.InvoiceService>();
+        services.AddSingleton<Services.Invoice.InvoiceService>();
         
         return services;
     }
