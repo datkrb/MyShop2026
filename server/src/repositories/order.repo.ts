@@ -337,6 +337,23 @@ export class OrderRepository {
 
     return monthlyRevenue;
   }
+
+  async getStats(userRole: string, userId?: number) {
+    const where: any = {};
+    
+    // SALE role can only see their own orders
+    if (userRole === 'SALE' && userId) {
+      where.createdById = userId;
+    }
+
+    const [total, pending, paid] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.count({ where: { ...where, status: OrderStatus.PENDING } }),
+      prisma.order.count({ where: { ...where, status: OrderStatus.PAID } })
+    ]);
+
+    return { total, pending, paid };
+  }
 }
 
 export default new OrderRepository();
