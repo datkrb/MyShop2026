@@ -22,6 +22,7 @@ public class InvoiceData
     public string CustomerAddress { get; set; } = string.Empty;
     public List<InvoiceItem> Items { get; set; } = new();
     public decimal Subtotal { get; set; }
+    public decimal DiscountAmount { get; set; }
     public decimal Total { get; set; }
     public string Status { get; set; } = string.Empty;
 }
@@ -208,6 +209,16 @@ public class InvoiceService
                         r.RelativeItem().Text("Tạm tính:").FontSize(12);
                         r.RelativeItem().AlignRight().Text(FormatCurrency(data.Subtotal)).FontSize(12);
                     });
+
+                    // Show discount row if there's a discount
+                    if (data.DiscountAmount > 0)
+                    {
+                        col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5).Row(r =>
+                        {
+                            r.RelativeItem().Text("Giảm giá:").FontSize(12).FontColor(Colors.Green.Darken1);
+                            r.RelativeItem().AlignRight().Text($"-{FormatCurrency(data.DiscountAmount)}").FontSize(12).FontColor(Colors.Green.Darken1);
+                        });
+                    }
 
                     col.Item().Background(Colors.Blue.Lighten5).Padding(8).Row(r =>
                     {
