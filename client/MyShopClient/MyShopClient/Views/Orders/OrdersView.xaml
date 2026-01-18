@@ -132,7 +132,7 @@
 
 
 
-                    <!-- Paid Card -->
+                    <!-- Pending Card -->
                     <Border x:Name="StatCard2" Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
@@ -155,14 +155,14 @@
                                 Grid.Column="1" 
                                 Width="48" 
                                 Height="48" 
-                                Background="#ECFDF5" 
+                                Background="#ffffeb" 
                                 CornerRadius="8">
-                                <FontIcon Glyph="&#xE8FB;" FontSize="24" Foreground="#10B981"/>
+                                <FontIcon Glyph="&#xECC5;" FontSize="24" Foreground="#ffa600"/>
                             </Border>
                         </Grid>
                     </Border>
 
-                    <!-- Canceled Card -->
+                    <!-- Paid Card -->
                     <Border x:Name="StatCard3" Grid.Column="1" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
@@ -185,9 +185,9 @@
                                 Grid.Column="1" 
                                 Width="48" 
                                 Height="48" 
-                                Background="#FEE2E2" 
+                                Background="#ECFDF5" 
                                 CornerRadius="8">
-                                <FontIcon Glyph="&#xE711;" FontSize="24" Foreground="#EF4444"/>
+                                <FontIcon Glyph="&#xE8FB;" FontSize="24" Foreground="#10B981"/>
                             </Border>
                         </Grid>
                     </Border>
