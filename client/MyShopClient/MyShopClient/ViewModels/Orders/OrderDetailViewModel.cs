@@ -786,7 +786,8 @@ public partial class OrderDetailViewModel : ObservableObject
                 CustomerPhone = CustomerPhone,
                 CustomerAddress = CustomerAddress,
                 Subtotal = Subtotal,
-                Total = Total,
+                DiscountAmount = SavedDiscountAmount,
+                Total = Amount, // FinalPrice from API
                 Status = OrderStatus,
                 Items = OrderItems.Select(item => new InvoiceItem
                 {
