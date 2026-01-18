@@ -88,14 +88,9 @@
             <StackPanel Spacing="24">
                 
                 <!-- Page Header -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Title Section -->
-                    <StackPanel Grid.Column="0" Spacing="4">
+                <StackPanel Spacing="16">
+                    <!-- Title -->
+                    <StackPanel Spacing="4">
                         <TextBlock 
                             Text="Reports &amp; Analytics" 
                             FontSize="28" 
@@ -107,61 +102,43 @@
                             Foreground="{ThemeResource TextSecondaryBrush}"/>
                     </StackPanel>
 
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <!-- Inline Filters (Large screens) -->
-                        <StackPanel x:Name="InlineFiltersPanel" Orientation="Horizontal" Spacing="12" Visibility="Visible">
-                            <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" PlaceholderText="Start Date"/>
-                            <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" PlaceholderText="End Date"/>
-                            <ComboBox SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}" MinWidth="100" PlaceholderText="View By"/>
-                            <ComboBox ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}" MinWidth="130" PlaceholderText="Category"/>
-                        </StackPanel>
-                        
-                        <!-- Filter Button with Flyout (Medium/Small screens) -->
-                        <Button 
-                            x:Name="FilterButton"
-                            Visibility="Collapsed"
-                            Style="{ThemeResource SecondaryButtonStyle}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE71C;" FontSize="16"/>
-                                <TextBlock Text="Filters"/>
+                    <!-- Filters Row -->
+                    <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Filter Controls -->
+                            <StackPanel x:Name="InlineFiltersPanel" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Start Date" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" PlaceholderText="Start Date"/>
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="End Date" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" PlaceholderText="End Date"/>
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="View By" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <ComboBox SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}" MinWidth="100"/>
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Category" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                    <ComboBox ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}" MinWidth="130"/>
+                                </StackPanel>
+
                             </StackPanel>
-                            <Button.Flyout>
-                                <Flyout Placement="BottomEdgeAlignedRight">
-                                    <StackPanel Spacing="16" MinWidth="300" Padding="8">
-                                        <TextBlock Text="Report Filters" FontWeight="SemiBold" FontSize="16" Foreground="{ThemeResource TextPrimaryBrush}"/>
-                                        
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="Start Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                            <CalendarDatePicker Date="{x:Bind ViewModel.StartDate, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="End Date" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                            <CalendarDatePicker Date="{x:Bind ViewModel.EndDate, Mode=TwoWay}" HorizontalAlignment="Stretch"/>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="View By" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                            <ComboBox HorizontalAlignment="Stretch" SelectedItem="{x:Bind ViewModel.SelectedReportType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.ReportTypes}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="Category" FontSize="12" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedCategory, Mode=TwoWay}"/>
-                                        </StackPanel>
-
-                                        <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" 
-                                                Style="{ThemeResource AccentButtonStyle}" HorizontalAlignment="Stretch"/>
-                                    </StackPanel>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-                        
-                        <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" Style="{ThemeResource AccentButtonStyle}"/>
-                        <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="24" Height="24"/>
-                    </StackPanel>
-                </Grid>
+                            
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <Button Content="Load Data" Command="{x:Bind ViewModel.LoadDataCommand}" Style="{ThemeResource AccentButtonStyle}"/>
+                                <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="24" Height="24"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
                 
                 <!-- Revenue Section -->
                 <Grid ColumnSpacing="16">
@@ -337,6 +314,79 @@
                         </Grid>
                     </Border>
                 </Grid>
+
+                <!-- Profit Time Series Section (NEW) -->
+                <Border Style="{StaticResource CardBorderStyle}" Height="350">
+                    <Grid Padding="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Profit Trend" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                        <lvc:CartesianChart Grid.Row="1" Series="{x:Bind ViewModel.ProfitTimeSeriesSeries, Mode=OneWay}" XAxes="{x:Bind ViewModel.ProfitTimeSeriesXAxes, Mode=OneWay}" TooltipPosition="Top"/>
+                    </Grid>
+                </Border>
+
+                <!-- Sales Analysis Section (Merged Product & Category) -->
+                <Border Style="{StaticResource CardBorderStyle}" Height="400">
+                    <Grid Padding="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header with toggle -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="16" Margin="0,0,0,12">
+                            <TextBlock Text="Sales Analysis" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            
+                            <!-- Analysis Mode Toggle -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Analyze By" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                <ComboBox ItemsSource="{x:Bind ViewModel.AnalysisModes}" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedAnalysisMode, Mode=TwoWay}" 
+                                          MinWidth="120"/>
+                            </StackPanel>
+                            
+                            <!-- Product Selector (visible when Product mode) -->
+                            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsProductMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Select Product" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                <ComboBox ItemsSource="{x:Bind ViewModel.AvailableProducts, Mode=OneWay}" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedProduct, Mode=TwoWay}" 
+                                          DisplayMemberPath="Name"
+                                          MinWidth="200"/>
+                            </StackPanel>
+
+                            <!-- Metric Selector (visible when Product mode) -->
+                            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsProductMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Metric" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                <ComboBox SelectedItem="{x:Bind ViewModel.SelectedMetricType, Mode=TwoWay}" ItemsSource="{x:Bind ViewModel.MetricTypes}" MinWidth="100"/>
+                            </StackPanel>
+                            
+                            <!-- Category Selector (visible when Category mode) -->
+                            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsCategoryMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Filter Category" FontSize="11" Foreground="{ThemeResource TextSecondaryBrush}"/>
+                                <ComboBox ItemsSource="{x:Bind ViewModel.Categories, Mode=OneWay}" 
+                                          SelectedItem="{x:Bind ViewModel.SelectedCategoryForAnalysis, Mode=TwoWay}"
+                                          MinWidth="150"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <!-- Product Chart (visible when Product mode) -->
+                        <lvc:CartesianChart Grid.Row="1" 
+                                           Series="{x:Bind ViewModel.SingleProductSeries, Mode=OneWay}" 
+                                           XAxes="{x:Bind ViewModel.SingleProductXAxes, Mode=OneWay}" 
+                                           TooltipPosition="Top"
+                                           Visibility="{x:Bind ViewModel.IsProductMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        
+                        <!-- Category Chart (visible when Category mode) -->
+                        <lvc:CartesianChart Grid.Row="1" 
+                                           Series="{x:Bind ViewModel.CategorySalesSeries, Mode=OneWay}" 
+                                           XAxes="{x:Bind ViewModel.CategorySalesXAxes, Mode=OneWay}" 
+                                           TooltipPosition="Top" 
+                                           LegendPosition="Right"
+                                           Visibility="{x:Bind ViewModel.IsCategoryMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </Grid>
+                </Border>
                 
                 <!-- KPI & Commission Section -->
                 <Border Style="{StaticResource CardBorderStyle}">

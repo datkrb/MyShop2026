@@ -167,6 +167,106 @@ export class ReportController {
       sendError(res, 'INTERNAL_ERROR', error.message, 500);
     }
   }
+
+  async getProfitTimeSeries(req: AuthRequest, res: Response) {
+    try {
+      const type = (req.query.type as 'day' | 'month' | 'year') || 'day';
+      const startDateStr = req.query.startDate as string;
+      const endDateStr = req.query.endDate as string;
+      const categoryIdStr = req.query.categoryId as string;
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (startDateStr && endDateStr) {
+        startDate = new Date(startDateStr);
+        endDate = new Date(endDateStr);
+      } else {
+        const now = new Date();
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      }
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return sendError(res, 'BAD_REQUEST', 'Invalid date format', 400);
+      }
+
+      const categoryId = categoryIdStr ? parseInt(categoryIdStr) : undefined;
+      const createdById = this.getCreatedByIdFilter(req);
+
+      const result = await reportService.getProfitTimeSeries(startDate, endDate, type, categoryId, createdById);
+      sendSuccess(res, result);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
+
+  async getProductSalesById(req: AuthRequest, res: Response) {
+    try {
+      const productId = parseInt(req.params.productId);
+      const type = (req.query.type as 'day' | 'month') || 'day';
+      const startDateStr = req.query.startDate as string;
+      const endDateStr = req.query.endDate as string;
+
+      if (isNaN(productId)) {
+        return sendError(res, 'BAD_REQUEST', 'Invalid product ID', 400);
+      }
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (startDateStr && endDateStr) {
+        startDate = new Date(startDateStr);
+        endDate = new Date(endDateStr);
+      } else {
+        const now = new Date();
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      }
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return sendError(res, 'BAD_REQUEST', 'Invalid date format', 400);
+      }
+
+      const createdById = this.getCreatedByIdFilter(req);
+
+      const result = await reportService.getProductSalesById(startDate, endDate, productId, type, createdById);
+      sendSuccess(res, result);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
+
+  async getCategorySalesTimeSeries(req: AuthRequest, res: Response) {
+    try {
+      const type = (req.query.type as 'day' | 'month') || 'day';
+      const startDateStr = req.query.startDate as string;
+      const endDateStr = req.query.endDate as string;
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (startDateStr && endDateStr) {
+        startDate = new Date(startDateStr);
+        endDate = new Date(endDateStr);
+      } else {
+        const now = new Date();
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      }
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return sendError(res, 'BAD_REQUEST', 'Invalid date format', 400);
+      }
+
+      const createdById = this.getCreatedByIdFilter(req);
+
+      const result = await reportService.getCategorySalesTimeSeries(startDate, endDate, type, createdById);
+      sendSuccess(res, result);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
 }
 
 export default new ReportController();
