@@ -10,7 +10,7 @@ using Windows.Storage.Pickers;
 using Windows.System;
 using Microsoft.UI.Xaml;
 
-namespace MyShopClient.Services;
+namespace MyShopClient.Services.Invoice;
 
 public class InvoiceData
 {
