@@ -137,10 +137,8 @@ public partial class OrdersViewModel : ViewModelBase
                     });
                 }
 
-                // Update stats (simplified - would need separate API for accurate counts)
-                PendingCount = FilteredOrders.Count(o => o.OrderStatus == "PENDING");
-                PaidCount = FilteredOrders.Count(o => o.OrderStatus == "PAID");
-                CancelledCount = FilteredOrders.Count(o => o.OrderStatus == "CANCELLED");
+                // Load statistics from API
+                await LoadStatsAsync();
             }
         }
         catch (Exception ex)
@@ -152,6 +150,24 @@ public partial class OrdersViewModel : ViewModelBase
             IsLoading = false;
             UpdatePaginationProperties();
             UpdatePageNumbers();
+        }
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var stats = await _orderApiService.GetStatsAsync();
+            if (stats != null)
+            {
+                TotalOrdersCount = stats.Total;
+                PendingCount = stats.Pending;
+                PaidCount = stats.Paid;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading order stats: {ex.Message}");
         }
     }
 

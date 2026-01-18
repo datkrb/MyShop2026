@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services;
+using MyShopClient.Services.Invoice;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Navigation;
 using MyShopClient.Views.Orders;

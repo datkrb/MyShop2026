@@ -7,6 +7,7 @@ import { createOrderDto, updateOrderStatusDto } from '../dtos/order.dto';
 const router = Router();
 
 router.get('/', authMiddleware, orderController.getAll.bind(orderController));
+router.get('/stats', authMiddleware, orderController.getStats.bind(orderController));
 router.get('/:id', authMiddleware, orderController.getById.bind(orderController));
 router.post('/', authMiddleware, validate(createOrderDto), orderController.create.bind(orderController));
 router.put('/:id', authMiddleware, orderController.update.bind(orderController));

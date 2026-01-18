@@ -201,7 +201,7 @@
                                      </StackPanel>
                                  </StackPanel>
                                  <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#EFF6FF" Width="40" Height="40" CornerRadius="8">
-                                      <FontIcon Glyph="&#xE781;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource InfoBrush}"/>
+                                      <FontIcon Glyph="&#xE8F1;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="{ThemeResource InfoBrush}"/>
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">
@@ -224,7 +224,7 @@
                                      </StackPanel>
                                  </StackPanel>
                                  <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F0FDFA" Width="40" Height="40" CornerRadius="8">
-                                      <FontIcon Glyph="&#xE8D6;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#14B8A6"/>
+                                      <FontIcon Glyph="&#xF785;" FontFamily="{ThemeResource SymbolThemeFontFamily}" Foreground="#14B8A6"/>
                                  </Border>
                              </Grid>
                              <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,16,0,0">

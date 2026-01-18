@@ -102,6 +102,36 @@ export class CustomerRepository {
       where: { id },
     });
   }
+
+  async getStats() {
+    const now = new Date();
+    
+    // Start of current month
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Start of current week (Monday)
+    const dayOfWeek = now.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - diffToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const [total, newThisMonth, newThisWeek] = await Promise.all([
+      prisma.customer.count(),
+      prisma.customer.count({
+        where: {
+          createdAt: { gte: startOfMonth }
+        }
+      }),
+      prisma.customer.count({
+        where: {
+          createdAt: { gte: startOfWeek }
+        }
+      })
+    ]);
+
+    return { total, newThisMonth, newThisWeek };
+  }
 }
 
 export default new CustomerRepository();

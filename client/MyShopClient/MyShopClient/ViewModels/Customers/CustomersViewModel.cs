@@ -32,10 +32,7 @@ public partial class CustomersViewModel : ViewModelBase
     private int _newThisMonth;
 
     [ObservableProperty]
-    private int _activeCustomers;
-
-    [ObservableProperty]
-    private int _totalOrders;
+    private int _newThisWeek;
 
     // Selection mode (for dialog)
     [ObservableProperty]
@@ -142,10 +139,8 @@ public partial class CustomersViewModel : ViewModelBase
                     });
                 }
 
-                // Update stats (mock values for now - could add stats API later)
-                NewThisMonth = FilteredCustomers.Count(c => c.CreatedAt >= DateTime.Now.AddDays(-30));
-                ActiveCustomers = TotalCustomers;
-                TotalOrders = 0; // Would need separate API
+                // Load statistics from API
+                await LoadStatsAsync();
             }
         }
         catch (Exception ex)
@@ -157,6 +152,24 @@ public partial class CustomersViewModel : ViewModelBase
             IsLoading = false;
             UpdatePaginationProperties();
             UpdatePageNumbers();
+        }
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var stats = await _customerApiService.GetStatsAsync();
+            if (stats != null)
+            {
+                TotalCustomers = stats.Total;
+                NewThisMonth = stats.NewThisMonth;
+                NewThisWeek = stats.NewThisWeek;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading customer stats: {ex.Message}");
         }
     }
 
