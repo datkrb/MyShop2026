@@ -24,12 +24,15 @@ public class ApiOrder
     public DateTime CreatedTime { get; set; }
     public DateTime UpdatedAt { get; set; }
     public decimal FinalPrice { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public int? PromotionId { get; set; }
     public int? CustomerId { get; set; }
     public int? CreatedById { get; set; }
     
     // Navigation properties
     public Customer? Customer { get; set; }
     public ApiUser? CreatedBy { get; set; }
+    public Promotion? Promotion { get; set; }
     public List<OrderItem>? OrderItems { get; set; }
     
     // Helper: Get first item name for display

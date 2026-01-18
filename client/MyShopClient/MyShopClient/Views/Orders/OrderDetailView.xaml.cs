@@ -23,7 +23,9 @@ public sealed partial class OrderDetailView : Page
             ?? new OrderDetailViewModel(
                 App.Current.Services.GetRequiredService<MyShopClient.Services.Api.OrderApiService>(),
                 _navigationService,
-                App.Current.Services.GetRequiredService<MyShopClient.Services.Local.ILocalDraftService>());
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Local.ILocalDraftService>(),
+                App.Current.Services.GetRequiredService<MyShopClient.Services.InvoiceService>(),
+                App.Current.Services.GetRequiredService<MyShopClient.Services.Api.PromotionApiService>());
         
         // Subscribe to notification property changes
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
