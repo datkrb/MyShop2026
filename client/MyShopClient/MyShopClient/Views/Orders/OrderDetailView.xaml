@@ -16,6 +16,8 @@
         <helpers:InverseStringVisibilityConverter x:Key="InverseStringVisibilityConverter"/>
         <helpers:ImageUrlConverter x:Key="ImageUrlConverter"/>
         <helpers:StringToInfoBarSeverityConverter x:Key="StringToInfoBarSeverityConverter"/>
+        <helpers:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <helpers:BoolToErrorBrushConverter x:Key="BoolToErrorBrushConverter"/>
     </Page.Resources>
 
     <Grid Padding="24,24,4,24">
@@ -204,6 +206,13 @@
                                 </StackPanel>
                             </Button>
                             
+                            <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.PrintCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE749;" FontSize="14" Foreground="{ThemeResource PrimaryBrush}"/>
+                                    <TextBlock Text="Print" Foreground="{ThemeResource PrimaryBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            
                             <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="#EF4444" Padding="20,10" Command="{x:Bind ViewModel.DeleteOrderCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
@@ -352,10 +361,66 @@
                         
                         <!-- Order Summary -->
                         <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
+                            
+                            <!-- Discount Code Section (Edit Mode Only) -->
+                            <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.IsEditing, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Mã giảm giá" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBox 
+                                        Grid.Column="0"
+                                        PlaceholderText="Nhập mã giảm giá..."
+                                        Text="{x:Bind ViewModel.PromotionCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{x:Bind ViewModel.IsPromotionApplied, Mode=OneWay, Converter={StaticResource InverseBoolConverter}}"
+                                        Margin="0,0,8,0"/>
+                                    
+                                    <!-- Apply Button -->
+                                    <Button 
+                                        Grid.Column="1"
+                                        Content="Áp dụng"
+                                        Command="{x:Bind ViewModel.ApplyPromotionCommand}"
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        Visibility="{x:Bind ViewModel.IsPromotionApplied, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                                    
+                                    <!-- Remove Button -->
+                                    <Button 
+                                        Grid.Column="1"
+                                        Content="Xóa"
+                                        Command="{x:Bind ViewModel.RemovePromotionCommand}"
+                                        Background="#FEE2E2"
+                                        Foreground="#EF4444"
+                                        Visibility="{x:Bind ViewModel.IsPromotionApplied, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                </Grid>
+                                
+                                <!-- Promotion Message -->
+                                <TextBlock 
+                                    Text="{x:Bind ViewModel.PromotionMessage, Mode=OneWay}"
+                                    FontSize="12"
+                                    Foreground="{x:Bind ViewModel.IsPromotionError, Mode=OneWay, Converter={StaticResource BoolToErrorBrushConverter}}"
+                                    Visibility="{x:Bind ViewModel.PromotionMessage, Mode=OneWay, Converter={StaticResource StringVisibilityConverter}}"
+                                    TextWrapping="Wrap"/>
+                                
+                                <Rectangle Height="1" Fill="{ThemeResource BorderBrush}" Margin="0,8"/>
+                            </StackPanel>
+                            
                             <Grid>
                                 <TextBlock Text="Subtotal" Foreground="{ThemeResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{x:Bind ViewModel.FormattedSubtotal, Mode=OneWay}" HorizontalAlignment="Right" Foreground="{ThemeResource TextPrimaryBrush}"/>
                             </Grid>
+                            
+                            <!-- Discount Row (Show when there's any discount - either from API or validated in edit mode) -->
+                            <Grid Visibility="{x:Bind ViewModel.HasDiscount, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Giảm giá" Foreground="#10B981"/>
+                                <TextBlock HorizontalAlignment="Right" Foreground="#10B981">
+                                    <Run Text="-"/>
+                                    <Run Text="{x:Bind ViewModel.FormattedDisplayDiscount, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Grid>
+                            
                             <Rectangle Height="1" Fill="{ThemeResource BorderBrush}" Margin="0,8"/>
                             <Grid>
                                 <TextBlock Text="Total" FontSize="16" FontWeight="Bold" Foreground="{ThemeResource TextPrimaryBrush}"/>
@@ -382,6 +447,13 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE70F;" FontSize="14"/>
                                 <TextBlock Text="Edit Order"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.PrintCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE749;" FontSize="14" Foreground="{ThemeResource PrimaryBrush}"/>
+                                <TextBlock Text="Print" Foreground="{ThemeResource PrimaryBrush}"/>
                             </StackPanel>
                         </Button>
                         

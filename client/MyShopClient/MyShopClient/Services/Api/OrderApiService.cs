@@ -103,6 +103,7 @@ public class CreateOrderRequest
     public int? CustomerId { get; set; }
     public string Status { get; set; } = "DRAFT";
     public System.Collections.Generic.List<CreateOrderItemRequest>? Items { get; set; }
+    public string? PromotionCode { get; set; }
 }
 
 /// <summary>
@@ -113,6 +114,7 @@ public class UpdateOrderRequest
     public int? CustomerId { get; set; }
     public string? Status { get; set; }
     public System.Collections.Generic.List<CreateOrderItemRequest>? Items { get; set; }
+    public string? PromotionCode { get; set; }
 }
 
 /// <summary>
