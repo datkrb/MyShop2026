@@ -86,4 +86,16 @@ public class CustomerApiService : BaseApiService
     {
         return await DeleteAsync($"customers/{id}");
     }
+
+    public async Task<CustomerStats?> GetStatsAsync()
+    {
+        return await GetAsync<CustomerStats>("customers/stats");
+    }
+}
+
+public class CustomerStats
+{
+    public int Total { get; set; }
+    public int NewThisMonth { get; set; }
+    public int NewThisWeek { get; set; }
 }
