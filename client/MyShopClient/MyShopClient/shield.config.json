@@ -1,0 +1,15 @@
+{
+	"Name": "My first project",
+	"Preset": "custom",
+	"ProjectToken": "bh_i4C3tzD1XfLMWnDVCBwKyON1puJQbiYItw",
+	"ProtectionSecret": "<your-protection-secret>",
+	"Enabled": "false",
+	"RunConfiguration": "*",
+	"Protections": {
+		"anti_ildasm": null,
+		"rename": {
+			"mode": "default"
+		}
+	},
+	"Actions": {}
+}
