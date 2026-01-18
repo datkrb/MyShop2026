@@ -63,8 +63,8 @@
                         <Setter Target="StatCard4.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="1"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="0"/>
-                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
-                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
                 
@@ -249,16 +249,18 @@
                                 <TextBox 
                                     PlaceholderText="Search orders..."
                                     Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Width="150"/>
+                                    Width="200"/>
 
                                 <!-- From Date -->
                                 <CalendarDatePicker 
                                     Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
+                                    MinWidth="70"
                                     PlaceholderText="From"/>
 
                                 <!-- To Date -->
                                 <CalendarDatePicker 
                                     Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
+                                    MinWidth="70"
                                     PlaceholderText="To"/>
 
                                 <!-- Status Filter -->
@@ -269,10 +271,10 @@
 
                                 <!-- Amount Range -->
                                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                    <NumberBox PlaceholderText="Min$" Width="70" 
+                                    <NumberBox PlaceholderText="Min$" Width="120"
                                                Value="{x:Bind ViewModel.MinAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
                                     <TextBlock Text="-" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                    <NumberBox PlaceholderText="Max$" Width="70" 
+                                    <NumberBox PlaceholderText="Max$" Width="120" 
                                                Value="{x:Bind ViewModel.MaxAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
                                 </StackPanel>
 
