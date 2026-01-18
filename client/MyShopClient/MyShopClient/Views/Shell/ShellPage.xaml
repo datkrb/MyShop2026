@@ -65,7 +65,7 @@
 
             <NavigationViewItem Content="Products" Tag="Products">
                 <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE781;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                    <FontIcon Glyph="&#xE8F1;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 
