@@ -372,6 +372,244 @@ export class ReportService {
 
     return Object.values(salesData).sort((a, b) => b.revenue - a.revenue);
   }
+
+  /**
+   * Get profit time series data (profit by day/month/year)
+   */
+  async getProfitTimeSeries(
+    startDate: Date,
+    endDate: Date,
+    type: "day" | "month" | "year" = "day",
+    categoryId?: number,
+    createdById?: number
+  ) {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+        ...(createdById && { createdById }),
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+          },
+          ...(categoryId && {
+            where: {
+              product: {
+                categoryId: categoryId,
+              },
+            },
+          }),
+        },
+      },
+    });
+
+    const profitData: { [key: string]: { revenue: number; cost: number } } = {};
+
+    orders.forEach((order) => {
+      let key = "";
+      const date = new Date(order.createdTime);
+
+      if (type === "day") {
+        key = date.toISOString().split("T")[0];
+      } else if (type === "month") {
+        key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+      } else if (type === "year") {
+        key = `${date.getFullYear()}`;
+      }
+
+      if (!profitData[key]) {
+        profitData[key] = { revenue: 0, cost: 0 };
+      }
+
+      if (categoryId) {
+        order.orderItems.forEach((item) => {
+          profitData[key].revenue += item.totalPrice;
+          profitData[key].cost += item.quantity * item.product.importPrice;
+        });
+      } else {
+        profitData[key].revenue += order.finalPrice;
+        order.orderItems.forEach((item) => {
+          profitData[key].cost += item.quantity * item.product.importPrice;
+        });
+      }
+    });
+
+    const sortedData = Object.entries(profitData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, data]) => ({
+        date,
+        revenue: data.revenue,
+        cost: data.cost,
+        profit: data.revenue - data.cost,
+      }));
+
+    return sortedData;
+  }
+
+  /**
+   * Get sales time series for a specific product
+   */
+  async getProductSalesById(
+    startDate: Date,
+    endDate: Date,
+    productId: number,
+    type: "day" | "month" = "day",
+    createdById?: number
+  ) {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+        ...(createdById && { createdById }),
+        orderItems: {
+          some: {
+            productId: productId,
+          },
+        },
+      },
+      include: {
+        orderItems: {
+          where: {
+            productId: productId,
+          },
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    const salesData: { [key: string]: { quantity: number; revenue: number } } = {};
+
+    orders.forEach((order) => {
+      let key = "";
+      const date = new Date(order.createdTime);
+
+      if (type === "day") {
+        key = date.toISOString().split("T")[0];
+      } else {
+        key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+      }
+
+      if (!salesData[key]) {
+        salesData[key] = { quantity: 0, revenue: 0 };
+      }
+
+      order.orderItems.forEach((item) => {
+        salesData[key].quantity += item.quantity;
+        salesData[key].revenue += item.totalPrice;
+      });
+    });
+
+    const sortedData = Object.entries(salesData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, data]) => ({
+        date,
+        quantity: data.quantity,
+        revenue: data.revenue,
+      }));
+
+    return sortedData;
+  }
+
+  /**
+   * Get sales time series grouped by category
+   */
+  async getCategorySalesTimeSeries(
+    startDate: Date,
+    endDate: Date,
+    type: "day" | "month" = "day",
+    createdById?: number
+  ) {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: OrderStatus.PAID,
+        createdTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+        ...(createdById && { createdById }),
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                category: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Get all categories
+    const categories = await prisma.category.findMany({
+      select: { id: true, name: true },
+    });
+
+    // Build date keys
+    const dateKeys = new Set<string>();
+    orders.forEach((order) => {
+      const date = new Date(order.createdTime);
+      let key = "";
+      if (type === "day") {
+        key = date.toISOString().split("T")[0];
+      } else {
+        key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+      }
+      dateKeys.add(key);
+    });
+
+    const sortedDates = Array.from(dateKeys).sort();
+
+    // Initialize data structure
+    const categoryData: { [categoryId: number]: { [date: string]: number } } = {};
+    categories.forEach((cat) => {
+      categoryData[cat.id] = {};
+      sortedDates.forEach((date) => {
+        categoryData[cat.id][date] = 0;
+      });
+    });
+
+    // Fill in sales data
+    orders.forEach((order) => {
+      const date = new Date(order.createdTime);
+      let key = "";
+      if (type === "day") {
+        key = date.toISOString().split("T")[0];
+      } else {
+        key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+      }
+
+      order.orderItems.forEach((item) => {
+        const categoryId = item.product.categoryId;
+        if (categoryData[categoryId]) {
+          categoryData[categoryId][key] += item.quantity;
+        }
+      });
+    });
+
+    // Format output
+    const series = categories.map((cat) => ({
+      categoryId: cat.id,
+      categoryName: cat.name,
+      data: sortedDates.map((date) => categoryData[cat.id][date] || 0),
+    }));
+
+    return {
+      dates: sortedDates,
+      series: series.filter((s) => s.data.some((v) => v > 0)), // Only include categories with data
+    };
+  }
 }
 
 export default new ReportService();

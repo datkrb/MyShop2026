@@ -103,6 +103,52 @@ public partial class ReportViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<int?> _kpiMonths = new();
 
+    // NEW: Profit Time Series Chart Properties
+    [ObservableProperty]
+    private ISeries[] _profitTimeSeriesSeries = Array.Empty<ISeries>();
+
+    [ObservableProperty]
+    private ICartesianAxis[] _profitTimeSeriesXAxes = Array.Empty<ICartesianAxis>();
+
+    // NEW: Single Product Analysis Properties
+    [ObservableProperty]
+    private ObservableCollection<ApiProduct> _availableProducts = new();
+
+    [ObservableProperty]
+    private ApiProduct? _selectedProduct;
+
+    [ObservableProperty]
+    private ISeries[] _singleProductSeries = Array.Empty<ISeries>();
+
+    [ObservableProperty]
+    private ICartesianAxis[] _singleProductXAxes = Array.Empty<ICartesianAxis>();
+
+    // NEW: Category Sales Chart Properties
+    [ObservableProperty]
+    private ISeries[] _categorySalesSeries = Array.Empty<ISeries>();
+
+    [ObservableProperty]
+    private ICartesianAxis[] _categorySalesXAxes = Array.Empty<ICartesianAxis>();
+
+    // NEW: Analysis Mode Toggle (Product vs Category)
+    [ObservableProperty]
+    private string _selectedAnalysisMode = "Product";
+
+    public string[] AnalysisModes { get; } = { "Product", "Category" };
+
+    [ObservableProperty]
+    private CategoryFilterItem? _selectedCategoryForAnalysis;
+
+    // NEW: Metric Type Filter (Quantity, Revenue, Profit)
+    [ObservableProperty]
+    private string _selectedMetricType = "Quantity";
+
+    public string[] MetricTypes { get; } = { "Quantity", "Revenue", "Profit" };
+
+    // Computed visibility properties
+    public bool IsProductMode => SelectedAnalysisMode == "Product";
+    public bool IsCategoryMode => SelectedAnalysisMode == "Category";
+
     public bool IsAdmin => App.Current.IsAdmin;
 
     // Computed properties for My KPI display (avoids null binding issues in XAML)
@@ -110,6 +156,7 @@ public partial class ReportViewModel : ObservableObject
     public string MyKpiRevenue => MyKpi != null ? Helpers.CurrencyHelper.FormatVND(MyKpi.Revenue) : "0 đ";
     public string MyKpiRate => MyKpi != null ? $"{MyKpi.CommissionRate}%" : "0%";
     public string MyKpiCommission => MyKpi != null ? Helpers.CurrencyHelper.FormatVND(MyKpi.Commission) : "0 đ";
+
 
     public ReportViewModel(IReportApiService reportApiService, ProductApiService productApiService)
     {
@@ -157,6 +204,23 @@ public partial class ReportViewModel : ObservableObject
             }
         }
         SelectedCategory = Categories.FirstOrDefault();
+
+        // Load available products for single product chart
+        await LoadAvailableProductsAsync();
+    }
+
+    private async Task LoadAvailableProductsAsync()
+    {
+        var products = await _productApiService.GetProductsAsync(1, 100, null, null);
+        AvailableProducts.Clear();
+        if (products.Data != null)
+        {
+            foreach (var product in products.Data)
+            {
+                AvailableProducts.Add(product);
+            }
+        }
+        SelectedProduct = AvailableProducts.FirstOrDefault();
     }
 
     [RelayCommand]
@@ -174,8 +238,16 @@ public partial class ReportViewModel : ObservableObject
                 LoadRevenueAsync(start, end),
                 LoadProfitAsync(start, end),
                 LoadProductSalesAsync(start, end),
+                LoadProfitTimeSeriesAsync(start, end),
+                LoadCategorySalesAsync(start, end),
                 LoadKpiAsync()
             );
+
+            // Load single product separately if selected
+            if (SelectedProduct != null)
+            {
+                await LoadSingleProductSalesAsync(start, end);
+            }
         }
         catch (Exception ex)
         {
@@ -366,6 +438,284 @@ public partial class ReportViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"LoadKpiAsync Error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Load profit time series chart
+    /// </summary>
+    private async Task LoadProfitTimeSeriesAsync(DateTime start, DateTime end)
+    {
+        try
+        {
+            var categoryId = SelectedCategory?.Id;
+            var data = await _reportApiService.GetProfitTimeSeriesAsync(start, end, SelectedReportType, categoryId);
+
+            if (data.Count == 0)
+            {
+                ProfitTimeSeriesSeries = Array.Empty<ISeries>();
+                ProfitTimeSeriesXAxes = Array.Empty<ICartesianAxis>();
+                return;
+            }
+
+            var profitValues = data.Select(x => (double)x.Profit).ToArray();
+            var revenueValues = data.Select(x => (double)x.Revenue).ToArray();
+            var labels = data.Select(x => x.Date).ToArray();
+
+            ProfitTimeSeriesSeries = new ISeries[]
+            {
+                new LineSeries<double>
+                {
+                    Name = "Profit",
+                    Values = profitValues,
+                    Stroke = new SolidColorPaint(new SKColor(34, 197, 94)) { StrokeThickness = 2 },
+                    Fill = null,
+                    GeometrySize = 6,
+                    GeometryFill = new SolidColorPaint(new SKColor(34, 197, 94)),
+                    LineSmoothness = 0.3
+                },
+                new LineSeries<double>
+                {
+                    Name = "Revenue",
+                    Values = revenueValues,
+                    Stroke = new SolidColorPaint(new SKColor(59, 130, 246)) { StrokeThickness = 2 },
+                    Fill = null,
+                    GeometrySize = 6,
+                    GeometryFill = new SolidColorPaint(new SKColor(59, 130, 246)),
+                    LineSmoothness = 0.3
+                }
+            };
+
+            ProfitTimeSeriesXAxes = new ICartesianAxis[]
+            {
+                new Axis { Labels = labels, LabelsRotation = 45, TextSize = 10 }
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadProfitTimeSeriesAsync Error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Load single product sales chart
+    /// </summary>
+    private async Task LoadSingleProductSalesAsync(DateTime start, DateTime end)
+    {
+        try
+        {
+            if (SelectedProduct == null)
+            {
+                SingleProductSeries = Array.Empty<ISeries>();
+                SingleProductXAxes = Array.Empty<ICartesianAxis>();
+                return;
+            }
+
+            var data = await _reportApiService.GetProductSalesByIdAsync(SelectedProduct.Id, start, end, SelectedReportType);
+
+            // Generate all dates in range based on SelectedReportType
+            var allDates = GenerateDateRange(start, end, SelectedReportType);
+            var dataDict = data.ToDictionary(x => x.Date, x => x);
+
+            var values = new List<double>();
+            var labels = new List<string>();
+
+            foreach (var date in allDates)
+            {
+                labels.Add(date);
+                if (dataDict.TryGetValue(date, out var item))
+                {
+                    // Select value based on SelectedMetricType
+                    var value = SelectedMetricType switch
+                    {
+                        "Revenue" => (double)item.Revenue,
+                        "Profit" => (double)item.Revenue * 0.3, // Estimate profit as 30% of revenue (actual profit would need cost data)
+                        _ => (double)item.Quantity
+                    };
+                    values.Add(value);
+                }
+                else
+                {
+                    values.Add(0);
+                }
+            }
+
+            SingleProductSeries = new ISeries[]
+            {
+                new LineSeries<double>
+                {
+                    Name = SelectedMetricType,
+                    Values = values.ToArray(),
+                    Stroke = new SolidColorPaint(new SKColor(124, 92, 252)) { StrokeThickness = 2 },
+                    Fill = null,
+                    GeometrySize = 6,
+                    GeometryFill = new SolidColorPaint(new SKColor(124, 92, 252)),
+                    LineSmoothness = 0.3
+                }
+            };
+
+            // Format labels for display
+            var formattedLabels = labels.Select(d =>
+            {
+                if (DateTime.TryParse(d, out var date))
+                    return date.ToString("dd/MM");
+                return d;
+            }).ToList();
+
+            SingleProductXAxes = new ICartesianAxis[]
+            {
+                new Axis { Labels = formattedLabels, LabelsRotation = 45, TextSize = 10 }
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadSingleProductSalesAsync Error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Generate all dates in range based on report type
+    /// </summary>
+    private List<string> GenerateDateRange(DateTime start, DateTime end, string reportType)
+    {
+        var dates = new List<string>();
+        var current = start;
+
+        while (current <= end)
+        {
+            if (reportType == "day")
+            {
+                dates.Add(current.ToString("yyyy-MM-dd"));
+                current = current.AddDays(1);
+            }
+            else if (reportType == "month")
+            {
+                dates.Add($"{current.Year}-{current.Month:D2}");
+                current = current.AddMonths(1);
+            }
+            else // year
+            {
+                dates.Add($"{current.Year}");
+                current = current.AddYears(1);
+            }
+        }
+
+        return dates;
+    }
+
+    /// <summary>
+    /// Load category sales comparison chart
+    /// </summary>
+    private async Task LoadCategorySalesAsync(DateTime start, DateTime end)
+    {
+        try
+        {
+            var data = await _reportApiService.GetCategorySalesTimeSeriesAsync(start, end, SelectedReportType);
+
+            if (data.Dates.Count == 0 || data.Series.Count == 0)
+            {
+                CategorySalesSeries = Array.Empty<ISeries>();
+                CategorySalesXAxes = Array.Empty<ICartesianAxis>();
+                return;
+            }
+
+            var colors = new SKColor[]
+            {
+                new SKColor(33, 150, 243),   // Blue
+                new SKColor(76, 175, 80),    // Green
+                new SKColor(255, 152, 0),    // Orange
+                new SKColor(156, 39, 176),   // Purple
+                new SKColor(244, 67, 54),    // Red
+                new SKColor(0, 188, 212),    // Cyan
+                new SKColor(255, 235, 59),   // Yellow
+                new SKColor(121, 85, 72)     // Brown
+            };
+
+            // Filter series based on selected category
+            var filteredSeries = data.Series;
+            if (SelectedCategoryForAnalysis != null && SelectedCategoryForAnalysis.Id.HasValue)
+            {
+                // Filter to only the selected category
+                filteredSeries = data.Series.Where(s => s.CategoryId == SelectedCategoryForAnalysis.Id.Value).ToList();
+            }
+
+            var seriesList = new List<ISeries>();
+            for (int i = 0; i < filteredSeries.Count; i++)
+            {
+                var seriesItem = filteredSeries[i];
+                var color = colors[i % colors.Length];
+
+                seriesList.Add(new LineSeries<double>
+                {
+                    Name = seriesItem.CategoryName,
+                    Values = seriesItem.Data.Select(x => (double)x).ToArray(),
+                    Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
+                    Fill = null,
+                    GeometrySize = 6,
+                    GeometryFill = new SolidColorPaint(color),
+                    LineSmoothness = 0.3
+                });
+            }
+
+            CategorySalesSeries = seriesList.ToArray();
+
+            var formattedDates = data.Dates.Select(d =>
+            {
+                if (DateTime.TryParse(d, out var date))
+                    return date.ToString("dd/MM");
+                return d;
+            }).ToList();
+
+            CategorySalesXAxes = new ICartesianAxis[]
+            {
+                new Axis { Labels = formattedDates, LabelsRotation = 45, TextSize = 10 }
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadCategorySalesAsync Error: {ex.Message}");
+        }
+    }
+
+    partial void OnSelectedProductChanged(ApiProduct? value)
+    {
+        if (value != null && !IsLoading && IsProductMode)
+        {
+            _ = LoadSingleProductSalesAsync(StartDate.DateTime, EndDate.DateTime);
+        }
+    }
+
+    partial void OnSelectedAnalysisModeChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsProductMode));
+        OnPropertyChanged(nameof(IsCategoryMode));
+
+        if (!IsLoading)
+        {
+            if (value == "Product" && SelectedProduct != null)
+            {
+                _ = LoadSingleProductSalesAsync(StartDate.DateTime, EndDate.DateTime);
+            }
+            else if (value == "Category")
+            {
+                _ = LoadCategorySalesAsync(StartDate.DateTime, EndDate.DateTime);
+            }
+        }
+    }
+
+    partial void OnSelectedCategoryForAnalysisChanged(CategoryFilterItem? value)
+    {
+        if (value != null && !IsLoading && IsCategoryMode)
+        {
+            _ = LoadCategorySalesAsync(StartDate.DateTime, EndDate.DateTime);
+        }
+    }
+
+    partial void OnSelectedMetricTypeChanged(string value)
+    {
+        if (!IsLoading && IsProductMode && SelectedProduct != null)
+        {
+            _ = LoadSingleProductSalesAsync(StartDate.DateTime, EndDate.DateTime);
         }
     }
 }
