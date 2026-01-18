@@ -23,6 +23,7 @@ public partial class OrderDetailViewModel : ObservableObject
     private readonly INavigationService _navigationService;
     private readonly Services.Local.ILocalDraftService _localDraftService;
     private readonly InvoiceService _invoiceService;
+    private readonly PromotionApiService _promotionApiService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -94,6 +95,36 @@ public partial class OrderDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _infoBarSeverity = "Informational"; // Success, Warning, Error, Informational
 
+    // Promotion/Discount properties
+    [ObservableProperty]
+    private string _promotionCode = string.Empty;
+
+    [ObservableProperty]
+    private decimal _discountAmount;
+
+    // Saved discount from API (for view mode)
+    [ObservableProperty]
+    private decimal _savedDiscountAmount;
+
+    // Saved promotion code from API (for display in edit mode)
+    [ObservableProperty] 
+    private string _savedPromotionCode = string.Empty;
+
+    [ObservableProperty]
+    private bool _isPromotionApplied;
+
+    [ObservableProperty]
+    private string _promotionMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isPromotionError;
+
+    // Check if there's any discount to show (either saved or currently applied)
+    public bool HasDiscount => IsEditing ? (IsPromotionApplied && DiscountAmount > 0) : (SavedDiscountAmount > 0);
+    
+    // Get the discount to display based on mode
+    public decimal DisplayDiscount => IsEditing ? DiscountAmount : SavedDiscountAmount;
+
     // Order Items
     public ObservableCollection<OrderItemViewModel> OrderItems { get; } = new();
 
@@ -105,7 +136,10 @@ public partial class OrderDetailViewModel : ObservableObject
     public decimal Total => Subtotal; // No tax calculation for simplicity
     
     public string FormattedSubtotal => Helpers.CurrencyHelper.FormatVND(Subtotal);
-    public string FormattedTotal => Helpers.CurrencyHelper.FormatVND(Total);
+    public string FormattedTotal => Helpers.CurrencyHelper.FormatVND(FinalTotal);
+    public string FormattedDiscount => Helpers.CurrencyHelper.FormatVND(DiscountAmount);
+    public string FormattedDisplayDiscount => Helpers.CurrencyHelper.FormatVND(DisplayDiscount);
+    public decimal FinalTotal => IsEditing ? Math.Max(0, Subtotal - DiscountAmount) : Amount;
 
     public string DisplayStatus => OrderStatus switch
     {
@@ -136,12 +170,13 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private readonly DispatcherTimer _autoSaveTimer;
 
-    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService, Services.Local.ILocalDraftService localDraftService, InvoiceService invoiceService)
+    public OrderDetailViewModel(OrderApiService orderApiService, INavigationService navigationService, Services.Local.ILocalDraftService localDraftService, InvoiceService invoiceService, PromotionApiService promotionApiService)
     {
         _orderApiService = orderApiService ?? throw new ArgumentNullException(nameof(orderApiService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _localDraftService = localDraftService ?? throw new ArgumentNullException(nameof(localDraftService));
         _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
+        _promotionApiService = promotionApiService ?? throw new ArgumentNullException(nameof(promotionApiService));
         OrderDate = DateTime.Now;
         
         _autoSaveTimer = new DispatcherTimer();
@@ -204,6 +239,17 @@ public partial class OrderDetailViewModel : ObservableObject
                         });
                     }
                 }
+
+                // Load discount/promotion info from API
+                SavedDiscountAmount = order.DiscountAmount;
+                SavedPromotionCode = order.Promotion?.Code ?? "";
+                
+                // Reset editing promotion state
+                PromotionCode = SavedPromotionCode;
+                DiscountAmount = 0;
+                IsPromotionApplied = false;
+                PromotionMessage = "";
+                IsPromotionError = false;
 
                 RecalculateTotals();
             }
@@ -331,6 +377,13 @@ public partial class OrderDetailViewModel : ObservableObject
         CustomerAddress = "";
         CustomerAvatar = "";
         
+        // Clear promotion
+        PromotionCode = "";
+        DiscountAmount = 0;
+        IsPromotionApplied = false;
+        PromotionMessage = "";
+        IsPromotionError = false;
+        
         OrderItems.Clear();
         RecalculateTotals();
     }
@@ -342,12 +395,23 @@ public partial class OrderDetailViewModel : ObservableObject
 
     private void RecalculateTotals()
     {
-        Amount = Subtotal;
+        if (IsEditing)
+        {
+            // In edit mode, calculate from items
+            Amount = Math.Max(0, Subtotal - DiscountAmount);
+        }
+        // In view mode, Amount is already set from API
+        
         OnPropertyChanged(nameof(Subtotal));
         OnPropertyChanged(nameof(Total));
+        OnPropertyChanged(nameof(FinalTotal));
         OnPropertyChanged(nameof(FormattedSubtotal));
         OnPropertyChanged(nameof(FormattedTotal));
+        OnPropertyChanged(nameof(FormattedDiscount));
+        OnPropertyChanged(nameof(FormattedDisplayDiscount));
         OnPropertyChanged(nameof(FormattedAmount));
+        OnPropertyChanged(nameof(HasDiscount));
+        OnPropertyChanged(nameof(DisplayDiscount));
         
         // Trigger auto-save whenever totals change (implies items/quantity changed)
         TriggerAutoSave();
@@ -521,7 +585,8 @@ public partial class OrderDetailViewModel : ObservableObject
                         ProductId = i.ProductId,
                         Quantity = i.Quantity
                     }).ToList(),
-                    Status = "PENDING"
+                    Status = "PENDING",
+                    PromotionCode = IsPromotionApplied ? PromotionCode : null
                 };
 
                 result = await _orderApiService.CreateOrderAsync(request);
@@ -536,7 +601,8 @@ public partial class OrderDetailViewModel : ObservableObject
                     {
                         ProductId = i.ProductId,
                         Quantity = i.Quantity
-                    }).ToList()
+                    }).ToList(),
+                    PromotionCode = IsPromotionApplied ? PromotionCode : null
                 };
 
                 result = await _orderApiService.UpdateOrderAsync(Id, request);
@@ -596,6 +662,87 @@ public partial class OrderDetailViewModel : ObservableObject
         InfoBarMessage = message;
         InfoBarSeverity = severity;
         IsTipOpen = true;
+    }
+
+    [RelayCommand]
+    private async Task ApplyPromotionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(PromotionCode))
+        {
+            PromotionMessage = "Vui lòng nhập mã giảm giá.";
+            IsPromotionError = true;
+            return;
+        }
+
+        if (Subtotal <= 0)
+        {
+            PromotionMessage = "Vui lòng thêm sản phẩm trước khi áp dụng mã giảm giá.";
+            IsPromotionError = true;
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            var result = await _promotionApiService.ValidatePromotionAsync(PromotionCode.Trim(), Subtotal);
+
+            if (result != null && result.Valid)
+            {
+                DiscountAmount = result.DiscountAmount ?? 0;
+                IsPromotionApplied = true;
+                IsPromotionError = false;
+                
+                var promotionInfo = result.Promotion;
+                if (promotionInfo != null)
+                {
+                    if (promotionInfo.DiscountType == "PERCENTAGE")
+                    {
+                        PromotionMessage = $"Giảm {promotionInfo.DiscountValue}% (-{FormattedDiscount})";
+                    }
+                    else
+                    {
+                        PromotionMessage = $"Giảm {FormattedDiscount}";
+                    }
+                }
+                else
+                {
+                    PromotionMessage = $"Đã áp dụng giảm giá: -{FormattedDiscount}";
+                }
+                
+                RecalculateTotals();
+            }
+            else
+            {
+                DiscountAmount = 0;
+                IsPromotionApplied = false;
+                IsPromotionError = true;
+                PromotionMessage = result?.Message ?? "Mã giảm giá không hợp lệ.";
+                RecalculateTotals();
+            }
+        }
+        catch (Exception ex)
+        {
+            DiscountAmount = 0;
+            IsPromotionApplied = false;
+            IsPromotionError = true;
+            PromotionMessage = $"Lỗi: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"Error applying promotion: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private void RemovePromotion()
+    {
+        PromotionCode = "";
+        DiscountAmount = 0;
+        IsPromotionApplied = false;
+        IsPromotionError = false;
+        PromotionMessage = "";
+        RecalculateTotals();
     }
 
     [RelayCommand]

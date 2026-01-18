@@ -242,3 +242,49 @@ public class StringToInfoBarSeverityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Inverts a boolean value. true becomes false, false becomes true.
+/// </summary>
+public class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool b)
+        {
+            return !b;
+        }
+        return true;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool b)
+        {
+            return !b;
+        }
+        return false;
+    }
+}
+
+/// <summary>
+/// Converts boolean to brush color - true returns error red, false returns success green
+/// </summary>
+public class BoolToErrorBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool isError && isError)
+        {
+            // Error - Red
+            return new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 239, 68, 68)); // #EF4444
+        }
+        // Success - Green
+        return new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 185, 129)); // #10B981
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
