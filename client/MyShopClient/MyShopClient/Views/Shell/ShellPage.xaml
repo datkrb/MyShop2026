@@ -68,13 +68,6 @@
                     <FontIcon Glyph="&#xE781;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            
-            <NavigationViewItem Content="Promotions" Tag="Promotions" 
-                                Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE8D4;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
 
             <NavigationViewItem Content="Orders" Tag="Orders">
                 <NavigationViewItem.Icon>
@@ -85,6 +78,20 @@
             <NavigationViewItem Content="Customers" Tag="Customers">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE77B;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Promotions" Tag="Promotions" 
+                                Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8D4;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItem Content="Employees" Tag="Employees" 
+                                Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE716;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 
@@ -100,18 +107,6 @@
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
 
-            <NavigationViewItem Content="Employees" Tag="Employees" 
-                                Visibility="{x:Bind ViewModel.IsAdmin, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE716;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
-
-            <NavigationViewItem Content="Help Center" Tag="Help">
-                <NavigationViewItem.Icon>
-                    <FontIcon Glyph="&#xE8F3;" FontFamily="{ThemeResource SymbolThemeFontFamily}"/>
-                </NavigationViewItem.Icon>
-            </NavigationViewItem>
         </NavigationView.MenuItems>
 
         <!-- Content Frame -->

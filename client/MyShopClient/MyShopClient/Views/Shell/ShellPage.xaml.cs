@@ -68,22 +68,36 @@ public sealed partial class ShellPage : Page
         {
             _navigationService.GoBack();
             ViewModel.UpdateCanGoBack();
+            
+            // Update navigation selection to match the current page
+            var currentPageType = ContentFrame.CurrentSourcePageType;
+            var tag = GetTagFromPageType(currentPageType);
+            if (!string.IsNullOrEmpty(tag))
+            {
+                SelectNavItemByTag(tag);
+            }
         }
     }
 
-    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    /// <summary>
+    /// Gets the navigation tag corresponding to a page type.
+    /// </summary>
+    private string? GetTagFromPageType(Type? pageType)
     {
-        if (args.InvokedItemContainer != null)
+        if (pageType == null) return null;
+        
+        return pageType.Name switch
         {
-            var tag = args.InvokedItemContainer.Tag?.ToString();
-            
-            // Handle Logout separately
-            if (tag == "Logout")
-            {
-                ViewModel.LogoutCommand.Execute(null);
-                return;
-            }
-        }
+            nameof(Views.Dashboard.DashboardView) => "Dashboard",
+            nameof(Views.Products.ProductsView) => "Products",
+            nameof(Views.Orders.OrdersView) => "Orders",
+            nameof(Views.Customers.CustomersView) => "Customers",
+            nameof(Views.Reports.ReportPage) => "Reports",
+            nameof(Views.Settings.SettingsView) => "Settings",
+            nameof(Views.Promotions.PromotionPage) => "Promotions",
+            nameof(Views.Employees.EmployeesView) => "Employees",
+            _ => null
+        };
     }
 
     private void NavigateToPage(string? tag)
@@ -96,12 +110,10 @@ public sealed partial class ShellPage : Page
             "Products" => typeof(Views.Products.ProductsView),
             "Orders" => typeof(Views.Orders.OrdersView),
             "Customers" => typeof(Views.Customers.CustomersView),
-            "Statistics" => typeof(Views.Reports.ReportPage),
-            // "Invoices" => typeof(Views.Invoices.InvoicesView),
+            "Reports" => typeof(Views.Reports.ReportPage),
             "Settings" => typeof(Views.Settings.SettingsView),
             "Promotions" => typeof(Views.Promotions.PromotionPage),
             "Employees" => typeof(Views.Employees.EmployeesView),
-            // "Help" => typeof(Views.Help.HelpView),
             _ => (Type?)null
         };
 
