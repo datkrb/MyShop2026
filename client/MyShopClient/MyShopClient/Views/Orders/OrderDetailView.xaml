@@ -204,6 +204,13 @@
                                 </StackPanel>
                             </Button>
                             
+                            <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.PrintCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE749;" FontSize="14" Foreground="{ThemeResource PrimaryBrush}"/>
+                                    <TextBlock Text="Print" Foreground="{ThemeResource PrimaryBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            
                             <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="#EF4444" Padding="20,10" Command="{x:Bind ViewModel.DeleteOrderCommand}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
@@ -382,6 +389,13 @@
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE70F;" FontSize="14"/>
                                 <TextBlock Text="Edit Order"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Background="{ThemeResource CardBackgroundBrush}" BorderBrush="{ThemeResource BorderBrush}" Padding="20,10" Command="{x:Bind ViewModel.PrintCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE749;" FontSize="14" Foreground="{ThemeResource PrimaryBrush}"/>
+                                <TextBlock Text="Print" Foreground="{ThemeResource PrimaryBrush}"/>
                             </StackPanel>
                         </Button>
                         
