@@ -204,7 +204,9 @@
                         <ListView 
                             Grid.Row="1"
                             ItemsSource="{x:Bind ViewModel.RecentOrders, Mode=OneWay}"
-                            SelectionMode="None">
+                            SelectionMode="None"
+                            IsItemClickEnabled="True"
+                            ItemClick="OrderItem_Click">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
