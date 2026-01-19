@@ -9,6 +9,7 @@ import { UserRole } from '../constants/roles';
 const router = Router();
 
 router.get('/', authMiddleware, customerController.getAll.bind(customerController));
+router.get('/stats', authMiddleware, customerController.getStats.bind(customerController));
 router.get('/:id', authMiddleware, customerController.getById.bind(customerController));
 router.post('/', authMiddleware, requireRole(UserRole.ADMIN, UserRole.SALE), validate(createCustomerDto), customerController.create.bind(customerController));
 router.put('/:id', authMiddleware, requireRole(UserRole.ADMIN, UserRole.SALE), validate(updateCustomerDto), customerController.update.bind(customerController));

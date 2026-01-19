@@ -188,7 +188,7 @@
                                 CornerRadius="12" 
                                 Width="48" Height="48"
                                 VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE7F7;" FontSize="24" Foreground="#7C5CFC"/>
+                                <FontIcon Glyph="&#xE8F1;" FontSize="24" Foreground="#7C5CFC"/>
                             </Border>
                         </Grid>
                     </Border>

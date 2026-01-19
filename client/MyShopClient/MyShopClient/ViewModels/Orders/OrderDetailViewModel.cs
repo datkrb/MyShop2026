@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services;
+using MyShopClient.Services.Invoice;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Navigation;
 using MyShopClient.Views.Orders;
@@ -200,7 +201,7 @@ public partial class OrderDetailViewModel : ObservableObject
             if (order != null)
             {
                 Id = order.Id;
-                OrderId = $"#ORD-{order.Id:D4}";
+                OrderId = $"{order.Id:D4}";
                 OrderStatus = order.Status;
                 SelectedStatus = order.Status;
                 OrderDate = order.CreatedTime;
