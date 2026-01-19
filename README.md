@@ -34,7 +34,7 @@ MyShop là hệ thống quản lý cửa hàng toàn diện được xây dựng
 
 **Tổng điểm chức năng cơ sở: 5/5**
 
-### 🔹 Chức Năng Tự Chọn (12/18)
+### 🔹 Chức Năng Tự Chọn (13/18)
 
 | STT | Chức Năng | Điểm | Trạng Thái |
 |-----|-----------|------|------------|
@@ -50,14 +50,14 @@ MyShop là hệ thống quản lý cửa hàng toàn diện được xây dựng
 | 10 | **TC-Quản lí khách hàng** | 0.5 | ✅ Hoàn thành |
 | 11 | **TC-In đơn hàng (PDF)** | 0.5 | ✅ Hoàn thành |
 | 12 | **TC-Sắp xếp theo nhiều tiêu chí** | 0.5 | ✅ Hoàn thành |
-| 13 | TC-Kiến trúc Plugin | 1.0 | ❌ Chưa thực hiện |
-| 14 | TC-Obfuscator | 0.25 | ❌ Chưa thực hiện |
+| 13 | **TC-Obfuscator** | 0.25 | ✅ Hoàn thành |
+| 14 | TC-Kiến trúc Plugin | 1.0 | ❌ Chưa thực hiện |
 | 15 | TC-GraphQL API | 1.0 | ❌ Chưa thực hiện |
 | 16 | TC-Test cases | 0.5 | ❌ Chưa thực hiện |
 | 17 | TC-Tìm kiếm nâng cao | 1.0 | ❌ Chưa thực hiện |
 | 18 | TC-Onboarding | 0.5 | ❌ Chưa thực hiện |
 
-**Tổng điểm chức năng tự chọn: 5.75/10**
+**Tổng điểm chức năng tự chọn: 6.0/10**
 
 ---
 
@@ -66,19 +66,16 @@ MyShop là hệ thống quản lý cửa hàng toàn diện được xây dựng
 1. **TC-Kiến trúc Plugin** (1.0 điểm)
    - Yêu cầu phức tạp, cần refactor toàn bộ kiến trúc
 
-2. **TC-Obfuscator** (0.25 điểm)
-   - Chưa tìm hiểu công cụ obfuscation cho .NET 8
-
-3. **TC-GraphQL API** (1.0 điểm)
+2. **TC-GraphQL API** (1.0 điểm)
    - Đã sử dụng RESTful API, không cần thiết chuyển sang GraphQL
 
-4. **TC-Test Cases** (0.5 điểm)
+3. **TC-Test Cases** (0.5 điểm)
    - Đã có file `TEST_CASE.md` nhưng chưa implement automated tests
 
-5. **TC-Tìm kiếm nâng cao** (1.0 điểm)
+4. **TC-Tìm kiếm nâng cao** (1.0 điểm)
    - Hiện tại chỉ hỗ trợ tìm kiếm cơ bản theo tên/SKU
 
-6. **TC-Onboarding** (0.5 điểm)
+5. **TC-Onboarding** (0.5 điểm)
    - Chưa có hướng dẫn sử dụng cho người dùng mới
 
 ---
