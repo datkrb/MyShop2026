@@ -18,6 +18,30 @@ public sealed partial class DashboardView : Page
         ViewModel = App.Current.Services.GetService<DashboardViewModel>()!;
     }
 
+    private void TopSelling_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Product product)
+        {
+            ViewModel.NavigateToProductCommand.Execute(product);
+        }
+    }
+
+    private void LowStock_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Product product)
+        {
+            ViewModel.NavigateToProductCommand.Execute(product);
+        }
+    }
+
+    private void RecentOrders_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Order order)
+        {
+            ViewModel.NavigateToOrderCommand.Execute(order);
+        }
+    }
+
     private async void ActivateButton_Click(object sender, RoutedEventArgs e)
     {
         // Tạo TextBox cho nhập license key
