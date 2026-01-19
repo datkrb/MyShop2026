@@ -101,18 +101,6 @@
                 
                 <!-- Page Header -->
                 <StackPanel Spacing="16">
-                    <!-- Title -->
-                    <StackPanel Spacing="4">
-                        <TextBlock 
-                            Text="Reports &amp; Analytics" 
-                            FontSize="28" 
-                            FontWeight="Bold" 
-                            Foreground="{ThemeResource TextPrimaryBrush}"/>
-                        <TextBlock 
-                            Text="View sales reports, revenue trends and performance metrics." 
-                            FontSize="14" 
-                            Foreground="{ThemeResource TextSecondaryBrush}"/>
-                    </StackPanel>
 
                     <!-- Filters Row -->
                     <Border Style="{StaticResource CardBorderStyle}" Padding="16">
