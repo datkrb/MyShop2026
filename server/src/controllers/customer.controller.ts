@@ -64,7 +64,7 @@ export class CustomerController {
     }
   }
 
-  async getStats(req: AuthRequest, res: Response) {
+  async getStats(_req: AuthRequest, res: Response) {
     try {
       const stats = await customerService.getStats();
       sendSuccess(res, stats);

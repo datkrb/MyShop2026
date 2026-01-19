@@ -33,6 +33,56 @@ export class UserRepository {
     });
   }
 
+  async findAllPaginated(filters: {
+    page?: number;
+    size?: number;
+    search?: string;
+    role?: string;
+  }) {
+    const page = filters.page || 1;
+    const size = filters.size || 10;
+    const skip = (page - 1) * size;
+
+    const where: any = {};
+
+    if (filters.search) {
+      where.username = {
+        contains: filters.search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.role) {
+      where.role = filters.role;
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          username: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: size,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      size,
+      totalPages: Math.ceil(total / size),
+    };
+  }
+
   async create(username: string, password: string, role: UserRole) {
     return prisma.user.create({
       data: {

@@ -5,10 +5,24 @@ import { sendSuccess, sendError } from '../utils/response';
 import { UserRole } from '../constants/roles';
 
 export class EmployeeController {
-  async getAll(_req: AuthRequest, res: Response) {
+  async getAll(req: AuthRequest, res: Response) {
     try {
-      const employees = await employeeService.getAll();
-      sendSuccess(res, employees);
+      const filters = {
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        size: req.query.size ? parseInt(req.query.size as string) : undefined,
+        search: req.query.search as string | undefined,
+        role: req.query.role as string | undefined,
+      };
+
+      // If pagination params provided, use paginated response
+      if (filters.page || filters.size || filters.search || filters.role) {
+        const result = await employeeService.getAllPaginated(filters);
+        sendSuccess(res, result);
+      } else {
+        // Return all for backward compatibility
+        const employees = await employeeService.getAll();
+        sendSuccess(res, employees);
+      }
     } catch (error: any) {
       sendError(res, 'INTERNAL_ERROR', error.message, 500);
     }

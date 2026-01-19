@@ -170,11 +170,25 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Header -->
+                        <!-- Header with Search -->
                         <Grid Grid.Row="0" Padding="20" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,0,0,1">
-                            <TextBlock Text="All Employees" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}"/>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Text="All Employees" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            
+                            <!-- Search Box -->
+                            <AutoSuggestBox 
+                                Grid.Column="1"
+                                PlaceholderText="Search by username..."
+                                Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                QueryIcon="Find"
+                                MinWidth="220"/>
                         </Grid>
 
                         <!-- Employees List -->
@@ -290,6 +304,19 @@
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
+
+                        <!-- Pagination Footer -->
+                        <Border Grid.Row="2" Padding="16" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,1,0,0">
+                            <shared:PaginationControl
+                                x:Name="EmployeesPagination"
+                                CurrentPage="{x:Bind ViewModel.CurrentPage, Mode=OneWay}"
+                                TotalPages="{x:Bind ViewModel.TotalPages, Mode=OneWay}"
+                                TotalItems="{x:Bind ViewModel.TotalEmployees, Mode=OneWay}"
+                                PageSize="{x:Bind ViewModel.PageSize, Mode=OneWay}"
+                                PageNumbers="{x:Bind ViewModel.PageNumbers, Mode=OneWay}"
+                                ItemsLabel="employees"
+                                PageChanged="EmployeesPagination_PageChanged"/>
+                        </Border>
                     </Grid>
                 </Border>
 
