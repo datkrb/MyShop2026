@@ -74,6 +74,29 @@ export class AuthService {
       role: user.role,
     };
   }
+
+  async changePassword(userId: number, currentPassword: string, newPassword: string) {
+    // Get user with password
+    const user = await userRepo.findByIdWithPassword(userId);
+    
+    if (!user) {
+      throw new Error(Messages.USER_NOT_FOUND);
+    }
+
+    // Verify current password
+    const isValid = await comparePassword(currentPassword, user.password);
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Hash and update new password
+    const { hashPassword } = await import('../utils/hash');
+    const hashedPassword = await hashPassword(newPassword);
+    
+    await userRepo.update(userId, { password: hashedPassword });
+
+    return { message: 'Password changed successfully' };
+  }
 }
 
 export default new AuthService();

@@ -115,6 +115,17 @@ export class OrderController {
     // TODO: Implement PDF/XPS export
     sendError(res, 'NOT_IMPLEMENTED', 'Export functionality not yet implemented', 501);
   }
+
+  async getStats(req: AuthRequest, res: Response) {
+    try {
+      const userRole = req.user?.role || '';
+      const userId = req.user?.userId;
+      const stats = await orderService.getStats(userRole, userId);
+      sendSuccess(res, stats);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
 }
 
 export default new OrderController();

@@ -63,8 +63,8 @@
                         <Setter Target="StatCard4.(Grid.Row)" Value="0"/>
                         <Setter Target="StatCard4.(Grid.ColumnSpan)" Value="1"/>
                         <Setter Target="StatsGrid.RowSpacing" Value="0"/>
-                        <Setter Target="InlineFiltersPanel.Visibility" Value="Visible"/>
-                        <Setter Target="FilterButton.Visibility" Value="Collapsed"/>
+                        <Setter Target="InlineFiltersPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="FilterButton.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
                 
@@ -132,7 +132,7 @@
 
 
 
-                    <!-- Paid Card -->
+                    <!-- Pending Card -->
                     <Border x:Name="StatCard2" Grid.Column="0" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
@@ -155,14 +155,14 @@
                                 Grid.Column="1" 
                                 Width="48" 
                                 Height="48" 
-                                Background="#ECFDF5" 
+                                Background="#ffffeb" 
                                 CornerRadius="8">
-                                <FontIcon Glyph="&#xE8FB;" FontSize="24" Foreground="#10B981"/>
+                                <FontIcon Glyph="&#xECC5;" FontSize="24" Foreground="#ffa600"/>
                             </Border>
                         </Grid>
                     </Border>
 
-                    <!-- Canceled Card -->
+                    <!-- Paid Card -->
                     <Border x:Name="StatCard3" Grid.Column="1" Style="{StaticResource CardBorderStyle}">
                         <Grid Padding="20">
                             <Grid.ColumnDefinitions>
@@ -185,9 +185,9 @@
                                 Grid.Column="1" 
                                 Width="48" 
                                 Height="48" 
-                                Background="#FEE2E2" 
+                                Background="#ECFDF5" 
                                 CornerRadius="8">
-                                <FontIcon Glyph="&#xE711;" FontSize="24" Foreground="#EF4444"/>
+                                <FontIcon Glyph="&#xE8FB;" FontSize="24" Foreground="#10B981"/>
                             </Border>
                         </Grid>
                     </Border>
@@ -249,16 +249,18 @@
                                 <TextBox 
                                     PlaceholderText="Search orders..."
                                     Text="{x:Bind ViewModel.SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Width="150"/>
+                                    Width="200"/>
 
                                 <!-- From Date -->
                                 <CalendarDatePicker 
                                     Date="{x:Bind ViewModel.FromDate, Mode=TwoWay}" 
+                                    MinWidth="70"
                                     PlaceholderText="From"/>
 
                                 <!-- To Date -->
                                 <CalendarDatePicker 
                                     Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" 
+                                    MinWidth="70"
                                     PlaceholderText="To"/>
 
                                 <!-- Status Filter -->
@@ -269,10 +271,10 @@
 
                                 <!-- Amount Range -->
                                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                    <NumberBox PlaceholderText="Min$" Width="70" 
+                                    <NumberBox PlaceholderText="Min$" Width="120"
                                                Value="{x:Bind ViewModel.MinAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
                                     <TextBlock Text="-" VerticalAlignment="Center" Foreground="{ThemeResource TextSecondaryBrush}"/>
-                                    <NumberBox PlaceholderText="Max$" Width="70" 
+                                    <NumberBox PlaceholderText="Max$" Width="120" 
                                                Value="{x:Bind ViewModel.MaxAmount, Mode=TwoWay, Converter={StaticResource DoubleToNullableDoubleConverter}}"/>
                                 </StackPanel>
 

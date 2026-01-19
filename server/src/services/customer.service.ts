@@ -49,6 +49,10 @@ export class CustomerService {
 
     return customerRepo.delete(id);
   }
+
+  async getStats() {
+    return customerRepo.getStats();
+  }
 }
 
 export default new CustomerService();

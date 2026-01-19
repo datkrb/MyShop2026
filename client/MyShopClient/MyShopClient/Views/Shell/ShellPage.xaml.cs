@@ -23,11 +23,14 @@ public sealed partial class ShellPage : Page
         _appSettingsService = App.Current.Services.GetRequiredService<AppSettingsService>();
         App.Current.ContentFrame = ContentFrame;
         
-        // Initialize NavigationService with ContentFrame
+        // Initialize the navigation service with ContentFrame
         _navigationService.Initialize(ContentFrame);
         
-        // Listen to ContentFrame navigation to update CanGoBack in ViewModel
-        ContentFrame.Navigated += ContentFrame_Navigated;
+        // Update CanGoBack after each navigation
+        ContentFrame.Navigated += (s, e) =>
+        {
+            ViewModel.UpdateCanGoBack();
+        };
         
         // Navigate to appropriate page based on settings
         this.Loaded += (s, e) =>
@@ -50,21 +53,6 @@ public sealed partial class ShellPage : Page
         };
     }
 
-    private void ContentFrame_Navigated(object sender, NavigationEventArgs e)
-    {
-        // Update CanGoBack in ViewModel when navigation occurs
-        ViewModel.UpdateCanGoBack();
-        
-        // Update selected NavigationViewItem based on current page
-        UpdateSelectedNavItem(e.SourcePageType);
-    }
-
-    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
-    {
-        // Use ViewModel command for MVVM pattern
-        ViewModel.GoBackCommand.Execute(null);
-    }
-
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.SelectedItemContainer != null)
@@ -72,6 +60,44 @@ public sealed partial class ShellPage : Page
             var tag = args.SelectedItemContainer.Tag?.ToString();
             NavigateToPage(tag);
         }
+    }
+
+    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    {
+        if (_navigationService.CanGoBack)
+        {
+            _navigationService.GoBack();
+            ViewModel.UpdateCanGoBack();
+            
+            // Update navigation selection to match the current page
+            var currentPageType = ContentFrame.CurrentSourcePageType;
+            var tag = GetTagFromPageType(currentPageType);
+            if (!string.IsNullOrEmpty(tag))
+            {
+                SelectNavItemByTag(tag);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the navigation tag corresponding to a page type.
+    /// </summary>
+    private string? GetTagFromPageType(Type? pageType)
+    {
+        if (pageType == null) return null;
+        
+        return pageType.Name switch
+        {
+            nameof(Views.Dashboard.DashboardView) => "Dashboard",
+            nameof(Views.Products.ProductsView) => "Products",
+            nameof(Views.Orders.OrdersView) => "Orders",
+            nameof(Views.Customers.CustomersView) => "Customers",
+            nameof(Views.Reports.ReportPage) => "Reports",
+            nameof(Views.Settings.SettingsView) => "Settings",
+            nameof(Views.Promotions.PromotionPage) => "Promotions",
+            nameof(Views.Employees.EmployeesView) => "Employees",
+            _ => null
+        };
     }
 
     private void NavigateToPage(string? tag)
@@ -87,6 +113,7 @@ public sealed partial class ShellPage : Page
             "Reports" => typeof(Views.Reports.ReportPage),
             "Settings" => typeof(Views.Settings.SettingsView),
             "Promotions" => typeof(Views.Promotions.PromotionPage),
+            "Employees" => typeof(Views.Employees.EmployeesView),
             _ => (Type?)null
         };
 
@@ -100,31 +127,6 @@ public sealed partial class ShellPage : Page
     }
 
     /// <summary>
-    /// Updates the selected NavigationViewItem based on the current page type.
-    /// </summary>
-    private void UpdateSelectedNavItem(Type? pageType)
-    {
-        if (pageType == null) return;
-
-        string? tag = pageType.Name switch
-        {
-            "DashboardView" => "Dashboard",
-            "ProductsView" => "Products",
-            "OrdersView" => "Orders",
-            "CustomersView" => "Customers",
-            "ReportPage" => "Reports",
-            "SettingsView" => "Settings",
-            "PromotionPage" => "Promotions",
-            _ => null
-        };
-
-        if (tag != null)
-        {
-            SelectNavItemByTag(tag);
-        }
-    }
-
-    /// <summary>
     /// Selects the NavigationViewItem that matches the given tag.
     /// </summary>
     private void SelectNavItemByTag(string tag)
@@ -133,19 +135,23 @@ public sealed partial class ShellPage : Page
         {
             if (item is NavigationViewItem navItem && navItem.Tag?.ToString() == tag)
             {
-                // Avoid re-triggering SelectionChanged
-                if (NavView.SelectedItem != navItem)
-                {
-                    NavView.SelectedItem = navItem;
-                }
+                NavView.SelectedItem = navItem;
                 return;
             }
         }
         
         // Fallback to first item (Dashboard) if tag not found
-        if (NavView.MenuItems.Count > 0 && NavView.SelectedItem != NavView.MenuItems[0])
+        if (NavView.MenuItems.Count > 0)
         {
             NavView.SelectedItem = NavView.MenuItems[0];
         }
+    }
+
+    /// <summary>
+    /// Handler for Logout button tap - calls ViewModel LogoutCommand
+    /// </summary>
+    private void LogoutButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        ViewModel.LogoutCommand.Execute(null);
     }
 }

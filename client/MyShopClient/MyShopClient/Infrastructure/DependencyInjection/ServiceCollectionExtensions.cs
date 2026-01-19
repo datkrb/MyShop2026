@@ -3,6 +3,7 @@ using MyShopClient.ViewModels;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Config;
 using MyShopClient.Services.Auth;
+using MyShopClient.ViewModels.Shared;
 
 namespace MyShopClient.Infrastructure.DependencyInjection;
 
@@ -27,7 +28,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ServerConfigViewModel>();
         services.AddTransient<ReportViewModel>();
         services.AddTransient<PromotionViewModel>();
-        services.AddTransient<ViewModels.Shared.PageHeaderViewModel>();
+        services.AddTransient<EmployeesViewModel>();
+        services.AddTransient<AddEmployeeDialogViewModel>();
+        services.AddTransient<PageHeaderViewModel>();
         return services;
     }
 
@@ -45,12 +48,14 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<CustomerApiService>();
         services.AddSingleton<PromotionApiService>();
         services.AddSingleton<LicenseApiService>();
+        services.AddSingleton<EmployeeApiService>();
 
         services.AddTransient<Services.Import.ImportService>();
         services.AddSingleton<Services.Navigation.INavigationService, Services.Navigation.NavigationService>();
         services.AddSingleton<CredentialService>();
         services.AddSingleton<AppSettingsService>();
         services.AddSingleton<Services.Local.ILocalDraftService, Services.Local.LocalDraftService>();
+        services.AddSingleton<Services.Invoice.InvoiceService>();
         
         return services;
     }

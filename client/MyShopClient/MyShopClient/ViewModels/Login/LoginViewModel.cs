@@ -6,6 +6,7 @@ using MyShopClient.ViewModels.Base;
 using MyShopClient.Services.Api;
 using MyShopClient.Services.Auth;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace MyShopClient.ViewModels;
 
@@ -39,8 +40,8 @@ public partial class LoginViewModel : ViewModelBase
         
         try
         {
-            var version = Windows.ApplicationModel.Package.Current.Id.Version;
-            AppVersion = $"version {version.Major}.{version.Minor}.{version.Build}";
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            AppVersion = $"version {version!.Major}.{version.Minor}.{version.Build}";
         }
         catch
         {

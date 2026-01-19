@@ -93,6 +93,18 @@ public class OrderApiService : BaseApiService
     {
         return await DeleteAsync($"orders/{id}");
     }
+
+    public async Task<OrderStats?> GetStatsAsync()
+    {
+        return await GetAsync<OrderStats>("orders/stats");
+    }
+}
+
+public class OrderStats
+{
+    public int Total { get; set; }
+    public int Pending { get; set; }
+    public int Paid { get; set; }
 }
 
 /// <summary>
@@ -103,6 +115,7 @@ public class CreateOrderRequest
     public int? CustomerId { get; set; }
     public string Status { get; set; } = "DRAFT";
     public System.Collections.Generic.List<CreateOrderItemRequest>? Items { get; set; }
+    public string? PromotionCode { get; set; }
 }
 
 /// <summary>
@@ -113,6 +126,7 @@ public class UpdateOrderRequest
     public int? CustomerId { get; set; }
     public string? Status { get; set; }
     public System.Collections.Generic.List<CreateOrderItemRequest>? Items { get; set; }
+    public string? PromotionCode { get; set; }
 }
 
 /// <summary>

@@ -1,19 +1,146 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 
 namespace MyShopClient.Services.Config;
 
 /// <summary>
-/// Service quản lý các cài đặt chung của ứng dụng (lưu vào LocalSettings)
+/// Service quản lý các cài đặt chung của ứng dụng (lưu vào file JSON cho unpackaged app)
 /// </summary>
 public class AppSettingsService
 {
+    private const string SettingsFileName = "appsettings.json";
+    
     private const string PageSizeKey = "PageSize";
     private const string RememberLastScreenKey = "RememberLastScreen";
     private const string DefaultScreenKey = "DefaultScreen";
+    private const string BaseUrlKey = "BaseUrl";
     
     private const int DefaultPageSize = 10;
     private const bool DefaultRememberLastScreen = true;
     private const string DefaultDefaultScreen = "Dashboard";
+    private const string DefaultBaseUrl = "http://localhost:3000";
+
+    private readonly string _settingsFolder;
+    private readonly string _settingsFilePath;
+
+    public AppSettingsService()
+    {
+        // Lấy thư mục của ứng dụng (cùng cấp với .exe)
+        _settingsFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyShopClient"
+        );
+        _settingsFilePath = Path.Combine(_settingsFolder, SettingsFileName);
+        
+        // Đảm bảo thư mục tồn tại
+        EnsureDirectoryExists();
+    }
+
+    private void EnsureDirectoryExists()
+    {
+        try
+        {
+            if (!Directory.Exists(_settingsFolder))
+            {
+                Directory.CreateDirectory(_settingsFolder);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error creating settings directory: {ex.Message}");
+        }
+    }
+
+    private Dictionary<string, object> LoadSettings()
+    {
+        try
+        {
+            if (File.Exists(_settingsFilePath))
+            {
+                var json = File.ReadAllText(_settingsFilePath);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    return JsonSerializer.Deserialize<Dictionary<string, object>>(json) 
+                           ?? new Dictionary<string, object>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading settings: {ex.Message}");
+        }
+        return new Dictionary<string, object>();
+    }
+
+    private void SaveSettings(Dictionary<string, object> settings)
+    {
+        try
+        {
+            EnsureDirectoryExists();
+            var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_settingsFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error saving settings: {ex.Message}");
+        }
+    }
+
+    private T GetValue<T>(string key, T defaultValue)
+    {
+        try
+        {
+            var settings = LoadSettings();
+            if (settings.TryGetValue(key, out var value))
+            {
+                if (value is JsonElement jsonElement)
+                {
+                    if (typeof(T) == typeof(int) && jsonElement.TryGetInt32(out var intValue))
+                    {
+                        return (T)(object)intValue;
+                    }
+                    if (typeof(T) == typeof(bool) && jsonElement.ValueKind == JsonValueKind.True)
+                    {
+                        return (T)(object)true;
+                    }
+                    if (typeof(T) == typeof(bool) && jsonElement.ValueKind == JsonValueKind.False)
+                    {
+                        return (T)(object)false;
+                    }
+                    if (typeof(T) == typeof(string))
+                    {
+                        return (T)(object)jsonElement.GetString()!;
+                    }
+                }
+                else if (value is T typedValue)
+                {
+                    return typedValue;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error getting value for {key}: {ex.Message}");
+        }
+        return defaultValue;
+    }
+
+    private void SetValue(string key, object value)
+    {
+        try
+        {
+            var settings = LoadSettings();
+            settings[key] = value;
+            SaveSettings(settings);
+            System.Diagnostics.Debug.WriteLine($"{key} saved: {value}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error setting value for {key}: {ex.Message}");
+        }
+    }
 
     #region PageSize
 
@@ -22,20 +149,8 @@ public class AppSettingsService
     /// </summary>
     public int GetPageSize()
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values[PageSizeKey];
-            if (value is int pageSize && pageSize > 0)
-            {
-                return pageSize;
-            }
-        }
-        catch
-        {
-            // Ignore errors
-        }
-        return DefaultPageSize;
+        var value = GetValue(PageSizeKey, DefaultPageSize);
+        return value > 0 ? value : DefaultPageSize;
     }
 
     /// <summary>
@@ -43,19 +158,8 @@ public class AppSettingsService
     /// </summary>
     public void SavePageSize(int pageSize)
     {
-        try
-        {
-            if (pageSize <= 0) return;
-            
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values[PageSizeKey] = pageSize;
-            
-            System.Diagnostics.Debug.WriteLine($"PageSize saved: {pageSize}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error saving PageSize: {ex.Message}");
-        }
+        if (pageSize <= 0) return;
+        SetValue(PageSizeKey, pageSize);
     }
 
     #endregion
@@ -67,20 +171,7 @@ public class AppSettingsService
     /// </summary>
     public bool GetRememberLastScreen()
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values[RememberLastScreenKey];
-            if (value is bool remember)
-            {
-                return remember;
-            }
-        }
-        catch
-        {
-            // Ignore errors
-        }
-        return DefaultRememberLastScreen;
+        return GetValue(RememberLastScreenKey, DefaultRememberLastScreen);
     }
 
     /// <summary>
@@ -88,17 +179,7 @@ public class AppSettingsService
     /// </summary>
     public void SaveRememberLastScreen(bool remember)
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values[RememberLastScreenKey] = remember;
-            
-            System.Diagnostics.Debug.WriteLine($"RememberLastScreen saved: {remember}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error saving RememberLastScreen: {ex.Message}");
-        }
+        SetValue(RememberLastScreenKey, remember);
     }
 
     #endregion
@@ -110,20 +191,8 @@ public class AppSettingsService
     /// </summary>
     public string GetDefaultScreen()
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values[DefaultScreenKey];
-            if (value is string screen && !string.IsNullOrEmpty(screen))
-            {
-                return screen;
-            }
-        }
-        catch
-        {
-            // Ignore errors
-        }
-        return DefaultDefaultScreen;
+        var value = GetValue(DefaultScreenKey, DefaultDefaultScreen);
+        return !string.IsNullOrEmpty(value) ? value : DefaultDefaultScreen;
     }
 
     /// <summary>
@@ -131,34 +200,21 @@ public class AppSettingsService
     /// </summary>
     public void SaveDefaultScreen(string screen)
     {
-        try
-        {
-            if (string.IsNullOrEmpty(screen)) return;
-            
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values[DefaultScreenKey] = screen;
-            
-            System.Diagnostics.Debug.WriteLine($"DefaultScreen saved: {screen}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error saving DefaultScreen: {ex.Message}");
-        }
+        if (string.IsNullOrEmpty(screen)) return;
+        SetValue(DefaultScreenKey, screen);
     }
 
+    #endregion
+
+    #region BaseUrl
+
+    /// <summary>
+    /// Lấy Base URL
+    /// </summary>
     public string GetBaseUrl()
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values["BaseUrl"];
-            if (value is string url && !string.IsNullOrEmpty(url))
-            {
-                return url;
-            }
-        }
-        catch { }
-        return "http://localhost:3000"; // Default
+        var value = GetValue(BaseUrlKey, DefaultBaseUrl);
+        return !string.IsNullOrEmpty(value) ? value : DefaultBaseUrl;
     }
 
     /// <summary>
@@ -166,17 +222,7 @@ public class AppSettingsService
     /// </summary>
     public void SaveBaseUrl(string url)
     {
-        try
-        {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values["BaseUrl"] = url ?? "http://localhost:3000";
-            
-            System.Diagnostics.Debug.WriteLine($"BaseUrl saved: {url}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error saving BaseUrl: {ex.Message}");
-        }
+        SetValue(BaseUrlKey, url ?? DefaultBaseUrl);
     }
 
     /// <summary>
@@ -188,6 +234,30 @@ public class AppSettingsService
         
         // Ensure trailing slash
         return url.EndsWith("/") ? url : url + "/";
+    }
+
+    #endregion
+
+    #region LastVisitedPage
+
+    private const string LastVisitedPageKey = "LastVisitedPage";
+
+    /// <summary>
+    /// Lấy trang cuối cùng đã truy cập
+    /// </summary>
+    public string GetLastVisitedPage()
+    {
+        var value = GetValue(LastVisitedPageKey, "Dashboard");
+        return !string.IsNullOrEmpty(value) ? value : "Dashboard";
+    }
+
+    /// <summary>
+    /// Lưu trang cuối cùng đã truy cập
+    /// </summary>
+    public void SaveLastVisitedPage(string pageTag)
+    {
+        if (string.IsNullOrEmpty(pageTag)) return;
+        SetValue(LastVisitedPageKey, pageTag);
     }
 
     #endregion

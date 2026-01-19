@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Config;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,6 +15,7 @@ namespace MyShopClient.ViewModels;
 public partial class PromotionViewModel : ObservableObject
 {
     private readonly PromotionApiService _promotionService;
+    private readonly AppSettingsService _appSettingsService;
 
     // List
     public ObservableCollection<Promotion> Promotions { get; } = new();
@@ -53,6 +55,23 @@ public partial class PromotionViewModel : ObservableObject
     public List<string> TypeOptions { get; } = new() { "All", "PERCENTAGE", "FIXED" };
     public List<string> SortOptions { get; } = new() { "Newest", "Oldest", "Code A-Z", "Code Z-A", "Highest Discount", "Lowest Discount" };
 
+    // Pagination
+    [ObservableProperty]
+    private int _currentPage = 1;
+
+    [ObservableProperty]
+    private int _pageSize = 10;
+
+    [ObservableProperty]
+    private int _totalPages = 1;
+
+    public int PageStart => TotalPromotionsCount > 0 ? (CurrentPage - 1) * PageSize + 1 : 0;
+    public int PageEnd => Math.Min(CurrentPage * PageSize, TotalPromotionsCount);
+    public bool CanGoPrevious => CurrentPage > 1;
+    public bool CanGoNext => CurrentPage < TotalPages;
+
+    public ObservableCollection<PageButtonModel> PageNumbers { get; } = new();
+
     // Edit/Create State
     [ObservableProperty]
     private bool _isEditing;
@@ -67,32 +86,102 @@ public partial class PromotionViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDialogOpen;
 
-    public PromotionViewModel(PromotionApiService promotionService)
+    // Debounce timer for search
+    private System.Threading.CancellationTokenSource? _searchDebounceToken;
+
+    public PromotionViewModel(PromotionApiService promotionService, AppSettingsService appSettingsService)
     {
         _promotionService = promotionService;
-        LoadPromotionsCommand.Execute(null);
+        _appSettingsService = appSettingsService;
+        _pageSize = _appSettingsService.GetPageSize();
     }
 
     private void UpdateStats()
     {
         var now = DateTime.Now;
-        TotalPromotionsCount = Promotions.Count;
+        // Note: Stats are calculated from current page data, for accurate total stats consider adding a stats endpoint
         ActivePromotionsCount = Promotions.Count(p => p.IsActive && p.StartDate <= now && p.EndDate >= now);
         ExpiredPromotionsCount = Promotions.Count(p => p.EndDate < now);
     }
 
+    private void UpdatePaginationProperties()
+    {
+        OnPropertyChanged(nameof(PageStart));
+        OnPropertyChanged(nameof(PageEnd));
+        OnPropertyChanged(nameof(CanGoPrevious));
+        OnPropertyChanged(nameof(CanGoNext));
+    }
+
+    private void UpdatePageNumbers()
+    {
+        PageNumbers.Clear();
+
+        if (TotalPages <= 1) return;
+
+        PageNumbers.Add(new PageButtonModel { PageNumber = 1, IsCurrentPage = CurrentPage == 1 });
+
+        int startPage = Math.Max(2, CurrentPage - 1);
+        int endPage = Math.Min(TotalPages - 1, CurrentPage + 1);
+
+        if (startPage > 2)
+        {
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+        }
+
+        for (int i = startPage; i <= endPage; i++)
+        {
+            PageNumbers.Add(new PageButtonModel { PageNumber = i, IsCurrentPage = CurrentPage == i });
+        }
+
+        if (endPage < TotalPages - 1)
+        {
+            PageNumbers.Add(new PageButtonModel { IsEllipsis = true });
+        }
+
+        if (TotalPages > 1)
+        {
+            PageNumbers.Add(new PageButtonModel { PageNumber = TotalPages, IsCurrentPage = CurrentPage == TotalPages });
+        }
+    }
+
     partial void OnSearchKeywordChanged(string value)
     {
-        ApplyFilters();
+        // Debounce search to avoid too many API calls
+        _searchDebounceToken?.Cancel();
+        _searchDebounceToken = new System.Threading.CancellationTokenSource();
+
+        var token = _searchDebounceToken.Token;
+
+        _ = DebounceSearchAsync(token);
+    }
+
+    private async Task DebounceSearchAsync(System.Threading.CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(400, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                CurrentPage = 1;
+                await LoadPromotions();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignored - expected when user types again before delay completes
+        }
     }
 
     partial void OnSelectedStatusFilterChanged(string value)
     {
+        CurrentPage = 1;
         ApplyFilters();
     }
 
     partial void OnSelectedTypeFilterChanged(string value)
     {
+        CurrentPage = 1;
         ApplyFilters();
     }
 
@@ -106,15 +195,6 @@ public partial class PromotionViewModel : ObservableObject
     {
         var now = DateTime.Now;
         var filtered = Promotions.AsEnumerable();
-
-        // Search filter
-        if (!string.IsNullOrWhiteSpace(SearchKeyword))
-        {
-            var keyword = SearchKeyword.ToLower();
-            filtered = filtered.Where(p => 
-                (p.Code?.ToLower().Contains(keyword) ?? false) ||
-                (p.Description?.ToLower().Contains(keyword) ?? false));
-        }
 
         // Status filter
         if (SelectedStatusFilter != "All")
@@ -154,15 +234,23 @@ public partial class PromotionViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task LoadPromotions()
+    public async Task LoadPromotions()
     {
         IsLoading = true;
         try
         {
-            var result = await _promotionService.GetPromotionsAsync(page: 1, size: 100, search: string.Empty);
+            var result = await _promotionService.GetPromotionsAsync(
+                page: CurrentPage, 
+                size: PageSize, 
+                search: string.IsNullOrWhiteSpace(SearchKeyword) ? null : SearchKeyword
+            );
+            
             Promotions.Clear();
             if (result?.Data != null)
             {
+                TotalPromotionsCount = result.Total;
+                TotalPages = result.TotalPages > 0 ? result.TotalPages : 1;
+
                 foreach (var item in result.Data)
                 {
                     Promotions.Add(item);
@@ -179,6 +267,38 @@ public partial class PromotionViewModel : ObservableObject
         finally
         {
             IsLoading = false;
+            UpdatePaginationProperties();
+            UpdatePageNumbers();
+        }
+    }
+
+    [RelayCommand]
+    public async Task GoToPageAsync(int pageNumber)
+    {
+        if (pageNumber >= 1 && pageNumber <= TotalPages && pageNumber != CurrentPage)
+        {
+            CurrentPage = pageNumber;
+            await LoadPromotions();
+        }
+    }
+
+    [RelayCommand]
+    private async Task PreviousPageAsync()
+    {
+        if (CanGoPrevious)
+        {
+            CurrentPage--;
+            await LoadPromotions();
+        }
+    }
+
+    [RelayCommand]
+    private async Task NextPageAsync()
+    {
+        if (CanGoNext)
+        {
+            CurrentPage++;
+            await LoadPromotions();
         }
     }
 
@@ -194,9 +314,7 @@ public partial class PromotionViewModel : ObservableObject
             DiscountValue = 10 
         };
         EditDialogTitle = "Create Promotion";
-        IsEditing = false; // "IsEditing" here means if we are editing *existing* vs creating? Or generally in edit mode? 
-                           // Let's use it as "IsEditMode" for deciding Update vs Create API call.
-        IsEditing = false; 
+        IsEditing = false;
         IsDialogOpen = true;
     }
 
@@ -290,6 +408,7 @@ public partial class PromotionViewModel : ObservableObject
         SelectedStatusFilter = "All";
         SelectedTypeFilter = "All";
         SelectedSortOption = "Newest";
-        ApplyFilters();
+        CurrentPage = 1;
+        _ = LoadPromotions();
     }
 }

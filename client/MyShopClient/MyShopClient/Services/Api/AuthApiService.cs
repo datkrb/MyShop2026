@@ -74,4 +74,21 @@ public class AuthApiService : BaseApiService
     {
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
+
+    public async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword)
+    {
+        try
+        {
+            var response = await PostAsync<object>("auth/change-password", new 
+            { 
+                currentPassword, 
+                newPassword 
+            });
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

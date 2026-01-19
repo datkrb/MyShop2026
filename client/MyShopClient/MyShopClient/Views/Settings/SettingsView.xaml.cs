@@ -97,3 +97,47 @@ public class BoolToInverseVisibilityConverter : IValueConverter
         return true;
     }
 }
+
+/// <summary>
+/// Converts a string to Visibility. Non-empty = Visible, Empty/Null = Collapsed.
+/// </summary>
+public class StringToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is string stringValue)
+        {
+            return string.IsNullOrEmpty(stringValue) ? Visibility.Collapsed : Visibility.Visible;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a boolean to its inverse. True = False, False = True.
+/// </summary>
+public class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool boolValue)
+        {
+            return !boolValue;
+        }
+        return true;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool boolValue)
+        {
+            return !boolValue;
+        }
+        return false;
+    }
+}
