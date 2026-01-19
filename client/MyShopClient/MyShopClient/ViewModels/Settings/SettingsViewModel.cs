@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyShopClient.ViewModels.Base;
 using MyShopClient.Services.Config;
 using MyShopClient.Services.Navigation;
+using MyShopClient.Services.Api;
 
 namespace MyShopClient.ViewModels;
 
@@ -12,6 +14,7 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private readonly AppSettingsService _appSettingsService;
     private readonly INavigationService _navigationService;
+    private readonly AuthApiService _authApiService;
 
     // Pagination settings
     [ObservableProperty]
@@ -42,10 +45,30 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private ScreenOption? _selectedDefaultScreen;
 
-    public SettingsViewModel(AppSettingsService appSettingsService, INavigationService navigationService)
+    // Change Password
+    [ObservableProperty]
+    private string _currentPassword = string.Empty;
+
+    [ObservableProperty]
+    private string _newPassword = string.Empty;
+
+    [ObservableProperty]
+    private string _confirmPassword = string.Empty;
+
+    [ObservableProperty]
+    private bool _isChangingPassword;
+
+    [ObservableProperty]
+    private string _passwordErrorMessage = string.Empty;
+
+    [ObservableProperty]
+    private string _passwordSuccessMessage = string.Empty;
+
+    public SettingsViewModel(AppSettingsService appSettingsService, INavigationService navigationService, AuthApiService authApiService)
     {
         _appSettingsService = appSettingsService;
         _navigationService = navigationService;
+        _authApiService = authApiService;
         
         // Load saved settings
         SelectedPageSize = _appSettingsService.GetPageSize();
@@ -95,6 +118,65 @@ public partial class SettingsViewModel : ViewModelBase
         SelectedPageSize = 10;
         RememberLastScreen = true;
         SelectedDefaultScreen = AvailableScreens[0];
+    }
+
+    [RelayCommand]
+    private async Task ChangePasswordAsync()
+    {
+        PasswordErrorMessage = string.Empty;
+        PasswordSuccessMessage = string.Empty;
+
+        // Validation
+        if (string.IsNullOrWhiteSpace(CurrentPassword))
+        {
+            PasswordErrorMessage = "Current password is required";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(NewPassword))
+        {
+            PasswordErrorMessage = "New password is required";
+            return;
+        }
+
+        if (NewPassword.Length < 6)
+        {
+            PasswordErrorMessage = "New password must be at least 6 characters";
+            return;
+        }
+
+        if (NewPassword != ConfirmPassword)
+        {
+            PasswordErrorMessage = "New password and confirm password do not match";
+            return;
+        }
+
+        IsChangingPassword = true;
+
+        try
+        {
+            var success = await _authApiService.ChangePasswordAsync(CurrentPassword, NewPassword);
+            
+            if (success)
+            {
+                PasswordSuccessMessage = "Password changed successfully!";
+                CurrentPassword = string.Empty;
+                NewPassword = string.Empty;
+                ConfirmPassword = string.Empty;
+            }
+            else
+            {
+                PasswordErrorMessage = "Failed to change password. Please check your current password.";
+            }
+        }
+        catch (System.Exception ex)
+        {
+            PasswordErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsChangingPassword = false;
+        }
     }
 }
 
