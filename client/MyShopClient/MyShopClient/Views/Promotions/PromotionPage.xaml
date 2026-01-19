@@ -233,6 +233,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Filters Section -->
@@ -487,6 +488,19 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                         </ScrollViewer>
+
+                        <!-- Pagination Footer -->
+                        <Border Grid.Row="2" Padding="16" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="0,1,0,0">
+                            <shared:PaginationControl
+                                x:Name="PromotionsPagination"
+                                CurrentPage="{x:Bind ViewModel.CurrentPage, Mode=OneWay}"
+                                TotalPages="{x:Bind ViewModel.TotalPages, Mode=OneWay}"
+                                TotalItems="{x:Bind ViewModel.TotalPromotionsCount, Mode=OneWay}"
+                                PageSize="{x:Bind ViewModel.PageSize, Mode=OneWay}"
+                                PageNumbers="{x:Bind ViewModel.PageNumbers, Mode=OneWay}"
+                                ItemsLabel="promotions"
+                                PageChanged="PromotionsPagination_PageChanged"/>
+                        </Border>
                     </Grid>
                 </Border>
 

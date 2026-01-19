@@ -1,9 +1,8 @@
 using System;
-using System.Threading.Tasks;
-using Windows.Storage;
-using System.Text.Json;
-using MyShopClient.Models;
 using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
+using MyShopClient.Models;
 
 namespace MyShopClient.Services.Local;
 
@@ -24,15 +23,52 @@ public class LocalDraftService : ILocalDraftService
     private const string DRAFT_FILENAME = "order_draft.json";
     private const string PRODUCT_DRAFT_FILENAME = "product_draft.json";
     private const string DRAFTS_FOLDER_NAME = "Drafts";
-    private readonly StorageFolder _localFolder = ApplicationData.Current.LocalFolder;
+    
+    private readonly string _localFolder;
+    private readonly string _draftsFolder;
+
+    public LocalDraftService()
+    {
+        // Sử dụng %LocalAppData%/MyShopClient cho unpackaged app
+        _localFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MyShopClient"
+        );
+        _draftsFolder = Path.Combine(_localFolder, DRAFTS_FOLDER_NAME);
+        
+        // Đảm bảo các thư mục tồn tại
+        EnsureDirectoriesExist();
+    }
+
+    private void EnsureDirectoriesExist()
+    {
+        try
+        {
+            if (!Directory.Exists(_localFolder))
+            {
+                Directory.CreateDirectory(_localFolder);
+            }
+            if (!Directory.Exists(_draftsFolder))
+            {
+                Directory.CreateDirectory(_draftsFolder);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error creating directories: {ex.Message}");
+        }
+    }
+
+    #region Order Draft
 
     public async Task SaveDraftAsync(OrderDraft draft)
     {
         try
         {
-            var json = JsonSerializer.Serialize(draft);
-            var file = await _localFolder.CreateFileAsync(DRAFT_FILENAME, CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteTextAsync(file, json);
+            EnsureDirectoriesExist();
+            var filePath = Path.Combine(_localFolder, DRAFT_FILENAME);
+            var json = JsonSerializer.Serialize(draft, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(filePath, json);
         }
         catch (Exception ex)
         {
@@ -44,10 +80,10 @@ public class LocalDraftService : ILocalDraftService
     {
         try
         {
-            var item = await _localFolder.TryGetItemAsync(DRAFT_FILENAME);
-            if (item is StorageFile file)
+            var filePath = Path.Combine(_localFolder, DRAFT_FILENAME);
+            if (File.Exists(filePath))
             {
-                var json = await FileIO.ReadTextAsync(file);
+                var json = await File.ReadAllTextAsync(filePath);
                 if (!string.IsNullOrWhiteSpace(json))
                 {
                     return JsonSerializer.Deserialize<OrderDraft>(json);
@@ -61,31 +97,35 @@ public class LocalDraftService : ILocalDraftService
         return null;
     }
 
-    public async Task ClearDraftAsync()
+    public Task ClearDraftAsync()
     {
         try
         {
-            var item = await _localFolder.TryGetItemAsync(DRAFT_FILENAME);
-            if (item is StorageFile file)
+            var filePath = Path.Combine(_localFolder, DRAFT_FILENAME);
+            if (File.Exists(filePath))
             {
-                await file.DeleteAsync();
+                File.Delete(filePath);
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error deleting draft: {ex.Message}");
         }
+        return Task.CompletedTask;
     }
-    
 
-    // Product Draft Implementation
+    #endregion
+
+    #region Product Draft
+
     public async Task SaveProductDraftAsync(ProductDraft draft)
     {
         try
         {
-            var json = JsonSerializer.Serialize(draft);
-            var file = await _localFolder.CreateFileAsync(PRODUCT_DRAFT_FILENAME, CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteTextAsync(file, json);
+            EnsureDirectoriesExist();
+            var filePath = Path.Combine(_localFolder, PRODUCT_DRAFT_FILENAME);
+            var json = JsonSerializer.Serialize(draft, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(filePath, json);
         }
         catch (Exception ex)
         {
@@ -97,10 +137,10 @@ public class LocalDraftService : ILocalDraftService
     {
         try
         {
-            var item = await _localFolder.TryGetItemAsync(PRODUCT_DRAFT_FILENAME);
-            if (item is StorageFile file)
+            var filePath = Path.Combine(_localFolder, PRODUCT_DRAFT_FILENAME);
+            if (File.Exists(filePath))
             {
-                var json = await FileIO.ReadTextAsync(file);
+                var json = await File.ReadAllTextAsync(filePath);
                 if (!string.IsNullOrWhiteSpace(json))
                 {
                     return JsonSerializer.Deserialize<ProductDraft>(json);
@@ -114,28 +154,40 @@ public class LocalDraftService : ILocalDraftService
         return null;
     }
 
-    public async Task ClearProductDraftAsync()
+    public Task ClearProductDraftAsync()
     {
         try
         {
             // Delete JSON file
-            var item = await _localFolder.TryGetItemAsync(PRODUCT_DRAFT_FILENAME);
-            if (item is StorageFile file)
+            var filePath = Path.Combine(_localFolder, PRODUCT_DRAFT_FILENAME);
+            if (File.Exists(filePath))
             {
-                await file.DeleteAsync();
+                File.Delete(filePath);
             }
 
             // Delete Drafts folder contents
-            var draftsFolderItem = await _localFolder.TryGetItemAsync(DRAFTS_FOLDER_NAME);
-            if (draftsFolderItem is StorageFolder draftsFolder)
+            if (Directory.Exists(_draftsFolder))
             {
-                // Delete the folder and recreate it, or delete all files
-                await draftsFolder.DeleteAsync();
+                Directory.Delete(_draftsFolder, recursive: true);
+                // Recreate empty folder
+                Directory.CreateDirectory(_draftsFolder);
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error deleting product draft: {ex.Message}");
         }
+        return Task.CompletedTask;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Lấy đường dẫn thư mục Drafts để lưu file tạm (images, etc.)
+    /// </summary>
+    public string GetDraftsFolder()
+    {
+        EnsureDirectoriesExist();
+        return _draftsFolder;
     }
 }

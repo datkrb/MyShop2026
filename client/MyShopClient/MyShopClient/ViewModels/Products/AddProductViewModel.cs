@@ -9,7 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Storage;
+
 using Windows.Storage.Pickers;
 
 using MyShopClient.Services.Api;
@@ -204,36 +204,56 @@ public partial class AddProductViewModel : ObservableValidator
         }
     }
 
-    public async Task AddImageFromFileAsync(StorageFile file)
+    public async Task AddImageFromFileAsync(Windows.Storage.StorageFile file)
     {
         try
         {
-            // If we are in Create mode (Draft mode), copy to Drafts folder
-            StorageFile targetFile = file;
+            // Get drafts folder path using System.IO
+            var draftsFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MyShopClient",
+                "Drafts"
+            );
             
+            // Ensure folder exists
+            if (!Directory.Exists(draftsFolder))
+            {
+                Directory.CreateDirectory(draftsFolder);
+            }
+            
+            string targetFilePath = file.Path;
+            
+            // If we are in Create mode (Draft mode), copy to Drafts folder
             if (!IsEditMode)
             {
-                var localFolder = ApplicationData.Current.LocalFolder;
-                var draftsFolder = await localFolder.CreateFolderAsync("Drafts", CreationCollisionOption.OpenIfExists);
-                
                 // Only copy if the file is not already in the Drafts folder
-                // We check if the file path contains the Drafts folder path
-                if (!file.Path.StartsWith(draftsFolder.Path, StringComparison.OrdinalIgnoreCase))
+                if (!file.Path.StartsWith(draftsFolder, StringComparison.OrdinalIgnoreCase))
                 {
-                    targetFile = await file.CopyAsync(draftsFolder, Guid.NewGuid() + Path.GetExtension(file.Name), NameCollisionOption.GenerateUniqueName);
+                    var newFileName = Guid.NewGuid() + Path.GetExtension(file.Name);
+                    targetFilePath = Path.Combine(draftsFolder, newFileName);
+                    
+                    // Copy file using System.IO
+                    using (var sourceStream = await file.OpenStreamForReadAsync())
+                    using (var destStream = File.Create(targetFilePath))
+                    {
+                        await sourceStream.CopyToAsync(destStream);
+                    }
                 }
             }
 
             var bitmapImage = new BitmapImage();
-            using (var stream = await targetFile.OpenReadAsync())
+            using (var stream = File.OpenRead(targetFilePath))
             {
-                await bitmapImage.SetSourceAsync(stream);
+                var memStream = new MemoryStream();
+                await stream.CopyToAsync(memStream);
+                memStream.Position = 0;
+                await bitmapImage.SetSourceAsync(memStream.AsRandomAccessStream());
             }
 
             var productImage = new LocalProductImage
             {
-                FilePath = targetFile.Path,
-                FileName = targetFile.Name,
+                FilePath = targetFilePath,
+                FileName = Path.GetFileName(targetFilePath),
                 ImageSource = bitmapImage
             };
 
@@ -578,9 +598,16 @@ public partial class AddProductViewModel : ObservableValidator
                               try 
                               {
                                   System.Diagnostics.Debug.WriteLine($"Restoring image from: {path}");
-                                  var file = await StorageFile.GetFileFromPathAsync(path);
-                                  await AddImageFromFileAsync(file);
-                                  System.Diagnostics.Debug.WriteLine($"Restored image successfully");
+                                  if (File.Exists(path))
+                                  {
+                                      var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(path);
+                                      await AddImageFromFileAsync(file);
+                                      System.Diagnostics.Debug.WriteLine($"Restored image successfully");
+                                  }
+                                  else
+                                  {
+                                      System.Diagnostics.Debug.WriteLine($"Image file not found: {path}");
+                                  }
                               }
                               catch (Exception ex)
                               { 

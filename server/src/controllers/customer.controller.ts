@@ -63,6 +63,15 @@ export class CustomerController {
       sendError(res, 'NOT_FOUND', error.message, 404);
     }
   }
+
+  async getStats(_req: AuthRequest, res: Response) {
+    try {
+      const stats = await customerService.getStats();
+      sendSuccess(res, stats);
+    } catch (error: any) {
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
 }
 
 export default new CustomerController();

@@ -1,5 +1,6 @@
 using System;
 using Microsoft.UI.Xaml.Controls;
+using MyShopClient.Services.Config;
 
 namespace MyShopClient.Services.Navigation;
 
@@ -7,6 +8,12 @@ public class NavigationService : INavigationService
 {
     private const string LastVisitedPageKey = "LastVisitedPage";
     private Frame? _frame;
+    private readonly AppSettingsService _appSettingsService;
+
+    public NavigationService(AppSettingsService appSettingsService)
+    {
+        _appSettingsService = appSettingsService;
+    }
 
     /// <summary>
     /// Initialize the navigation service with the content frame.
@@ -55,15 +62,13 @@ public class NavigationService : INavigationService
     }
 
     /// <summary>
-    /// Gets the last visited page tag from local settings.
+    /// Gets the last visited page tag from settings.
     /// </summary>
     public string GetLastVisitedPage()
     {
         try
         {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            var value = localSettings.Values[LastVisitedPageKey];
-            return value as string ?? "Dashboard";
+            return _appSettingsService.GetLastVisitedPage();
         }
         catch
         {
@@ -72,16 +77,14 @@ public class NavigationService : INavigationService
     }
 
     /// <summary>
-    /// Saves the current page tag to local settings.
+    /// Saves the current page tag to settings.
     /// </summary>
     public void SaveLastVisitedPage(string pageTag)
     {
         try
         {
             if (string.IsNullOrEmpty(pageTag)) return;
-            
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            localSettings.Values[LastVisitedPageKey] = pageTag;
+            _appSettingsService.SaveLastVisitedPage(pageTag);
         }
         catch
         {
