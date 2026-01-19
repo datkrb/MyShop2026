@@ -46,6 +46,32 @@ export class AuthController {
       sendError(res, 'UNAUTHORIZED', error.message, 401);
     }
   }
+
+  async changePassword(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return sendError(res, 'UNAUTHORIZED', Messages.UNAUTHORIZED, 401);
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return sendError(res, 'BAD_REQUEST', 'Current password and new password are required', 400);
+      }
+
+      if (newPassword.length < 6) {
+        return sendError(res, 'BAD_REQUEST', 'New password must be at least 6 characters', 400);
+      }
+
+      const result = await authService.changePassword(req.user.userId, currentPassword, newPassword);
+      sendSuccess(res, result);
+    } catch (error: any) {
+      if (error.message === 'Current password is incorrect') {
+        return sendError(res, 'INVALID_CREDENTIALS', error.message, 400);
+      }
+      sendError(res, 'INTERNAL_ERROR', error.message, 500);
+    }
+  }
 }
 
 export default new AuthController();
