@@ -18,6 +18,35 @@ public sealed partial class DashboardView : Page
         ViewModel = App.Current.Services.GetService<DashboardViewModel>()!;
     }
 
+    private void TopSelling_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Product product)
+        {
+            App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
+        }
+    }
+
+    private void LowStock_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Product product)
+        {
+            App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
+        }
+    }
+
+    private void RecentOrders_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Models.Order order)
+        {
+            // OrderId is formatted as "#000001", extract the number
+            var orderId = order.OrderId.TrimStart('#');
+            if (int.TryParse(orderId, out var id))
+            {
+                App.Current.ContentFrame?.Navigate(typeof(Views.Orders.OrderDetailView), id);
+            }
+        }
+    }
+
     private async void ActivateButton_Click(object sender, RoutedEventArgs e)
     {
         // Tạo TextBox cho nhập license key
