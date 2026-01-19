@@ -7,6 +7,7 @@ using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using MyShopClient.Models;
 using MyShopClient.ViewModels.Base;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Navigation;
 using SkiaSharp;
 using System.Collections.ObjectModel;
 using System;
@@ -20,6 +21,7 @@ public partial class DashboardViewModel : ViewModelBase
 {
     private readonly DashboardApiService _dashboardApiService;
     private readonly LicenseApiService _licenseApiService;
+    private readonly INavigationService _navigationService;
 
     [ObservableProperty]
     private string _totalProducts = "0";
@@ -85,10 +87,11 @@ public partial class DashboardViewModel : ViewModelBase
     public ObservableCollection<Order> RecentOrders { get; } = new();
     public ObservableCollection<Product> LowStock { get; } = new();
 
-    public DashboardViewModel(DashboardApiService dashboardApiService, LicenseApiService licenseApiService)
+    public DashboardViewModel(DashboardApiService dashboardApiService, LicenseApiService licenseApiService, INavigationService navigationService)
     {
         _dashboardApiService = dashboardApiService;
         _licenseApiService = licenseApiService;
+        _navigationService = navigationService;
         
         // Check if current user is admin
         IsAdmin = App.Current.IsAdmin;
@@ -332,6 +335,35 @@ public partial class DashboardViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync Error: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"LoadLicenseStatusAsync StackTrace: {ex.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// Navigate to Product Detail when clicking on a product
+    /// </summary>
+    [RelayCommand]
+    private void NavigateToProduct(Product product)
+    {
+        if (product != null)
+        {
+            _navigationService.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
+        }
+    }
+
+    /// <summary>
+    /// Navigate to Order Detail when clicking on an order
+    /// </summary>
+    [RelayCommand]
+    private void NavigateToOrder(Order order)
+    {
+        if (order != null)
+        {
+            // OrderId is formatted as "#000001", extract the number
+            var orderId = order.OrderId.TrimStart('#');
+            if (int.TryParse(orderId, out var id))
+            {
+                _navigationService.Navigate(typeof(Views.Orders.OrderDetailView), id);
+            }
         }
     }
 }
