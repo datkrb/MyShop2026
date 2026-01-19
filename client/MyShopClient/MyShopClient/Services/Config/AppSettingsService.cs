@@ -237,4 +237,28 @@ public class AppSettingsService
     }
 
     #endregion
+
+    #region LastVisitedPage
+
+    private const string LastVisitedPageKey = "LastVisitedPage";
+
+    /// <summary>
+    /// Lấy trang cuối cùng đã truy cập
+    /// </summary>
+    public string GetLastVisitedPage()
+    {
+        var value = GetValue(LastVisitedPageKey, "Dashboard");
+        return !string.IsNullOrEmpty(value) ? value : "Dashboard";
+    }
+
+    /// <summary>
+    /// Lưu trang cuối cùng đã truy cập
+    /// </summary>
+    public void SaveLastVisitedPage(string pageTag)
+    {
+        if (string.IsNullOrEmpty(pageTag)) return;
+        SetValue(LastVisitedPageKey, pageTag);
+    }
+
+    #endregion
 }
