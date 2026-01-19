@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Media;
 using MyShopClient.Models;
 using MyShopClient.Services.Api;
+using MyShopClient.Services.Navigation;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -15,6 +17,7 @@ namespace MyShopClient.ViewModels;
 public partial class CustomerDetailViewModel : ObservableObject
 {
     private readonly CustomerApiService _customerApiService;
+    private readonly INavigationService _navigationService;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -43,9 +46,22 @@ public partial class CustomerDetailViewModel : ObservableObject
 
     public ObservableCollection<CustomerOrderViewModel> RecentOrders { get; } = new();
 
-    public CustomerDetailViewModel(CustomerApiService customerApiService)
+    public CustomerDetailViewModel(CustomerApiService customerApiService, INavigationService navigationService)
     {
         _customerApiService = customerApiService ?? throw new ArgumentNullException(nameof(customerApiService));
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+    }
+
+    /// <summary>
+    /// Navigate to Order Detail
+    /// </summary>
+    [RelayCommand]
+    private void NavigateToOrder(CustomerOrderViewModel order)
+    {
+        if (order != null)
+        {
+            _navigationService.Navigate(typeof(Views.Orders.OrderDetailView), order.Id);
+        }
     }
 
     /// <summary>
@@ -96,6 +112,7 @@ public partial class CustomerDetailViewModel : ObservableObject
                     {
                         RecentOrders.Add(new CustomerOrderViewModel
                         {
+                            Id = order.Id,
                             OrderId = $"#{order.Id:D4}",
                             Date = order.CreatedTime,
                             Amount = order.FinalPrice,
@@ -150,6 +167,7 @@ public partial class CustomerDetailViewModel : ObservableObject
 /// </summary>
 public class CustomerOrderViewModel
 {
+    public int Id { get; set; }
     public string OrderId { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public decimal Amount { get; set; }

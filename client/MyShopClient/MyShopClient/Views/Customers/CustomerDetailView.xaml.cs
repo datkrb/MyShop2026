@@ -19,8 +19,7 @@ public sealed partial class CustomerDetailView : Page
     {
         this.InitializeComponent();
         _navigationService = App.Current.Services.GetRequiredService<INavigationService>();
-        ViewModel = App.Current.Services.GetService<CustomerDetailViewModel>() 
-            ?? new CustomerDetailViewModel(App.Current.Services.GetRequiredService<MyShopClient.Services.Api.CustomerApiService>());
+        ViewModel = App.Current.Services.GetRequiredService<CustomerDetailViewModel>();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -36,6 +35,14 @@ public sealed partial class CustomerDetailView : Page
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         _navigationService.GoBack();
+    }
+
+    private void OrderItem_Click(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is CustomerOrderViewModel order)
+        {
+            ViewModel.NavigateToOrderCommand.Execute(order);
+        }
     }
 
     private async void EditCustomerButton_Click(object sender, RoutedEventArgs e)

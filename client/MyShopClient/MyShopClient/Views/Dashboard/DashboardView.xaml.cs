@@ -22,7 +22,7 @@ public sealed partial class DashboardView : Page
     {
         if (e.ClickedItem is Models.Product product)
         {
-            App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
+            ViewModel.NavigateToProductCommand.Execute(product);
         }
     }
 
@@ -30,7 +30,7 @@ public sealed partial class DashboardView : Page
     {
         if (e.ClickedItem is Models.Product product)
         {
-            App.Current.ContentFrame?.Navigate(typeof(Views.Products.ProductDetailView), product.Id);
+            ViewModel.NavigateToProductCommand.Execute(product);
         }
     }
 
@@ -38,12 +38,7 @@ public sealed partial class DashboardView : Page
     {
         if (e.ClickedItem is Models.Order order)
         {
-            // OrderId is formatted as "#000001", extract the number
-            var orderId = order.OrderId.TrimStart('#');
-            if (int.TryParse(orderId, out var id))
-            {
-                App.Current.ContentFrame?.Navigate(typeof(Views.Orders.OrderDetailView), id);
-            }
+            ViewModel.NavigateToOrderCommand.Execute(order);
         }
     }
 
