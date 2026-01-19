@@ -111,4 +111,9 @@ public sealed partial class EmployeesView : Page
     {
         await ViewModel.RefreshAsync();
     }
+
+    private async void EmployeesPagination_PageChanged(object sender, int pageNumber)
+    {
+        await ViewModel.GoToPageAsync(pageNumber);
+    }
 }

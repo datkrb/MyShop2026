@@ -8,6 +8,15 @@ export class EmployeeService {
     return userRepo.findAll();
   }
 
+  async getAllPaginated(filters: {
+    page?: number;
+    size?: number;
+    search?: string;
+    role?: string;
+  }) {
+    return userRepo.findAllPaginated(filters);
+  }
+
   async getById(id: number) {
     const employee = await userRepo.findById(id);
     if (!employee) {
