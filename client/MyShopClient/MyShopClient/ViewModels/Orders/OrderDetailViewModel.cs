@@ -201,7 +201,7 @@ public partial class OrderDetailViewModel : ObservableObject
             if (order != null)
             {
                 Id = order.Id;
-                OrderId = $"#ORD-{order.Id:D4}";
+                OrderId = $"{order.Id:D4}";
                 OrderStatus = order.Status;
                 SelectedStatus = order.Status;
                 OrderDate = order.CreatedTime;

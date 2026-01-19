@@ -96,7 +96,7 @@ public partial class CustomerDetailViewModel : ObservableObject
                     {
                         RecentOrders.Add(new CustomerOrderViewModel
                         {
-                            OrderId = $"#ORD-{order.Id:D4}",
+                            OrderId = $"#{order.Id:D4}",
                             Date = order.CreatedTime,
                             Amount = order.FinalPrice,
                             Status = FormatStatus(order.Status)
