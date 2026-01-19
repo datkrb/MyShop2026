@@ -1,0 +1,18 @@
+{
+	"Name": "My first project",
+	"Preset": "custom",
+	"ProjectToken": "bh_SnnOcvROUOG2mf66jv9a0iYPPBbgaqEaOQ",
+	"ProtectionSecret": "myshopclient",
+	"Enabled": "true",
+	"RunConfiguration": "*",
+	"Protections": {
+		"anti_ildasm": null,
+		"rename": {
+			"mode": "default",
+			"rename_xaml": true,
+			"rename_pdb": true,
+			"rename_namespaces": true
+		}
+	},
+	"Actions": {}
+}
