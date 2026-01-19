@@ -1,14 +1,17 @@
 {
 	"Name": "My first project",
 	"Preset": "custom",
-	"ProjectToken": "bh_i4C3tzD1XfLMWnDVCBwKyON1puJQbiYItw",
-	"ProtectionSecret": "<your-protection-secret>",
-	"Enabled": "false",
+	"ProjectToken": "bh_SnnOcvROUOG2mf66jv9a0iYPPBbgaqEaOQ",
+	"ProtectionSecret": "myshopclient",
+	"Enabled": "true",
 	"RunConfiguration": "*",
 	"Protections": {
 		"anti_ildasm": null,
 		"rename": {
-			"mode": "default"
+			"mode": "default",
+			"rename_xaml": true,
+			"rename_pdb": true,
+			"rename_namespaces": true
 		}
 	},
 	"Actions": {}
